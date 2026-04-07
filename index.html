@@ -163,6 +163,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+/* QUICK NAV */
+.qnav{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 18px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.qnav-year{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--t2);padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;}
+.qnav-year:hover{color:var(--text);border-color:var(--border);}
+.qnav-year.qy-active{color:var(--accent);border-color:var(--accent);background:rgba(249,115,22,.08);}
+.qnav-month{font-family:'DM Mono',monospace;font-size:10px;padding:4px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--t2);transition:all .15s;white-space:nowrap;}
+.qnav-month:hover{border-color:var(--accent);color:var(--text);}
+.qnav-month.qm-active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+.qnav-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.qnav-arrow{background:none;border:1px solid var(--border);color:var(--t2);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:12px;transition:all .15s;}
+.qnav-arrow:hover{border-color:var(--accent);color:var(--accent);}
+.qnav-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);white-space:nowrap;}
+.qnav-all{font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--t2);transition:all .15s;}
+.qnav-all:hover{border-color:var(--green);color:var(--green);}
+.qnav-all.active{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
 /* tooltip */
 [data-tip]{position:relative;}
 [data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;color:var(--text);white-space:nowrap;z-index:100;pointer-events:none;opacity:0;transition:opacity .2s;}
@@ -221,29 +236,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="header-right">
       <span class="meta" id="hdr-meta"></span>
-      <button class="hbtn upload" id="btn-up-orders" style="display:none" onclick="showUploadModal('orders')">⬆ Orders</button>
-      <button class="hbtn upload" id="btn-up-products" style="display:none" onclick="showUploadModal('products')">⬆ Products</button>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--purple);color:var(--purple)" onclick="showSuper()">★ Super Admin</button>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
     </div>
   </div>
+  <!-- QUICK NAV -->
+  <div class="qnav" id="quick-nav">
+    <button class="qnav-all active" id="qnav-all" onclick="qnavAll()" title="Show all data">All</button>
+    <div class="qnav-sep"></div>
+    <button class="qnav-arrow" onclick="qnavStep(-1)" title="Previous month">&#8592;</button>
+    <div id="qnav-months" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+    <button class="qnav-arrow" onclick="qnavStep(+1)" title="Next month">&#8594;</button>
+    <div class="qnav-sep"></div>
+    <div id="qnav-years" style="display:flex;gap:4px;"></div>
+  </div>
+
   <div class="body-layout">
     <!-- SIDEBAR -->
     <div class="sidebar">
       <div>
         <div class="fg-label">Date Range</div>
         <div class="date-row">
-          <input type="date" id="f-from" onchange="applyFilters()">
-          <input type="date" id="f-to" onchange="applyFilters()">
+          <input type="date" id="f-from" onchange="onDateRangeChange()">
+          <input type="date" id="f-to" onchange="onDateRangeChange()">
         </div>
       </div>
       <div>
-        <div class="fg-label">Year <button onclick="uncheckAll('f-years')">Uncheck all</button></div>
+        <div class="fg-label">Year <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:9px;color:var(--t3);"><input type="checkbox" id="master-years" checked onchange="masterCheck('f-years',this.checked)" style="accent-color:var(--accent);cursor:pointer;width:11px;height:11px;"> Un/Check All</label></div>
         <div class="cbox-list" id="f-years"></div>
       </div>
       <div>
-        <div class="fg-label">Month <button onclick="uncheckAll('f-months')">Uncheck all</button></div>
+        <div class="fg-label">Month <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:9px;color:var(--t3);"><input type="checkbox" id="master-months" checked onchange="masterCheck('f-months',this.checked)" style="accent-color:var(--accent);cursor:pointer;width:11px;height:11px;"> Un/Check All</label></div>
         <div class="cbox-list" id="f-months"></div>
       </div>
       <div>
@@ -262,11 +286,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
       </div>
       <div>
-        <div class="fg-label">City <button onclick="uncheckAll('f-cities')">Uncheck all</button></div>
+        <div class="fg-label">City <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:9px;color:var(--t3);"><input type="checkbox" id="master-cities" checked onchange="masterCheck('f-cities',this.checked)" style="accent-color:var(--accent);cursor:pointer;width:11px;height:11px;"> Un/Check All</label></div>
         <div class="cbox-list" id="f-cities"></div>
       </div>
       <div>
-        <div class="fg-label">Order Status <button onclick="uncheckAll('f-statuses')">Uncheck all</button></div>
+        <div class="fg-label">Order Status <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:9px;color:var(--t3);"><input type="checkbox" id="master-statuses" checked onchange="masterCheck('f-statuses',this.checked)" style="accent-color:var(--accent);cursor:pointer;width:11px;height:11px;"> Un/Check All</label></div>
         <div class="cbox-list" id="f-statuses"></div>
       </div>
       <div>
@@ -326,19 +350,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <!-- CUSTOMER TAB -->
       <div class="tab-panel" id="tab-customer">
         <div class="kpi-grid" id="cust-kpis"></div>
-        <div class="two mb12">
+        <div style="display:grid;grid-template-columns:1fr 1fr 280px;gap:12px;margin-bottom:12px;">
           <div class="chart-box" style="margin-bottom:0">
             <div class="stitle mb12">Top 10 Customers by Sales</div>
             <canvas id="chart-top10" height="220"></canvas>
           </div>
           <div>
-            <div class="sh mb12"><div class="stitle">Ranked by Sales</div><div class="hint">Click row → filter stats</div></div>
+            <div class="sh mb12"><div class="stitle">Ranked by Sales</div><div class="hint">Click row → see details</div></div>
             <div class="tw st" style="max-height:280px;">
               <table class="dt" id="tbl-ranked">
                 <thead><tr><th>#</th><th>Customer</th><th>Type</th><th style="text-align:right">Orders</th><th style="text-align:right">Sales</th></tr></thead>
                 <tbody id="body-ranked"></tbody>
                 <tfoot><tr><td colspan="3" style="text-align:right;color:var(--t3)">Totals</td><td id="ranked-tot-orders" style="text-align:right"></td><td id="ranked-tot-sales" style="text-align:right"></td></tr></tfoot>
               </table>
+            </div>
+          </div>
+          <div>
+            <div class="sh mb12"><div class="stitle">Customer Details</div></div>
+            <div class="tw" style="padding:14px;" id="cust-tab-info-box">
+              <div class="hint" style="padding:20px 0;text-align:center;">Click a customer to see details</div>
             </div>
           </div>
         </div>
@@ -393,6 +423,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div><!-- /body-layout -->
 </div><!-- /app -->
 
+<!-- ═══ CONFIRM CLEAR DATA MODAL ═══ -->
+<div class="overlay" id="clear-modal">
+  <div class="ov-inner" style="max-width:400px;">
+    <div style="background:var(--surface);border:1px solid var(--red);border-radius:var(--r);padding:28px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Remove All Data?</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:6px;">This will permanently delete ALL orders and products from the database.</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:20px;">Your B2B list, city mappings, test rules and user accounts will NOT be affected.</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:16px;">Type <strong style="color:var(--red)">DELETE</strong> to confirm:</div>
+      <input id="clear-confirm-inp" class="adm-inp" placeholder="Type DELETE here" style="width:100%;margin-bottom:12px;text-align:center;">
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="ov-close" onclick="closeModal('clear-modal')">Cancel</button>
+        <button onclick="executeDataClear()" style="padding:8px 20px;background:var(--red);border:none;border-radius:var(--r2);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Delete Everything</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ UPLOAD MODAL ═══ -->
 <div class="overlay" id="up-modal">
   <div class="ov-inner" style="max-width:480px;">
@@ -416,6 +464,69 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="overlay" id="admin-overlay">
   <div class="ov-inner">
     <div class="ov-hdr"><div class="ov-title">⚙ Admin Panel</div><button class="ov-close" onclick="closeModal('admin-overlay')">Close</button></div>
+
+    <!-- DATA MANAGEMENT -->
+    <div class="adm-card mb12">
+      <div class="adm-card-title">📂 Data Management</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <!-- Orders Upload -->
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">
+            Orders Files
+            <span title="The date of the most recently uploaded order record in the database" style="cursor:help;margin-left:4px;color:var(--accent);">ⓘ</span>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">
+            Last upload: <span id="adm-orders-last-date" style="color:var(--text);font-weight:600;">—</span>
+            <span title="Name of the last Orders file that was uploaded" style="cursor:help;color:var(--accent);margin-left:2px;">ⓘ</span>
+          </div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">
+            File: <span id="adm-orders-last-file" style="color:var(--t2);">—</span>
+          </div>
+          <label class="up-btn" id="adm-lbl-orders" style="margin-bottom:6px;font-size:12px;">
+            <span>📁</span><span id="adm-txt-orders">Select one or more .xlsx files</span>
+            <input type="file" id="adm-file-orders" accept=".xlsx,.xls" multiple onchange="admFilesSelected('orders',this.files)">
+          </label>
+          <div style="font-size:10px;color:var(--t3);">Tip: You can select multiple files at once. They will be processed in order.</div>
+        </div>
+
+        <!-- Products Upload -->
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">
+            Products Files
+            <span title="The date of the most recently uploaded product record in the database" style="cursor:help;margin-left:4px;color:var(--accent);">ⓘ</span>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">
+            Last upload: <span id="adm-prods-last-date" style="color:var(--text);font-weight:600;">—</span>
+            <span title="Name of the last Products file that was uploaded" style="cursor:help;color:var(--accent);margin-left:2px;">ⓘ</span>
+          </div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">
+            File: <span id="adm-prods-last-file" style="color:var(--t2);">—</span>
+          </div>
+          <label class="up-btn" id="adm-lbl-products" style="margin-bottom:6px;font-size:12px;">
+            <span>📁</span><span id="adm-txt-products">Select one or more .xlsx files</span>
+            <input type="file" id="adm-file-products" accept=".xlsx,.xls" multiple onchange="admFilesSelected('products',this.files)">
+          </label>
+          <div style="font-size:10px;color:var(--t3);">Tip: You can select multiple files at once. They will be processed in order.</div>
+        </div>
+      </div>
+
+      <!-- Upload log and action buttons -->
+      <div id="adm-upload-log" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px;font-size:11px;font-family:'DM Mono',monospace;max-height:140px;overflow-y:auto;margin-top:12px;"></div>
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+        <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">
+          ⬆ Upload Selected Files
+        </button>
+        <div style="flex:1;"></div>
+        <div style="border-left:1px solid var(--border);padding-left:12px;">
+          <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;" onmouseover="this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.background='transparent'">
+            🗑 Remove All Data
+          </button>
+          <div style="font-size:10px;color:var(--t3);margin-top:4px;text-align:center;" title="Permanently deletes all Orders and Products records from the database. Config (B2B list, city mappings etc) is kept.">⚠ Deletes all orders &amp; products</div>
+        </div>
+      </div>
+    </div>
+
     <div class="adm-grid mb12">
       <div class="adm-card">
         <div class="adm-card-title">🏢 B2B Customers</div>
@@ -504,6 +615,9 @@ const HC_TEST_STATUS=[{c:'qasim imtiaz',s:'cancelled'},{c:'qasim imtiaz lhr',s:'
 // STATE
 // ═══════════════════════════════════════════════
 let S={orders:[],prods:[],adminB2B:[],adminTests:[],cityMappings:[],manualCities:{},users:[]};
+// Upload tracking stored in Supabase admin_config
+let uploadMeta={ordersLastDate:'—',ordersLastFile:'—',prodsLastDate:'—',prodsLastFile:'—'};
+let admOrdersFiles=[],admProductsFiles=[];
 let filtered=[],selCust=null,selOrder=null,selProd=null,selProdIdx=-1;
 let fSt={ctype:'all',nc:'all',years:new Set(),months:new Set(),cities:new Set(),statuses:new Set()};
 let charts={};
@@ -513,6 +627,8 @@ let uploadModalType='orders';
 let umFile=null;
 let curTab='dashboard',tabStart=Date.now();
 let _avail={years:[],months:[],cities:[],statuses:[]};
+// Quick nav state: null = all data, otherwise {year, month} where month can be null
+let qnavState={year:null,month:null,mode:'all'}; // mode: 'all' | 'year' | 'month'
 
 // ═══════════════════════════════════════════════
 // SUPABASE API LAYER
@@ -535,6 +651,21 @@ async function sb(method, path, body=null){
   }
   const text=await res.text();
   return text?JSON.parse(text):[];
+}
+
+// Fetch ALL rows from a table, bypassing Supabase's 1000-row default limit
+async function fetchAllRows(table, extraParams=''){
+  const BATCH=1000;
+  let allRows=[];
+  let from=0;
+  while(true){
+    const params='select=*&limit='+BATCH+'&offset='+from+(extraParams?'&'+extraParams:'');
+    const rows=await sb('GET',table+'?'+params);
+    allRows=allRows.concat(rows);
+    if(rows.length<BATCH)break; // last page
+    from+=BATCH;
+  }
+  return allRows;
 }
 
 // Shorthand helpers
@@ -599,7 +730,7 @@ function doLogout(){
   document.getElementById('li-user').value='';
   document.getElementById('li-pass').value='';
   document.getElementById('li-err').textContent='';
-  ['btn-admin','btn-super','btn-up-orders','btn-up-products'].forEach(id=>{
+  ['btn-admin','btn-super'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
 }
@@ -609,8 +740,6 @@ function onLoginSuccess(){
   document.getElementById('hdr-user').textContent=curUser.u;
   if(curUser.role==='admin'||curUser.role==='super'){
     document.getElementById('btn-admin').style.display='';
-    document.getElementById('btn-up-orders').style.display='';
-    document.getElementById('btn-up-products').style.display='';
   }
   if(curUser.role==='super') document.getElementById('btn-super').style.display='';
   loadAllData();
@@ -624,8 +753,8 @@ async function loadAllData(){
   try{
     // Fetch in parallel
     const [orders,products,config,users]=await Promise.all([
-      dbGet('orders','select=*&order=order_date_str.desc'),
-      dbGet('products','select=*'),
+      fetchAllRows('orders'),
+      fetchAllRows('products'),
       dbGet('admin_config','select=*'),
       dbGet('users','select=username,role')
     ]);
@@ -641,7 +770,20 @@ async function loadAllData(){
       IsFirstOrder:o.is_first_order||'Recurring Customer',
       Year:parseInt(o.year)||null,Month:parseInt(o.month)||null,
       Order_Date_Str:o.order_date_str||'—',
-      Order_Date:o.order_date_str&&o.order_date_str!=='—'?new Date(o.order_date_str):null
+      Order_Date:(()=>{
+        // Use ISO date if available (reliable), fallback to parsing order_date_str
+        if(o.order_date_iso&&o.order_date_iso!=='null'&&o.order_date_iso){
+          const parts=o.order_date_iso.split('-');
+          return new Date(+parts[0],+parts[1]-1,+parts[2]);
+        }
+        if(o.order_date_str&&o.order_date_str!=='—'){
+          // Try to parse "7 Sep 2023" format manually
+          const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+          const m=o.order_date_str.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+          if(m&&months[m[2]]!==undefined)return new Date(+m[3],months[m[2]],+m[1]);
+        }
+        return null;
+      })()
     }));
 
     // Parse products
@@ -654,6 +796,7 @@ async function loadAllData(){
 
     // Parse config
     S.adminB2B=[];S.adminTests=[];S.cityMappings=[];S.manualCities={};
+    S._rawConfig=config; // keep raw for upload meta
     config.forEach(r=>{
       if(r.type==='b2b'&&r.value1)S.adminB2B.push(r.value1);
       if(r.type==='testRule'&&r.value1)S.adminTests.push({c:r.value1,s:r.value2||''});
@@ -673,7 +816,7 @@ async function loadAllData(){
 
 function launchApp(){
   document.getElementById('app').style.display='flex';
-  buildFilters();applyFilters();updateMeta();
+  buildFilters();applyFilters();updateMeta();updateUploadMeta();buildQuickNav();
 }
 
 // ═══════════════════════════════════════════════
@@ -730,6 +873,149 @@ function umFileSelected(e){
 }
 function closeModal(id){document.getElementById(id).style.display='none';}
 
+// ── Admin panel upload functions ──
+function admFilesSelected(type,files){
+  if(!files.length)return;
+  const names=[...files].map(f=>f.name).join(', ');
+  if(type==='orders'){
+    admOrdersFiles=[...files];
+    document.getElementById('adm-txt-orders').textContent=`✓ ${files.length} file(s): ${names.slice(0,60)}`;
+    document.getElementById('adm-lbl-orders').classList.add('loaded');
+  }else{
+    admProductsFiles=[...files];
+    document.getElementById('adm-txt-products').textContent=`✓ ${files.length} file(s): ${names.slice(0,60)}`;
+    document.getElementById('adm-lbl-products').classList.add('loaded');
+  }
+  document.getElementById('adm-upload-btn').disabled=!(admOrdersFiles.length||admProductsFiles.length);
+}
+
+async function runAdminUpload(){
+  const log=document.getElementById('adm-upload-log');
+  log.style.display='block';log.innerHTML='';
+  const ulog=m=>{log.innerHTML+=`<div>${m}</div>`;log.scrollTop=log.scrollHeight;};
+  document.getElementById('adm-upload-btn').disabled=true;
+
+  // Process Orders files first (Products reference Order IDs)
+  if(admOrdersFiles.length){
+    ulog(`<span style="color:var(--accent)">━━ Processing ${admOrdersFiles.length} Orders file(s) ━━</span>`);
+    let totalAdded=0;
+    for(let i=0;i<admOrdersFiles.length;i++){
+      const f=admOrdersFiles[i];
+      ulog(`📂 [${i+1}/${admOrdersFiles.length}] Reading: ${f.name}`);
+      try{
+        const wb=await readXLSX(f);
+        const rows=processOrdersWB(wb,ulog);
+        if(rows.length){
+          const dbRows=rows.map(r=>({
+            order_id:r.Order_ID,customer:r.Customer,address:r.Address,phone:r.Phone,
+            placed_on:r.Placed_On,payment:r.Payment,source:r.Source,status:r.Status,
+            total_sales:r.Total_Sales,other_details:r.Other_Details,scheduled:r.Scheduled,
+            city:r.City,customer_type:r.Customer_Type,is_first_order:r.IsFirstOrder,
+            year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str,
+            order_date_iso:r.Order_Date_ISO
+          }));
+          const res=await sendInChunks('orders',dbRows,ulog);
+          totalAdded+=res.added;
+          // Save upload metadata
+          await saveUploadMeta('orders',f.name);
+        }
+      }catch(e){ulog(`<span style="color:var(--red)">❌ Error in ${f.name}: ${e.message}</span>`);}
+    }
+    ulog(`<span style="color:var(--green)">✅ Orders complete — ${totalAdded} rows processed</span>`);
+    logActivity('upload',`Uploaded ${admOrdersFiles.length} orders file(s): ${totalAdded} rows`);
+  }
+
+  // Process Products files
+  if(admProductsFiles.length){
+    ulog(`<span style="color:var(--accent)">━━ Processing ${admProductsFiles.length} Products file(s) ━━</span>`);
+    let totalAdded=0;
+    for(let i=0;i<admProductsFiles.length;i++){
+      const f=admProductsFiles[i];
+      ulog(`📂 [${i+1}/${admProductsFiles.length}] Reading: ${f.name}`);
+      try{
+        const wb=await readXLSX(f);
+        const rows=processProductsWB(wb,ulog);
+        if(rows.length){
+          const dbRows=rows.map(r=>({
+            sr_no:r.SR_NO,product_id:r.Product_ID,mart_id:r.Mart_ID,
+            product_name:r.Product_Name,order_id:r.Order_ID,
+            qty:r.Qty,unit_price:r.Unit_Price,total_price:r.Total_Price
+          }));
+          const res=await sendInChunks('products',dbRows,ulog);
+          totalAdded+=res.added;
+          await saveUploadMeta('products',f.name);
+        }
+      }catch(e){ulog(`<span style="color:var(--red)">❌ Error in ${f.name}: ${e.message}</span>`);}
+    }
+    ulog(`<span style="color:var(--green)">✅ Products complete — ${totalAdded} rows processed</span>`);
+    logActivity('upload',`Uploaded ${admProductsFiles.length} products file(s): ${totalAdded} rows`);
+  }
+
+  // Reset file selections
+  admOrdersFiles=[];admProductsFiles=[];
+  document.getElementById('adm-txt-orders').textContent='Select one or more .xlsx files';
+  document.getElementById('adm-txt-products').textContent='Select one or more .xlsx files';
+  document.getElementById('adm-lbl-orders').classList.remove('loaded');
+  document.getElementById('adm-lbl-products').classList.remove('loaded');
+  document.getElementById('adm-upload-btn').disabled=true;
+
+  // Refresh data and meta
+  await loadAllData();
+  updateUploadMeta();
+}
+
+async function saveUploadMeta(type,filename){
+  // Store last upload date and filename in admin_config
+  const now=new Date().toISOString();
+  const keyDate='lastUpload_'+type+'_date';
+  const keyFile='lastUpload_'+type+'_file';
+  // Delete existing meta entries for this type then re-insert
+  await sb('DELETE','admin_config?type=eq.'+keyDate).catch(()=>{});
+  await sb('DELETE','admin_config?type=eq.'+keyFile).catch(()=>{});
+  await dbInsert('admin_config',[
+    {type:keyDate,value1:now,value2:'',updated_by:curUser.u,updated_at:now},
+    {type:keyFile,value1:filename,value2:'',updated_by:curUser.u,updated_at:now}
+  ]).catch(()=>{});
+}
+
+function updateUploadMeta(){
+  // Read from S config (already loaded) and update display
+  const cfg=S._rawConfig||[];
+  const get=(key)=>{const r=cfg.find(c=>c.type===key);return r?r.value1:'—';};
+  const ordDate=get('lastUpload_orders_date');
+  const ordFile=get('lastUpload_orders_file');
+  const prdDate=get('lastUpload_products_date');
+  const prdFile=get('lastUpload_products_file');
+  const fmtMeta=d=>d&&d!=='—'?new Date(d).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}):d;
+  document.getElementById('adm-orders-last-date').textContent=fmtMeta(ordDate);
+  document.getElementById('adm-orders-last-file').textContent=ordFile;
+  document.getElementById('adm-prods-last-date').textContent=fmtMeta(prdDate);
+  document.getElementById('adm-prods-last-file').textContent=prdFile;
+}
+
+function confirmClearData(){
+  document.getElementById('clear-confirm-inp').value='';
+  document.getElementById('clear-modal').style.display='block';
+}
+async function executeDataClear(){
+  const val=document.getElementById('clear-confirm-inp').value.trim();
+  if(val!=='DELETE'){notif('⚠ Type DELETE in capitals to confirm');return;}
+  closeModal('clear-modal');
+  showLoader('Deleting all data…');
+  try{
+    // Delete all orders and products (keep config/users/activity)
+    await sb('DELETE','products?id=neq.00000000-0000-0000-0000-000000000000');
+    await sb('DELETE','orders?id=neq.00000000-0000-0000-0000-000000000000');
+    logActivity('admin','Deleted ALL orders and products data');
+    hideLoader();
+    notif('✅ All data deleted successfully');
+    await loadAllData();
+  }catch(e){
+    hideLoader();
+    notif('❌ Delete failed: '+e.message);
+  }
+}
+
 // Send rows in chunks of 100 (Supabase handles larger payloads than Apps Script)
 async function sendInChunks(table,rows,ulog){
   const CHUNK=100;
@@ -778,7 +1064,7 @@ async function doModalUpload(){
         placed_on:r.Placed_On,payment:r.Payment,source:r.Source,status:r.Status,
         total_sales:r.Total_Sales,other_details:r.Other_Details,scheduled:r.Scheduled,
         city:r.City,customer_type:r.Customer_Type,is_first_order:r.IsFirstOrder,
-        year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str
+        year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str,order_date_iso:r.Order_Date_ISO
       }));
       const res=await sendInChunks('orders',dbRows,ulog);
       ulog(`<span style="color:var(--green)">✅ Complete — ${res.added} rows processed</span>`);
@@ -851,7 +1137,8 @@ function processOrdersWB(wb,log){
       Scheduled:String(r['Scheduled']||'').trim(),
       City:city,Customer_Type:custType,IsFirstOrder:isFirst,
       Year:od?od.getFullYear():null,Month:od?od.getMonth()+1:null,
-      Order_Date_Str:od?fmtDate(od):'—'
+      Order_Date_Str:od?fmtDate(od):'—',
+      Order_Date_ISO:od?toISODate(od):null
     });
   });
   if(removed>0)log(`🗑 Removed ${removed} test records`);
@@ -891,6 +1178,7 @@ function parseRawDate(s){
   const d=new Date(s);return isNaN(d)?null:d;
 }
 function fmtDate(d){return d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';}
+function toISODate(d){if(!d)return null;const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}
 function normPayment(p){const l=p.toLowerCase();if(l==='cod'||l==='cash on delivery')return'Cash on Delivery';if(l.includes('online'))return'Online Payment';if(l.includes('credit')||l.includes('debit'))return'Card';return p;}
 function detectCity(addr){
   if(S.manualCities[addr])return S.manualCities[addr];
@@ -909,6 +1197,126 @@ function getUniqueDays(orders){return Math.max(1,new Set(orders.filter(o=>o.Orde
 function logActivity(type,msg){
   if(!curUser)return;
   dbInsert('activity_log',[{username:curUser.u,type,message:msg,timestamp:new Date().toISOString()}]).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════════
+// QUICK NAV
+// ═══════════════════════════════════════════════
+function buildQuickNav(){
+  const years=[...new Set(S.orders.filter(o=>o.Year).map(o=>o.Year))].sort();
+  if(!years.length)return;
+
+  // Render year buttons
+  const yEl=document.getElementById('qnav-years');
+  if(!yEl)return;
+  yEl.innerHTML=years.map(y=>`<button class="qnav-year ${qnavState.year===y?'qy-active':''}" onclick="qnavSetYear(${y})">${y}</button>`).join('');
+
+  // Render month buttons for active year (or all years if none selected)
+  renderQNavMonths();
+}
+
+function renderQNavMonths(){
+  const mEl=document.getElementById('qnav-months');
+  if(!mEl)return;
+  const activeYear=qnavState.year;
+  // Get months available for selected year
+  const availMonths=[...new Set(
+    S.orders.filter(o=>o.Year&&(!activeYear||o.Year===activeYear)&&o.Month)
+    .map(o=>o.Month)
+  )].sort((a,b)=>a-b);
+
+  mEl.innerHTML=availMonths.map(m=>`
+    <button class="qnav-month ${qnavState.month===m&&qnavState.year===activeYear?'qm-active':''}"
+      onclick="qnavSetMonth(${m})">${MONTHS[m-1]}</button>`).join('');
+}
+
+function qnavAll(){
+  qnavState={year:null,month:null,mode:'all'};
+  // Clear date range inputs
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  // Re-check all years and months
+  fSt.years=new Set(_avail.years);
+  fSt.months=new Set(_avail.months);
+  // Update UI
+  document.getElementById('qnav-all').classList.add('active');
+  buildQuickNav();
+  applyFilters();
+}
+
+function qnavSetYear(year){
+  qnavState={year,month:null,mode:'year'};
+  // Clear date range
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  // Set year filter, all months for that year
+  fSt.years=new Set([year]);
+  fSt.months=new Set(); // will be set by rebuildDynamicFilters
+  document.getElementById('qnav-all').classList.remove('active');
+  buildQuickNav();
+  rebuildDynamicFilters();
+  applyFilters();
+}
+
+function qnavSetMonth(month){
+  if(!qnavState.year){
+    // If no year selected, default to most recent year that has this month
+    const yr=Math.max(...S.orders.filter(o=>o.Month===month&&o.Year).map(o=>o.Year));
+    qnavState.year=yr;
+    fSt.years=new Set([yr]);
+  }
+  qnavState.month=month;
+  qnavState.mode='month';
+  // Clear date range
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  // Set exact month filter
+  fSt.months=new Set([month]);
+  document.getElementById('qnav-all').classList.remove('active');
+  buildQuickNav();
+  applyFilters();
+}
+
+function qnavStep(dir){
+  // Step forward/backward one month
+  const allMonthYear=[];
+  const years=[...new Set(S.orders.filter(o=>o.Year).map(o=>o.Year))].sort();
+  years.forEach(y=>{
+    const months=[...new Set(S.orders.filter(o=>o.Year===y&&o.Month).map(o=>o.Month))].sort((a,b)=>a-b);
+    months.forEach(m=>allMonthYear.push({y,m}));
+  });
+  if(!allMonthYear.length)return;
+
+  const curY=qnavState.year||(dir>0?allMonthYear[0].y:allMonthYear[allMonthYear.length-1].y);
+  const curM=qnavState.month||(dir>0?allMonthYear[0].m:allMonthYear[allMonthYear.length-1].m);
+  const curIdx=allMonthYear.findIndex(x=>x.y===curY&&x.m===curM);
+  const nextIdx=curIdx+dir;
+  if(nextIdx<0||nextIdx>=allMonthYear.length)return;
+  const next=allMonthYear[nextIdx];
+  qnavState={year:next.y,month:next.m,mode:'month'};
+  fSt.years=new Set([next.y]);
+  fSt.months=new Set([next.m]);
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  document.getElementById('qnav-all').classList.remove('active');
+  buildQuickNav();
+  applyFilters();
+}
+
+// When date range is manually set, clear qnav selection
+function onDateRangeChange(){
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+  if(from||to){
+    // Date range takes priority — clear qnav month/year selection
+    qnavState={year:null,month:null,mode:'daterange'};
+    document.getElementById('qnav-all').classList.remove('active');
+    // Unset month/year checkboxes so they don't conflict
+    fSt.years=new Set(_avail.years);
+    fSt.months=new Set(_avail.months);
+    buildQuickNav();
+  }
+  applyFilters();
 }
 
 // ═══════════════════════════════════════════════
@@ -945,20 +1353,37 @@ function renderCheckList(id,items,checkedSet,fstKey,valType){
 function onChk(fstKey,val,checked,valType){
   const v=valType==='num'?+val:val;
   if(checked)fSt[fstKey].add(v);else fSt[fstKey].delete(v);
+  // Update master checkbox state
+  const idMap={years:'f-years',months:'f-months',cities:'f-cities',statuses:'f-statuses'};
+  const masterId='master-'+fstKey;
+  const masterEl=document.getElementById(masterId);
+  if(masterEl){
+    const avail=_avail[fstKey]||[];
+    masterEl.checked=avail.length>0&&fSt[fstKey].size===avail.length;
+    masterEl.indeterminate=fSt[fstKey].size>0&&fSt[fstKey].size<avail.length;
+  }
   if(fstKey==='years')rebuildDynamicFilters();
   applyFilters();
 }
-function uncheckAll(id){
+function masterCheck(id,checked){
   const map={'f-years':'years','f-months':'months','f-cities':'cities','f-statuses':'statuses'};
   const key=map[id];if(!key)return;
-  fSt[key]=new Set();
   const avail=_avail[key]||[];
   const valType=key==='cities'||key==='statuses'?'str':'num';
   const labelFn=key==='months'?(v=>MONTHS[v-1]):(v=>String(v));
-  renderCheckList(id,avail.map(v=>({val:v,label:labelFn(v)})),new Set(),key,valType);
+  if(checked){
+    // Check all — restore all available items
+    fSt[key]=new Set(valType==='num'?avail.map(Number):avail);
+  }else{
+    // Uncheck all — empty set
+    fSt[key]=new Set();
+  }
+  renderCheckList(id,avail.map(v=>({val:v,label:labelFn(v)})),fSt[key],key,valType);
   if(key==='years')rebuildDynamicFilters();
   applyFilters();
 }
+// Keep uncheckAll as alias for backward compat
+function uncheckAll(id){masterCheck(id,false);}
 function setCtype(v){fSt.ctype=v;['all','B2B','B2C'].forEach(k=>document.getElementById('fc-'+k.toLowerCase()).classList.remove('on'));document.getElementById(v==='all'?'fc-all':v==='B2B'?'fc-b2b':'fc-b2c').classList.add('on');applyFilters();}
 function setNC(v){fSt.nc=v;document.getElementById('fn-all').classList.toggle('on',v==='all');document.getElementById('fn-new').classList.toggle('on',v==='new');applyFilters();}
 function resetFilters(){
@@ -973,6 +1398,14 @@ function applyFilters(){
   const from=document.getElementById('f-from').value?new Date(document.getElementById('f-from').value):null;
   const to=document.getElementById('f-to').value?new Date(document.getElementById('f-to').value):null;
   const csrch=(document.getElementById('f-cusr')?.value||'').toLowerCase().trim();
+  // Sync master checkboxes
+  ['years','months','cities','statuses'].forEach(key=>{
+    const el=document.getElementById('master-'+key);
+    if(!el)return;
+    const avail=_avail[key]||[];
+    el.checked=avail.length>0&&fSt[key].size===avail.length;
+    el.indeterminate=fSt[key].size>0&&fSt[key].size<avail.length;
+  });
   filtered=S.orders.filter(o=>{
     if(fSt.years.size>0&&!fSt.years.has(o.Year))return false;
     if(fSt.months.size>0&&!fSt.months.has(o.Month))return false;
@@ -1036,7 +1469,23 @@ function renderDashboard(pinnedCust){
 // ═══════════════════════════════════════════════
 // DRILL DOWN
 // ═══════════════════════════════════════════════
-function drillCust(cust){selCust=cust;selOrder=null;renderDashboard(cust);renderOrdersDrill();showCustInfo(cust);}
+function drillCust(cust){
+  if(selCust===cust){
+    // Clicking same customer again — deselect and return to default view
+    selCust=null;selOrder=null;
+    renderDashboard(); // no pinned customer = default KPIs
+    // Clear orders and items panels
+    document.getElementById('title-orders').textContent='Orders';
+    document.getElementById('body-orders').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">Click a customer to see their orders</td></tr>';
+    document.getElementById('body-items').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">Click an order to see items</td></tr>';
+    document.getElementById('foot-items').innerHTML='';
+    document.getElementById('title-items').textContent='Order Items';
+    document.getElementById('cust-info-box').innerHTML='<div class="hint" style="padding:20px 0;text-align:center;">Click a customer to see details</div>';
+  }else{
+    selCust=cust;selOrder=null;
+    renderDashboard(cust);renderOrdersDrill();showCustInfo(cust);
+  }
+}
 function renderOrdersDrill(){
   const orders=filtered.filter(o=>o.Customer===selCust).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
   document.getElementById('title-orders').textContent=selCust||'Orders';
@@ -1069,10 +1518,43 @@ function drillOrder(oid){
 }
 function showCustInfo(cust){
   const custOrds=filtered.filter(o=>o.Customer===cust);
-  const totalSales=custOrds.reduce((s,o)=>s+o.Total_Sales,0);
-  const cities=[...new Set(custOrds.map(o=>o.City))].join(', ');
   const type=custOrds[0]?.Customer_Type||'—';
-  document.getElementById('cust-info-box').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;"><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)">${esc(cust)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${infoRow('Type',`<span class="bdg ${type==='B2B'?'b-b2b':'b-b2c'}">${type}</span>`)}${infoRow('City',esc(cities))}${infoRow('Phone',esc(custOrds[0]?.Phone||'—'))}${infoRow('Orders',custOrds.length)}${infoRow('Total Sales','PKR '+fmtFull(totalSales))}${infoRow('Avg Order','PKR '+fmt(totalSales/Math.max(1,custOrds.length)))}</div></div>`;
+  const phone=custOrds[0]?.Phone||'—';
+  const addr=custOrds[0]?.Address||'—';
+  const city=custOrds[0]?.City||'—';
+  document.getElementById('cust-info-box').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3">${esc(cust)}</div>
+      <div><span class="bdg ${type==='B2B'?'b-b2b':'b-b2c'}">${type}</span></div>
+      ${infoRow('Phone',esc(phone))}
+      ${infoRow('City',esc(city))}
+      ${infoRow('Address','<span style="font-size:10px;line-height:1.4;white-space:normal">'+esc(addr)+'</span>')}
+    </div>`;
+}
+
+function showCustTabInfo(cust){
+  const custOrds=filtered.filter(o=>o.Customer===cust);
+  if(!custOrds.length)return;
+  const type=custOrds[0]?.Customer_Type||'—';
+  const phone=custOrds[0]?.Phone||'—';
+  const addr=custOrds[0]?.Address||'—';
+  const city=custOrds[0]?.City||'—';
+  const totalSales=custOrds.reduce((s,o)=>s+o.Total_Sales,0);
+  const totalOrders=custOrds.length;
+  const avgOrder=totalSales/Math.max(1,totalOrders);
+  const firstOrder=custOrds.filter(o=>o.IsFirstOrder==='New Customer').length?'New Customer':'Recurring';
+  document.getElementById('cust-tab-info-box').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3">${esc(cust)}</div>
+      <div><span class="bdg ${type==='B2B'?'b-b2b':'b-b2c'}">${type}</span></div>
+      ${infoRow('Total Sales','<span style="color:var(--accent);font-weight:600">PKR '+fmtFull(totalSales)+'</span>')}
+      ${infoRow('Total Orders',totalOrders)}
+      ${infoRow('Avg Order','PKR '+fmt(avgOrder))}
+      ${infoRow('Status',firstOrder)}
+      ${infoRow('Phone',esc(phone))}
+      ${infoRow('City',esc(city))}
+      ${infoRow('Address','<span style="font-size:10px;line-height:1.4;white-space:normal">'+esc(addr)+'</span>')}
+    </div>`;
 }
 function infoRow(k,v){return`<div><div style="font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:2px">${k}</div><div style="font-size:12px;color:var(--text)">${v}</div></div>`;}
 
@@ -1095,7 +1577,12 @@ function renderCustomer(pinnedCust){
   charts.top10=new Chart(document.getElementById('chart-top10'),{type:'bar',data:{labels:top10.map(c=>c.Customer.length>14?c.Customer.slice(0,14)+'…':c.Customer),datasets:[{data:top10.map(c=>c.Sales),backgroundColor:'rgba(249,115,22,.8)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
   const frag=document.createDocumentFragment();
   let totO=0,totS=0;
-  custs.forEach((c,i)=>{totO+=c.Orders;totS+=c.Sales;const tr=document.createElement('tr');tr.className='r'+(selRankedCust===c.Customer?' sel':'');tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;tr.onclick=()=>{selRankedCust=selRankedCust===c.Customer?null:c.Customer;renderCustomer(selRankedCust||undefined);};frag.appendChild(tr);});
+  custs.forEach((c,i)=>{totO+=c.Orders;totS+=c.Sales;const tr=document.createElement('tr');tr.className='r'+(selRankedCust===c.Customer?' sel':'');tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;tr.onclick=()=>{
+  selRankedCust=selRankedCust===c.Customer?null:c.Customer;
+  renderCustomer(selRankedCust||undefined);
+  if(selRankedCust)showCustTabInfo(selRankedCust);
+  else document.getElementById('cust-tab-info-box').innerHTML='<div class="hint" style="padding:20px 0;text-align:center;">Click a customer to see details</div>';
+};frag.appendChild(tr);});
   const tb=document.getElementById('body-ranked');tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -1187,7 +1674,7 @@ function updateMeta(){
 // ═══════════════════════════════════════════════
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
-  renderAdminLists();buildCityAssign();
+  renderAdminLists();buildCityAssign();updateUploadMeta();
   document.getElementById('admin-overlay').style.display='block';
 }
 async function showSuper(){
