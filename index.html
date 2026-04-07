@@ -1096,7 +1096,7 @@ async function doModalUpload(){
 function readXLSX(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
-    reader.onload=e=>{try{resolve(XLSX.read(e.target.result,{type:'array',cellDates:true}));}catch(err){reject(err);}};
+    reader.onload=e=>{try{resolve(XLSX.read(e.target.result,{type:'array',raw:true,cellDates:false}));}catch(err){reject(err);}};
     reader.onerror=()=>reject(new Error('File read failed'));
     reader.readAsArrayBuffer(file);
   });
@@ -1172,10 +1172,19 @@ function processProductsWB(wb,log){
 // HELPERS
 // ═══════════════════════════════════════════════
 function parseRawDate(s){
-  if(!s)return null;
-  const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m)return new Date(+m[3],+m[1]-1,+m[2]);
-  const d=new Date(s);return isNaN(d)?null:d;
+  if(!s||s==='—')return null;
+  s=String(s).trim();
+  // Format 1: MM/DD/YYYY HH:MM AM/PM (Tezz Delivery export format)
+  const m1=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m1){const d=new Date(+m1[3],+m1[1]-1,+m1[2]);return isNaN(d.getTime())?null:d;}
+  // Format 2: YYYY-MM-DD (ISO)
+  const m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m2){const d=new Date(+m2[1],+m2[2]-1,+m2[3]);return isNaN(d.getTime())?null:d;}
+  // Format 3: DD Mon YYYY e.g. "7 Sep 2023"
+  const months2={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m3=s.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+  if(m3&&months2[m3[2]]!==undefined){const d=new Date(+m3[3],months2[m3[2]],+m3[1]);return isNaN(d.getTime())?null:d;}
+  return null;
 }
 function fmtDate(d){return d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';}
 function toISODate(d){if(!d)return null;const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}
