@@ -778,14 +778,16 @@ async function loadAllData(){
       Year:parseInt(o.year)||null,Month:parseInt(o.month)||null,
       Order_Date_Str:o.order_date_str||'—',
       Order_Date:(()=>{
-        if(o.order_date_iso&&o.order_date_iso!=='null'){
-          const p=o.order_date_iso.split('-');
-          if(p.length===3)return new Date(+p[0],+p[1]-1,+p[2]);
+        // Use ISO date if available - most reliable
+        if(o.order_date_iso&&o.order_date_iso!=='null'&&o.order_date_iso!==''){
+          const p=String(o.order_date_iso).split('-');
+          if(p.length===3){const d=new Date(+p[0],+p[1]-1,+p[2]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
         }
+        // Fallback to order_date_str
         if(o.order_date_str&&o.order_date_str!=='—'){
           const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-          const m=o.order_date_str.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
-          if(m&&mo[m[2]]!==undefined)return new Date(+m[3],mo[m[2]],+m[1]);
+          const m=String(o.order_date_str).match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+          if(m&&mo[m[2]]!==undefined){const d=new Date(+m[3],mo[m[2]],+m[1]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
         }
         return null;
       })()
@@ -1617,13 +1619,24 @@ async function renderSuperLog(){
 // ═══════════════════════════════════════════════
 function parseRawDate(s){
   if(!s||s==='—')return null;s=String(s).trim();
+  // Format 1: MM/DD/YYYY (Tezz Delivery export)
   const m1=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m1){const d=new Date(+m1[3],+m1[1]-1,+m1[2]);return isNaN(d.getTime())?null:d;}
+  if(m1){const d=new Date(+m1[3],+m1[1]-1,+m1[2]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
+  // Format 2: YYYY-MM-DD (ISO)
   const m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if(m2){const d=new Date(+m2[1],+m2[2]-1,+m2[3]);return isNaN(d.getTime())?null:d;}
+  if(m2){const d=new Date(+m2[1],+m2[2]-1,+m2[3]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
+  // Format 3: DD Mon YYYY e.g. "7 Sep 2023"
   const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
   const m3=s.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
-  if(m3&&mo[m3[2]]!==undefined){const d=new Date(+m3[3],mo[m3[2]],+m3[1]);return isNaN(d.getTime())?null:d;}
+  if(m3&&mo[m3[2]]!==undefined){const d=new Date(+m3[3],mo[m3[2]],+m3[1]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
+  // Format 4: Excel serial number (numeric string like "46400")
+  const serial=parseFloat(s);
+  if(!isNaN(serial)&&serial>40000&&serial<60000){
+    // Excel serial: days since Dec 30, 1899
+    const excelEpoch=new Date(1899,11,30);
+    const d=new Date(excelEpoch.getTime()+serial*86400000);
+    if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;
+  }
   return null;
 }
 function fmtDate(d){return d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';}
