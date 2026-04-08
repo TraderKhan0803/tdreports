@@ -271,6 +271,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="tab" onclick="switchTab('customer',this)">Customer</div>
     <div class="tab" onclick="switchTab('product',this)">Product</div>
     <div class="tab" onclick="switchTab('productsearch',this)">Product Search</div>
+    <div class="tab" onclick="switchTab('reports',this)">Reports</div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta">No data</span>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
@@ -468,6 +469,72 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       </div>
     </div>
 
+
+    <!-- ═══ REPORTS ═══ -->
+    <div class="tab-panel" id="tab-reports" style="overflow-y:auto;padding:14px 18px;">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+        <button class="dbtn on" id="rpt-btn-monthly" onclick="setReport('monthly')">Monthly Sales</button>
+        <button class="dbtn" id="rpt-btn-customers" onclick="setReport('customers')">Customer Summary</button>
+        <button class="dbtn" id="rpt-btn-atrisk" onclick="setReport('atrisk')">At-Risk Customers</button>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button class="dbtn on" id="rpt-type-all" onclick="setRptType('all')">All</button>
+          <button class="dbtn" id="rpt-type-b2b" onclick="setRptType('B2B')">B2B</button>
+          <button class="dbtn" id="rpt-type-b2c" onclick="setRptType('B2C')">B2C</button>
+          <div style="width:1px;height:16px;background:var(--bdr);"></div>
+          <button onclick="downloadReport()" style="padding:4px 14px;background:var(--grn);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
+        </div>
+      </div>
+      <!-- Monthly Sales -->
+      <div id="rpt-monthly">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+          <button class="dbtn on" id="rpt-metric-sales" onclick="setRptMetric('sales')">Sales</button>
+          <button class="dbtn" id="rpt-metric-orders" onclick="setRptMetric('orders')">Orders</button>
+          <button class="dbtn" id="rpt-metric-avg" onclick="setRptMetric('avg')">Avg Order</button>
+        </div>
+        <div class="chart-box mb12"><div style="position:relative;height:180px;"><canvas id="rpt-chart" role="img" aria-label="Monthly sales chart">Monthly data.</canvas></div></div>
+        <div class="kpi-row mb12" id="rpt-kpis"></div>
+        <div class="tw"><div style="overflow-x:auto;"><table class="dt"><thead><tr id="rpt-thead"></tr></thead><tbody id="rpt-tbody"></tbody><tfoot id="rpt-tfoot"></tfoot></table></div></div>
+      </div>
+      <!-- Customer Summary -->
+      <div id="rpt-customers" style="display:none;">
+        <div class="kpi-row mb12" id="rpt-cust-kpis"></div>
+        <div class="tw"><div style="overflow-x:auto;"><table class="dt" id="rpt-cust-table">
+          <thead><tr>
+            <th onclick="sortRptCust('Customer')">Customer ↕</th><th>Type</th><th>City</th>
+            <th onclick="sortRptCust('FirstOrder')" style="text-align:right">First Order ↕</th>
+            <th onclick="sortRptCust('LastOrder')" style="text-align:right">Last Order ↕</th>
+            <th onclick="sortRptCust('Orders')" style="text-align:right">Orders ↕</th>
+            <th onclick="sortRptCust('Sales')" style="text-align:right">Total Sales ↕</th>
+            <th onclick="sortRptCust('AvgOrder')" style="text-align:right">Avg Order ↕</th>
+          </tr></thead>
+          <tbody id="rpt-cust-tbody"></tbody>
+          <tfoot id="rpt-cust-tfoot"></tfoot>
+        </table></div></div>
+      </div>
+      <!-- At-Risk -->
+      <div id="rpt-atrisk" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">Inactive for:</span>
+          <button class="dbtn on" id="risk-30" onclick="setRisk(30)">30 days</button>
+          <button class="dbtn" id="risk-60" onclick="setRisk(60)">60 days</button>
+          <button class="dbtn" id="risk-90" onclick="setRisk(90)">90 days</button>
+          <span id="risk-count" style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;"></span>
+        </div>
+        <div class="kpi-row mb12" id="rpt-risk-kpis"></div>
+        <div class="tw"><div style="overflow-x:auto;"><table class="dt">
+          <thead><tr>
+            <th>Customer</th><th>Type</th>
+            <th style="text-align:right">Last Order</th>
+            <th style="text-align:right">Days Inactive</th>
+            <th style="text-align:right">Total Orders</th>
+            <th style="text-align:right">Total Sales</th>
+            <th style="text-align:right">Avg Order</th>
+          </tr></thead>
+          <tbody id="rpt-risk-tbody"></tbody>
+        </table></div></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /app -->
 
@@ -528,6 +595,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       <div class="up-log" id="adm-upload-log"></div>
       <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
         <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">⬆ Upload Selected Files</button>
+        <button onclick="recalcNewCustomers()" title="Re-runs New/Recurring calculation in chronological order across all data" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">↺ Recalc New Customers</button>
         <div style="flex:1;"></div>
         <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
       </div>
@@ -554,6 +622,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
         <div class="adm-list" id="list-tests"></div>
       </div>
     </div>
+    <!-- Customer Linking -->
+    <div class="adm-card mb12" style="margin-top:12px;">
+      <div class="adm-title">🔗 Customer Linking</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Link duplicate customer names to a single primary name. All data aggregates under the primary.</div>
+      <div class="adm-inp-row" style="margin-bottom:8px;">
+        <input class="adm-inp" id="link-search" placeholder="Search customer name…" oninput="searchLinkCustomers()" style="flex:2;">
+        <div style="flex:1;font-size:11px;color:var(--t3);padding:8px 0;">Type to search existing customers</div>
+      </div>
+      <div id="link-search-results" style="max-height:120px;overflow-y:auto;margin-bottom:10px;"></div>
+      <div id="link-builder" style="display:none;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Primary name (shown in all reports):</div>
+        <input class="adm-inp" id="link-primary" placeholder="Primary customer name" style="width:100%;margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:4px;">Aliases (these will be merged into the primary):</div>
+        <div id="link-aliases" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:24px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input class="adm-inp" id="link-alias-inp" placeholder="Add alias…" style="flex:1;" onkeydown="if(event.key==='Enter')addLinkAlias()">
+          <button class="adm-add" onclick="addLinkAlias()">+ Alias</button>
+          <button class="adm-add" onclick="saveLinkGroup()" style="background:var(--grn);">Save Link</button>
+          <button onclick="cancelLinkBuilder()" style="padding:7px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
+      <div class="adm-list" id="list-links" style="max-height:200px;"></div>
+    </div>
+
     <div class="adm-card mb12" style="margin-top:12px;">
       <div class="adm-title">🗺 Unrecognised Addresses — Assign City</div>
       <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">These addresses couldn't be auto-matched. Enter city name and save.</div>
@@ -810,6 +903,7 @@ async function loadAllData(){
     // Load panel layout for this user
     const layoutCfg=config.find(r=>r.type==='panelLayout_'+curUser?.u);
     if(layoutCfg&&layoutCfg.value1){try{panelLayout=JSON.parse(layoutCfg.value1);}catch(e){panelLayout={};}}
+    await loadLinks();
     hideLoader();
     launchApp();
   }catch(e){hideLoader();notif('❌ Failed to load: '+e.message);console.error(e);}
@@ -990,6 +1084,7 @@ function applyFilters(){
   const at=document.querySelector('.tab-panel.active')?.id;
   if(at==='tab-customer')renderCustomer();
   if(at==='tab-product')renderProduct();
+  if(at==='tab-reports')renderReport();
 }
 
 // ═══════════════════════════════════════════════
@@ -1013,8 +1108,10 @@ function kpi(l,v,c='',s=''){return`<div class="kpi ${c}"><div class="kpi-lbl">${
 function buildCustMap(orders){
   const m={};
   orders.forEach(o=>{
-    if(!m[o.Customer])m[o.Customer]={Customer:o.Customer,City:o.City,Type:o.Customer_Type,Orders:0,Sales:0,IsNew:o.IsFirstOrder==='New Customer',Address:o.Address,Phone:o.Phone};
-    m[o.Customer].Orders++;m[o.Customer].Sales+=o.Total_Sales;
+    const cn=resolveCustomerName(o.Customer);
+    if(!m[cn])m[cn]={Customer:cn,City:o.City,Type:o.Customer_Type,Orders:0,Sales:0,IsNew:o.IsFirstOrder==='New Customer',Address:o.Address,Phone:o.Phone};
+    m[cn].Orders++;m[cn].Sales+=o.Total_Sales;
+    if(o.IsFirstOrder==='New Customer')m[cn].IsNew=true;
   });
   return Object.values(m);
 }
@@ -1120,7 +1217,7 @@ function showCustInfo(cust){
 function renderCustomer(pinnedCust){
   const O=pinnedCust?filtered.filter(o=>o.Customer===pinnedCust):filtered;
   const custMap={};
-  O.forEach(o=>{if(!custMap[o.Customer])custMap[o.Customer]={Customer:o.Customer,Type:o.Customer_Type,Orders:0,Sales:0,IsNew:o.IsFirstOrder==='New Customer',Address:o.Address,Phone:o.Phone};custMap[o.Customer].Orders++;custMap[o.Customer].Sales+=o.Total_Sales;});
+  O.forEach(o=>{const cn=resolveCustomerName(o.Customer);if(!custMap[cn])custMap[cn]={Customer:cn,Type:o.Customer_Type,Orders:0,Sales:0,IsNew:o.IsFirstOrder==='New Customer',Address:o.Address,Phone:o.Phone};custMap[cn].Orders++;custMap[cn].Sales+=o.Total_Sales;if(o.IsFirstOrder==='New Customer')custMap[cn].IsNew=true;});
   const custs=Object.values(custMap).sort((a,b)=>b.Sales-a.Sales);
   const totalSales=O.reduce((s,o)=>s+o.Total_Sales,0);
   const days=getUniqueDays(O);
@@ -1349,7 +1446,7 @@ function updateMeta(){
 // ═══════════════════════════════════════════════
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
-  renderAdminLists();buildCityAssign();updateUploadMeta();
+  renderAdminLists();buildCityAssign();updateUploadMeta();renderLinkList();
   document.getElementById('admin-overlay').style.display='block';
 }
 async function showSuper(){
@@ -1418,13 +1515,7 @@ async function rmB2B(i){
     applyFilters();
   }catch(e){notif('❌ '+e.message);}
 }
-async function addTestFilter(){
-  const c=document.getElementById('inp-tc').value.trim();const s=document.getElementById('inp-ts').value.trim();if(!c)return;
-  S.adminTests.push({c:c.toLowerCase(),s:s.toLowerCase()});
-  document.getElementById('inp-tc').value='';document.getElementById('inp-ts').value='';
-  renderAdminLists();try{await saveConfig();notif(`Test filter added for "${c}"`);}catch(e){notif('❌ '+e.message);}
-}
-async function rmTest(i){S.adminTests.splice(i,1);renderAdminLists();try{await saveConfig();}catch(e){notif('❌ '+e.message);}}
+// addTestFilter and rmTest moved to new_functions block below
 
 function buildCityAssign(){
   const el=document.getElementById('list-cities');
@@ -1695,6 +1786,497 @@ function sbadge(s){const m={delivered:'b-del',cancelled:'b-can',assigned:'b-asg'
 function notif(msg){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);}
 function getUniqueDays(orders){return Math.max(1,new Set(orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.toDateString())).size);}
 function logActivity(type,msg){if(!curUser)return;dbInsert('activity_log',[{username:curUser.u,type,message:msg,timestamp:new Date().toISOString()}]).catch(()=>{});}
+
+// ═══════════════════════════════════════════════
+// CUSTOMER LINKS
+// ═══════════════════════════════════════════════
+let S_links=[]; // [{primary,aliases:[]}]
+let linkAliasesTemp=[];
+
+async function loadLinks(){
+  try{
+    const rows=await dbGet('customer_links','select=*&order=primary_name.asc');
+    // Group by primary_name
+    const map={};
+    rows.forEach(r=>{
+      if(!map[r.primary_name])map[r.primary_name]={primary:r.primary_name,aliases:[]};
+      map[r.primary_name].aliases.push(r.alias);
+    });
+    S_links=Object.values(map);
+  }catch(e){S_links=[];}
+}
+
+function applyCustomerLinks(name){
+  // Returns primary name if this name is an alias, otherwise returns as-is
+  for(const link of S_links){
+    if(link.aliases.includes(name))return link.primary;
+    if(link.primary===name)return name;
+  }
+  return name;
+}
+
+function resolveCustomerName(name){return applyCustomerLinks(name);}
+
+function renderLinkList(){
+  const el=document.getElementById('list-links');
+  if(!S_links.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px">No links defined yet</div>';return;}
+  el.innerHTML=S_links.map((l,i)=>`
+    <div class="adm-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="display:flex;width:100%;align-items:center;justify-content:space-between;">
+        <span style="color:var(--txt);font-weight:600;">${esc(l.primary)}</span>
+        <button class="rm-btn" onclick="deleteLink('${esc(l.primary)}')">✕ Delink</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        ${l.aliases.map(a=>`<span style="background:var(--sur2);border:1px solid var(--bdr);border-radius:10px;padding:1px 8px;font-size:10px;color:var(--t2);">${esc(a)}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function searchLinkCustomers(){
+  const q=document.getElementById('link-search').value.trim().toLowerCase();
+  const el=document.getElementById('link-search-results');
+  if(!q){el.innerHTML='';return;}
+  const custMap={};
+  S.orders.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!custMap[n])custMap[n]=0;custMap[n]++;});
+  const matches=Object.keys(custMap).filter(c=>c.toLowerCase().includes(q)).sort().slice(0,15);
+  if(!matches.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px">No customers found</div>';return;}
+  el.innerHTML=matches.map(c=>`<div onclick="selectLinkCustomer('${esc(c)}')" style="padding:5px 9px;cursor:pointer;font-size:12px;border-radius:4px;color:var(--t2);" onmouseover="this.style.background='var(--sur2)'" onmouseout="this.style.background=''">${esc(c)} <span style="color:var(--t3);font-size:10px">(${custMap[c]} orders)</span></div>`).join('');
+}
+
+function selectLinkCustomer(name){
+  document.getElementById('link-search').value='';
+  document.getElementById('link-search-results').innerHTML='';
+  // Pre-fill builder
+  const existing=S_links.find(l=>l.primary===name||l.aliases.includes(name));
+  if(existing){
+    document.getElementById('link-primary').value=existing.primary;
+    linkAliasesTemp=[...existing.aliases];
+  }else{
+    document.getElementById('link-primary').value=name;
+    linkAliasesTemp=[];
+  }
+  document.getElementById('link-builder').style.display='block';
+  renderLinkAliases();
+}
+
+function renderLinkAliases(){
+  document.getElementById('link-aliases').innerHTML=linkAliasesTemp.map((a,i)=>`<span style="background:var(--sur2);border:1px solid var(--bdr);border-radius:10px;padding:2px 8px;font-size:11px;color:var(--t2);display:flex;align-items:center;gap:4px;">${esc(a)}<button onclick="removeLinkAlias(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button></span>`).join('');
+}
+
+function addLinkAlias(){
+  const inp=document.getElementById('link-alias-inp');
+  const v=inp.value.trim();
+  if(!v||linkAliasesTemp.includes(v))return;
+  linkAliasesTemp.push(v);
+  inp.value='';
+  renderLinkAliases();
+}
+
+function removeLinkAlias(i){linkAliasesTemp.splice(i,1);renderLinkAliases();}
+
+function cancelLinkBuilder(){
+  document.getElementById('link-builder').style.display='none';
+  document.getElementById('link-primary').value='';
+  linkAliasesTemp=[];
+}
+
+async function saveLinkGroup(){
+  const primary=document.getElementById('link-primary').value.trim();
+  if(!primary||!linkAliasesTemp.length){notif('⚠ Set a primary name and at least one alias');return;}
+  try{
+    // Delete existing links for this primary
+    await sb('DELETE','customer_links?primary_name=eq.'+encodeURIComponent(primary)).catch(()=>{});
+    // Also delete any rows where aliases are primary elsewhere
+    for(const alias of linkAliasesTemp){
+      await sb('DELETE','customer_links?alias=eq.'+encodeURIComponent(alias)).catch(()=>{});
+    }
+    // Insert new rows
+    const now=new Date().toISOString();
+    const rows=linkAliasesTemp.map(a=>({alias:a,primary_name:primary,created_by:curUser.u,created_at:now}));
+    await dbInsert('customer_links',rows);
+    await loadLinks();
+    renderLinkList();
+    cancelLinkBuilder();
+    notif(`✓ Linked ${linkAliasesTemp.length} alias(es) to "${primary}"`);
+    logActivity('admin',`Created customer link: ${primary} ← ${linkAliasesTemp.join(', ')}`);
+    applyFilters();
+  }catch(e){notif('❌ '+e.message);}
+}
+
+async function deleteLink(primary){
+  try{
+    await sb('DELETE','customer_links?primary_name=eq.'+encodeURIComponent(primary));
+    await loadLinks();
+    renderLinkList();
+    notif(`✓ Delinked "${primary}"`);
+    logActivity('admin',`Removed customer link: ${primary}`);
+    applyFilters();
+  }catch(e){notif('❌ '+e.message);}
+}
+
+// ═══════════════════════════════════════════════
+// TEST RULES — DYNAMIC DELETION
+// ═══════════════════════════════════════════════
+async function addTestFilter(){
+  const c=document.getElementById('inp-tc').value.trim();
+  const s=document.getElementById('inp-ts').value.trim();
+  if(!c)return;
+  S.adminTests.push({c:c.toLowerCase(),s:s.toLowerCase()});
+  document.getElementById('inp-tc').value='';document.getElementById('inp-ts').value='';
+  renderAdminLists();
+  try{
+    await saveConfig();
+    // Dynamically delete matching orders from Supabase
+    showLoader('Removing test records…');
+    let deleteQuery='orders?customer=ilike.'+encodeURIComponent(c);
+    if(s)deleteQuery+='&status=eq.'+encodeURIComponent(s.toLowerCase());
+    const res=await fetch(SUPABASE_URL+'/rest/v1/'+deleteQuery,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=representation','Content-Type':'application/json'}
+    });
+    const deleted=await res.json();
+    const count=Array.isArray(deleted)?deleted.length:0;
+    hideLoader();
+    notif(`✓ Test rule added — ${count} matching record(s) deleted`);
+    logActivity('admin',`Added test rule: ${c}${s?' ('+s+')':''} — deleted ${count} records`);
+    await loadAllData();
+  }catch(e){hideLoader();notif('❌ '+e.message);}
+}
+
+async function rmTest(i){
+  S.adminTests.splice(i,1);
+  renderAdminLists();
+  try{await saveConfig();notif('✓ Test rule removed');}catch(e){notif('❌ '+e.message);}
+}
+
+// ═══════════════════════════════════════════════
+// RECALCULATE NEW CUSTOMERS
+// ═══════════════════════════════════════════════
+async function recalcNewCustomers(){
+  showLoader('Recalculating new customers…');
+  try{
+    // Sort all orders by date ascending
+    const sorted=[...S.orders].filter(o=>o.Order_Date).sort((a,b)=>a.Order_Date-b.Order_Date);
+    const seen=new Set();
+    const updates=[]; // {order_id, is_first_order}
+    sorted.forEach(o=>{
+      const key=resolveCustomerName(o.Customer).toLowerCase();
+      const isFirst=!seen.has(key);
+      seen.add(key);
+      const newVal=isFirst?'New Customer':'Recurring Customer';
+      if(o.IsFirstOrder!==newVal)updates.push({order_id:o.Order_ID,is_first_order:newVal});
+    });
+    // Also handle orders without dates
+    S.orders.filter(o=>!o.Order_Date).forEach(o=>{
+      const key=resolveCustomerName(o.Customer).toLowerCase();
+      if(seen.has(key)){if(o.IsFirstOrder!=='Recurring Customer')updates.push({order_id:o.Order_ID,is_first_order:'Recurring Customer'});}
+    });
+    // Send updates in batches
+    const BATCH=50;
+    for(let i=0;i<updates.length;i+=BATCH){
+      const batch=updates.slice(i,i+BATCH);
+      await Promise.all(batch.map(u=>fetch(SUPABASE_URL+'/rest/v1/orders?order_id=eq.'+encodeURIComponent(u.order_id),{
+        method:'PATCH',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({is_first_order:u.is_first_order})
+      })));
+    }
+    hideLoader();
+    notif(`✓ Recalculated — ${updates.length} records updated`);
+    logActivity('admin',`Recalculated new customers: ${updates.length} updates`);
+    await loadAllData();
+  }catch(e){hideLoader();notif('❌ '+e.message);}
+}
+
+// ═══════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════
+let rptReport='monthly',rptType='all',rptMetric='sales',rptRisk=30;
+let rptCustSort={key:'Sales',asc:false};
+let rptChart=null;
+
+function setReport(r){
+  rptReport=r;
+  ['monthly','customers','atrisk'].forEach(x=>{
+    document.getElementById('rpt-'+x).style.display=x===r?'':'none';
+    document.getElementById('rpt-btn-'+x)?.classList.toggle('on',x===r);
+  });
+  renderReport();
+}
+function setRptType(t){
+  rptType=t;
+  ['all','B2B','B2C'].forEach(x=>document.getElementById('rpt-type-'+x.toLowerCase()).classList.toggle('on',x===t));
+  renderReport();
+}
+function setRptMetric(m){
+  rptMetric=m;
+  ['sales','orders','avg'].forEach(x=>document.getElementById('rpt-metric-'+x)?.classList.toggle('on',x===m));
+  renderReport();
+}
+function setRisk(d){
+  rptRisk=d;
+  [30,60,90].forEach(x=>document.getElementById('risk-'+x)?.classList.toggle('on',x===d));
+  renderReport();
+}
+function sortRptCust(key){if(rptCustSort.key===key)rptCustSort.asc=!rptCustSort.asc;else{rptCustSort.key=key;rptCustSort.asc=false;}renderReport();}
+
+function getRptOrders(){
+  return S.orders.filter(o=>rptType==='all'||o.Customer_Type===rptType);
+}
+
+function renderReport(){
+  if(rptReport==='monthly')renderMonthlyReport();
+  else if(rptReport==='customers')renderCustomerSummary();
+  else if(rptReport==='atrisk')renderAtRisk();
+}
+
+function renderMonthlyReport(){
+  const orders=getRptOrders();
+  const years=[...new Set(orders.filter(o=>o.Year).map(o=>o.Year))].sort();
+  const COLORS_RPT={};
+  const palette=['#f97316','#3b82f6','#22c55e','#a855f7','#ef4444'];
+  years.forEach((y,i)=>COLORS_RPT[y]=palette[i%palette.length]);
+
+  // Build data matrix
+  const matrix={};
+  years.forEach(y=>matrix[y]=Array(12).fill(0));
+  orders.forEach(o=>{
+    if(!o.Year||!o.Month)return;
+    const val=rptMetric==='sales'?o.Total_Sales:rptMetric==='orders'?1:0;
+    if(rptMetric!=='avg')matrix[o.Year][o.Month-1]+=val;
+  });
+  // Avg order: calculate separately
+  if(rptMetric==='avg'){
+    const sums={},counts={};
+    years.forEach(y=>{sums[y]=Array(12).fill(0);counts[y]=Array(12).fill(0);});
+    orders.forEach(o=>{if(!o.Year||!o.Month)return;sums[o.Year][o.Month-1]+=o.Total_Sales;counts[o.Year][o.Month-1]++;});
+    years.forEach(y=>matrix[y]=matrix[y].map((_,i)=>counts[y][i]?Math.round(sums[y][i]/counts[y][i]):0));
+  }
+
+  // Chart
+  if(rptChart)rptChart.destroy();
+  const datasets=years.map(y=>({
+    label:String(y),data:matrix[y].map((v,i)=>{
+      const hasOrders=orders.some(o=>o.Year===y&&o.Month===i+1);
+      return hasOrders?v:null;
+    }),
+    borderColor:COLORS_RPT[y],backgroundColor:COLORS_RPT[y]+'22',
+    borderWidth:2,pointRadius:3,tension:0.3,spanGaps:false
+  }));
+  rptChart=new Chart(document.getElementById('rpt-chart'),{
+    type:'line',data:{labels:MONTHS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#94a3b8',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+        y:{ticks:{color:'#64748b',font:{size:10},callback:v=>rptMetric==='orders'?v:v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:'rgba(255,255,255,.04)'}}
+      }
+    }
+  });
+
+  // KPIs
+  const allVals=years.flatMap(y=>matrix[y].filter(v=>v>0));
+  const total=rptMetric==='avg'?0:allVals.reduce((s,v)=>s+v,0);
+  const maxV=Math.max(...allVals)||0;
+  let bestMonth='—';
+  outer:for(const y of years){for(let m=0;m<12;m++){if(matrix[y][m]===maxV&&maxV>0){bestMonth=MONTHS[m]+' '+y;break outer;}}}
+  // YoY
+  let yoyHtml='—';
+  if(years.length>=2){
+    const y1=matrix[years[years.length-2]].reduce((s,v)=>s+v,0);
+    const y2=matrix[years[years.length-1]].reduce((s,v)=>s+v,0);
+    if(y1){const pct=Math.round((y2-y1)/y1*100);yoyHtml=`<span style="color:${pct>=0?'var(--grn)':'var(--red)'}">${pct>=0?'+':''}${pct}%</span>`;}
+  }
+  const nonZeroMonths=allVals.length;
+  document.getElementById('rpt-kpis').innerHTML=
+    kpi(rptMetric==='orders'?'Total Orders':'Total Sales',rptMetric==='orders'?fmtFull(total):fmt(total),'c-grn',rptMetric!=='orders'?'PKR':'')+
+    kpi('Best Month',bestMonth)+
+    kpi('YoY Growth',yoyHtml,'c-blu')+
+    kpi('Monthly Avg',rptMetric==='orders'?fmtFull(Math.round(total/Math.max(1,nonZeroMonths))):fmt(total/Math.max(1,nonZeroMonths)));
+
+  // Table
+  const thead=document.getElementById('rpt-thead');
+  const tbody=document.getElementById('rpt-tbody');
+  const tfoot=document.getElementById('rpt-tfoot');
+  thead.innerHTML='<th>Month</th>'+years.map(y=>`<th style="text-align:right;color:${COLORS_RPT[y]}">${y}</th>`).join('')+(years.length>=2?'<th style="text-align:right">YoY %</th>':'');
+  const fmtV=v=>rptMetric==='orders'?fmtFull(v):fmt(v);
+  tbody.innerHTML=MONTHS.map((m,i)=>{
+    const vals=years.map(y=>matrix[y][i]);
+    const hasData=vals.some(v=>v>0);
+    let yoy='';
+    if(years.length>=2){
+      const prev=vals[vals.length-2],last=vals[vals.length-1];
+      if(prev&&last){const p=Math.round((last-prev)/prev*100);yoy=`<td style="text-align:right;color:${p>=0?'var(--grn)':'var(--red)'}">${p>=0?'+':''}${p}%</td>`;}
+      else yoy='<td style="text-align:right;color:var(--t3)">—</td>';
+    }
+    return`<tr>${'<td>'+m+'</td>'}${vals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace">${v?fmtV(v):'<span style="color:var(--t3)">—</span>'}</td>`).join('')}${yoy}</tr>`;
+  }).join('');
+  const totals=years.map(y=>matrix[y].reduce((s,v)=>s+v,0));
+  let yoyTot='';
+  if(years.length>=2){const p=totals[totals.length-2],l=totals[totals.length-1];if(p){const pct=Math.round((l-p)/p*100);yoyTot=`<td style="text-align:right;color:${pct>=0?'var(--grn)':'var(--red)'};font-weight:600">${pct>=0?'+':''}${pct}%</td>`;}}
+  tfoot.innerHTML=`<tr><td style="font-weight:600">Full Year</td>${totals.map(t=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtV(t)}</td>`).join('')}${yoyTot}</tr>`;
+}
+
+function renderCustomerSummary(){
+  const orders=getRptOrders();
+  const custMap={};
+  orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
+    custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
+    if(o.Order_Date){
+      if(!custMap[name].FirstOrder||o.Order_Date<custMap[name].FirstOrder)custMap[name].FirstOrder=o.Order_Date;
+      if(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder)custMap[name].LastOrder=o.Order_Date;
+    }
+  });
+  let custs=Object.values(custMap).map(c=>({...c,AvgOrder:c.Sales/Math.max(1,c.Orders)}));
+  custs.sort((a,b)=>{
+    let va=a[rptCustSort.key],vb=b[rptCustSort.key];
+    if(va instanceof Date&&vb instanceof Date)return rptCustSort.asc?va-vb:vb-va;
+    if(typeof va==='string')return rptCustSort.asc?va.localeCompare(vb):vb.localeCompare(va);
+    return rptCustSort.asc?(va||0)-(vb||0):(vb||0)-(va||0);
+  });
+  const totalSales=custs.reduce((s,c)=>s+c.Sales,0);
+  const totalOrds=custs.reduce((s,c)=>s+c.Orders,0);
+  document.getElementById('rpt-cust-kpis').innerHTML=
+    kpi('Total Customers',fmtFull(custs.length))+
+    kpi('Total Orders',fmtFull(totalOrds),'c-blu')+
+    kpi('Total Sales',fmt(totalSales),'c-grn','PKR')+
+    kpi('Avg Order',fmt(totalOrds?totalSales/totalOrds:0),'','PKR');
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    frag.appendChild(tr);
+  });
+  const tb=document.getElementById('rpt-cust-tbody');tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
+}
+
+function renderAtRisk(){
+  const orders=getRptOrders();
+  const today=new Date();
+  const custMap={};
+  orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,LastOrder:null};
+    custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
+    if(o.Order_Date&&(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder))custMap[name].LastOrder=o.Order_Date;
+  });
+  const atRisk=Object.values(custMap).filter(c=>{
+    if(!c.LastOrder)return true;
+    const days=Math.floor((today-c.LastOrder)/(1000*60*60*24));
+    return days>=rptRisk;
+  }).map(c=>({
+    ...c,
+    DaysInactive:c.LastOrder?Math.floor((today-c.LastOrder)/(1000*60*60*24)):999,
+    AvgOrder:c.Sales/Math.max(1,c.Orders)
+  })).sort((a,b)=>b.DaysInactive-a.DaysInactive);
+
+  const el=document.getElementById('risk-count');
+  if(el)el.textContent=`${atRisk.length} customers`;
+
+  const totalAtRisk=atRisk.reduce((s,c)=>s+c.Sales,0);
+  document.getElementById('rpt-risk-kpis').innerHTML=
+    kpi('At-Risk Customers',fmtFull(atRisk.length),'c-blu')+
+    kpi('Their Total Sales',fmt(totalAtRisk),'','PKR')+
+    kpi('Avg Days Inactive',atRisk.length?Math.round(atRisk.reduce((s,c)=>s+c.DaysInactive,0)/atRisk.length):0)+
+    kpi('B2B At-Risk',fmtFull(atRisk.filter(c=>c.Type==='B2B').length));
+
+  const frag=document.createDocumentFragment();
+  atRisk.forEach(c=>{
+    const urgency=c.DaysInactive>90?'var(--red)':c.DaysInactive>60?'var(--acc)':'var(--t2)';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:'DM Mono',monospace">${c.DaysInactive===999?'Unknown':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    frag.appendChild(tr);
+  });
+  const tb=document.getElementById('rpt-risk-tbody');tb.innerHTML='';
+  if(!atRisk.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="7" style="text-align:center;padding:30px;color:var(--grn)">✓ No at-risk customers</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+}
+
+// ═══════════════════════════════════════════════
+// DOWNLOAD EXCEL
+// ═══════════════════════════════════════════════
+function downloadReport(){
+  if(rptReport==='monthly')downloadMonthlyExcel();
+  else if(rptReport==='customers')downloadCustomerExcel();
+  else if(rptReport==='atrisk')downloadAtRiskExcel();
+}
+
+function makeExcelDownload(rows,filename){
+  // Simple CSV with BOM for Excel compatibility
+  const bom='\uFEFF';
+  const csv=rows.map(r=>r.map(c=>{
+    const s=String(c===null||c===undefined?'':c);
+    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\n');
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadMonthlyExcel(){
+  const orders=getRptOrders();
+  const years=[...new Set(orders.filter(o=>o.Year).map(o=>o.Year))].sort();
+  const rows=[['Month','Year','Sales (PKR)','Orders','Avg Order (PKR)','Type']];
+  orders.filter(o=>o.Year&&o.Month).forEach(o=>{
+    rows.push([MONTHS[o.Month-1],o.Year,Math.round(o.Total_Sales),1,Math.round(o.Total_Sales),o.Customer_Type]);
+  });
+  // Aggregate by month/year
+  const agg={};
+  orders.filter(o=>o.Year&&o.Month).forEach(o=>{
+    const k=`${o.Year}-${o.Month}`;
+    if(!agg[k])agg[k]={Month:MONTHS[o.Month-1],Year:o.Year,Sales:0,Orders:0,Type:rptType==='all'?'Combined':rptType};
+    agg[k].Sales+=o.Total_Sales;agg[k].Orders++;
+  });
+  const aggRows=[['Month','Year','Sales (PKR)','Orders','Avg Order (PKR)','Type'],
+    ...Object.values(agg).sort((a,b)=>a.Year-b.Year||MONTHS.indexOf(a.Month)-MONTHS.indexOf(b.Month))
+    .map(r=>[r.Month,r.Year,Math.round(r.Sales),r.Orders,Math.round(r.Sales/r.Orders),r.Type])
+  ];
+  makeExcelDownload(aggRows,`tezz_monthly_sales_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  notif('✓ Downloaded monthly sales report');
+}
+
+function downloadCustomerExcel(){
+  const orders=getRptOrders();
+  const custMap={};
+  orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
+    custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
+    if(o.Order_Date){if(!custMap[name].FirstOrder||o.Order_Date<custMap[name].FirstOrder)custMap[name].FirstOrder=o.Order_Date;if(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder)custMap[name].LastOrder=o.Order_Date;}
+  });
+  const rows=[['Customer','Type','City','First Order','Last Order','Total Orders','Total Sales (PKR)','Avg Order (PKR)'],
+    ...Object.values(custMap).sort((a,b)=>b.Sales-a.Sales).map(c=>[c.Customer,c.Type,c.City,c.FirstOrder?fmtDate(c.FirstOrder):'—',c.LastOrder?fmtDate(c.LastOrder):'—',c.Orders,Math.round(c.Sales),Math.round(c.Sales/c.Orders)])
+  ];
+  makeExcelDownload(rows,`tezz_customer_summary_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  notif('✓ Downloaded customer summary report');
+}
+
+function downloadAtRiskExcel(){
+  const orders=getRptOrders();
+  const today=new Date();
+  const custMap={};
+  orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,LastOrder:null};
+    custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
+    if(o.Order_Date&&(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder))custMap[name].LastOrder=o.Order_Date;
+  });
+  const atRisk=Object.values(custMap).filter(c=>{
+    const days=c.LastOrder?Math.floor((today-c.LastOrder)/(1000*60*60*24)):999;
+    return days>=rptRisk;
+  }).map(c=>({...c,Days:c.LastOrder?Math.floor((today-c.LastOrder)/(1000*60*60*24)):999})).sort((a,b)=>b.Days-a.Days);
+  const rows=[['Customer','Type','Last Order','Days Inactive','Total Orders','Total Sales (PKR)','Avg Order (PKR)'],
+    ...atRisk.map(c=>[c.Customer,c.Type,c.LastOrder?fmtDate(c.LastOrder):'Never',c.Days===999?'Unknown':c.Days,c.Orders,Math.round(c.Sales),Math.round(c.Sales/c.Orders)])
+  ];
+  makeExcelDownload(rows,`tezz_at_risk_${rptRisk}days_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  notif('✓ Downloaded at-risk customers report');
+}
 
 // ═══════════════════════════════════════════════
 // INIT
