@@ -272,12 +272,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="tab" onclick="switchTab('product',this)">Product</div>
     <div class="tab" onclick="switchTab('productsearch',this)">Product Search</div>
     <div class="tab" onclick="switchTab('reports',this)">Reports</div>
+    <div class="tab" onclick="switchTab('marketing',this)">Marketing</div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta">No data</span>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--pur);color:var(--pur)" onclick="showSuper()">★ Super</button>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
     </div>
+  </div>
+
+  <!-- BACK BUTTON BAR -->
+  <div id="back-bar" style="display:none;background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 18px;height:36px;display:none;align-items:center;gap:10px;flex-shrink:0;">
+    <button onclick="goBack()" style="display:flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bdr);color:var(--t2);padding:4px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">
+      &#8592; <span id="back-label">Back</span>
+    </button>
+    <span id="back-context" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></span>
   </div>
 
   <!-- TIME NAV BAR -->
@@ -514,11 +523,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       <!-- At-Risk -->
       <div id="rpt-atrisk" style="display:none;">
         <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
-          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">Inactive for:</span>
-          <button class="dbtn on" id="risk-30" onclick="setRisk(30)">30 days</button>
-          <button class="dbtn" id="risk-60" onclick="setRisk(60)">60 days</button>
-          <button class="dbtn" id="risk-90" onclick="setRisk(90)">90 days</button>
+          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">Inactive for more than 30 days —</span>
           <span id="risk-count" style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;"></span>
+          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-left:4px;">Click any customer to view their full history on the dashboard.</span>
         </div>
         <div class="kpi-row mb12" id="rpt-risk-kpis"></div>
         <div class="tw"><div style="overflow-x:auto;"><table class="dt">
@@ -532,6 +539,98 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
           </tr></thead>
           <tbody id="rpt-risk-tbody"></tbody>
         </table></div></div>
+      </div>
+    </div>
+
+
+    <!-- ═══ MARKETING ═══ -->
+    <div class="tab-panel" id="tab-marketing" style="overflow-y:auto;padding:14px 18px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+        <!-- Panel 1: Welcome Queue -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--grn);">🎉 Welcome Queue</div>
+              <div class="hint">New customers — send a welcome note</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:11px;color:var(--t3);">Last</span>
+              <input type="number" id="mkt-welcome-days" value="14" min="1" max="90" onchange="renderMarketing()" style="width:48px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">days</span>
+              <button onclick="downloadMktList('welcome')" style="padding:3px 10px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">First Order</th><th style="text-align:right">Value</th><th>Phone</th></tr></thead>
+            <tbody id="mkt-welcome-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-welcome-count"></div>
+        </div>
+
+        <!-- Panel 2: Gone Quiet -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--acc);">🔇 Gone Quiet</div>
+              <div class="hint">Ordered once, not seen since</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:11px;color:var(--t3);">Silent for</span>
+              <input type="number" id="mkt-quiet-days" value="14" min="1" max="90" onchange="renderMarketing()" style="width:48px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">days+</span>
+              <button onclick="downloadMktList('quiet')" style="padding:3px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Only Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Value</th></tr></thead>
+            <tbody id="mkt-quiet-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-quiet-count"></div>
+        </div>
+
+        <!-- Panel 3: Reactivation Targets -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--pur);">♻ Reactivation Targets</div>
+              <div class="hint">Were loyal — now gone quiet</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <input type="number" id="mkt-react-min" value="30" min="1" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">–</span>
+              <input type="number" id="mkt-react-max" value="60" min="1" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">days inactive</span>
+              <button onclick="downloadMktList('react')" style="padding:3px 10px;background:var(--pur);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
+            <tbody id="mkt-react-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-react-count"></div>
+        </div>
+
+        <!-- Panel 4: Bulk & VIP -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--blu);">💎 Bulk &amp; VIP</div>
+              <div class="hint">Consistent high-value customers</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:11px;color:var(--t3);">Avg order ≥ PKR</span>
+              <input type="number" id="mkt-vip-threshold" value="50000" min="1000" step="5000" onchange="renderMarketing()" style="width:72px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <button onclick="downloadMktList('vip')" style="padding:3px 10px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Avg Order</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th><th style="text-align:right">Last Order</th></tr></thead>
+            <tbody id="mkt-vip-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-vip-count"></div>
+        </div>
+
       </div>
     </div>
 
@@ -932,17 +1031,50 @@ function hideLoader(){document.getElementById('loader').style.display='none';}
 // ═══════════════════════════════════════════════
 // TAB SWITCH
 // ═══════════════════════════════════════════════
-function switchTab(name,el){
+let navHistory=[];
+
+function switchTab(name,el,fromNav){
   const elapsed=Math.round((Date.now()-tabStart)/1000);
   if(curUser&&elapsed>2)logActivity('pageview','Spent '+elapsed+'s on '+curTab);
+  if(!fromNav&&curTab&&curTab!==name){navHistory.push(curTab);if(navHistory.length>10)navHistory.shift();}
   curTab=name;tabStart=Date.now();
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+name+"'"))t.classList.add('active');});
   if(el)el.classList.add('active');
   if(name==='customer')renderCustomer();
   if(name==='product')renderProduct();
   if(name==='productsearch')initProdSearch();
+  if(name==='reports')renderReport();
+  if(name==='marketing')renderMarketing();
+  updateBackBar();
+}
+
+function updateBackBar(){
+  const bar=document.getElementById('back-bar');
+  const prev=navHistory.length?navHistory[navHistory.length-1]:null;
+  const labels={customer:'Customer',reports:'Reports',marketing:'Marketing',product:'Product',productsearch:'Product Search',dashboard:'Dashboard'};
+  if(prev&&curTab==='dashboard'&&prev!=='dashboard'){
+    document.getElementById('back-label').textContent='Back to '+(labels[prev]||prev);
+    document.getElementById('back-context').textContent=selCust?'· Viewing: '+selCust:'';
+    bar.style.display='flex';
+  }else{bar.style.display='none';}
+}
+
+function goBack(){
+  if(!navHistory.length)return;
+  const prev=navHistory.pop();
+  switchTab(prev,null,true);
+}
+
+function goToDashboardCustomer(custName){
+  selCust=custName;selOrder=null;
+  switchTab('dashboard',null);
+  renderDashboard(custName);
+  renderOrdersDrill();
+  showCustInfo(custName);
+  updateBackBar();
 }
 
 // ═══════════════════════════════════════════════
@@ -1237,9 +1369,13 @@ function renderCustomer(pinnedCust){
     tr.onclick=()=>{
       selRankedCust=selRankedCust===c.Customer?null:c.Customer;
       renderCustomer(selRankedCust||undefined);
-      if(selRankedCust)showCustTabInfo(c);
-      else document.getElementById('cust-tab-info-box').innerHTML='<div class="info-empty">Click a customer</div>';
+      if(selRankedCust){
+        showCustTabInfo(c);
+        // Double-click or hold to go to dashboard — single click just selects
+      }else document.getElementById('cust-tab-info-box').innerHTML='<div class="info-empty">Click a customer</div>';
     };
+    // Add go-to-dashboard button in info box on selection
+    tr.ondblclick=()=>{if(selRankedCust)goToDashboardCustomer(selRankedCust);};
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-ranked');tb.innerHTML='';
@@ -1252,13 +1388,16 @@ function renderCustomer(pinnedCust){
 function showCustTabInfo(c){
   document.getElementById('cust-tab-info-box').innerHTML=`
     <div class="info-name">${esc(c.Customer)}</div>
-    <div><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}" style="margin-bottom:10px;display:inline-block;">${c.Type}</span></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span>
+    </div>
     <div class="info-row"><div class="info-lbl">Total Sales</div><div class="info-val" style="color:var(--acc);font-weight:600">PKR ${fmtFull(c.Sales)}</div></div>
     <div class="info-row"><div class="info-lbl">Total Orders</div><div class="info-val">${c.Orders}</div></div>
     <div class="info-row"><div class="info-lbl">Avg Order</div><div class="info-val">PKR ${fmt(c.Sales/Math.max(1,c.Orders))}</div></div>
     <div class="info-row"><div class="info-lbl">Status</div><div class="info-val">${c.IsNew?'<span class="bdg b-new">New Customer</span>':'Recurring'}</div></div>
     <div class="info-row"><div class="info-lbl">Phone</div><div class="info-val">${esc(c.Phone||'—')}</div></div>
-    <div class="info-row"><div class="info-lbl">Address</div><div class="info-val" style="font-size:11px;line-height:1.5">${esc(c.Address||'—')}</div></div>`;
+    <div class="info-row"><div class="info-lbl">Address</div><div class="info-val" style="font-size:11px;line-height:1.5">${esc(c.Address||'—')}</div></div>
+    <button onclick="goToDashboardCustomer('${esc(c.Customer)}')" style="margin-top:12px;width:100%;padding:7px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">View Full History →</button>`;
 }
 
 // ═══════════════════════════════════════════════
@@ -2155,48 +2294,44 @@ function renderCustomerSummary(){
   document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
 }
 
-function renderAtRisk(){
-  const orders=getRptOrders();
-  // Use most recent order date as reference point, not actual today
-  // This prevents all customers appearing inactive if data is not current
-  const allDates=S.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
+// Shared helper — builds inactive customer list relative to last order in DB
+function getInactiveCustomers(minDays, ordersToUse){
+  const src=ordersToUse||S.orders;
+  const allDates=src.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
   const today=allDates.length?new Date(Math.max(...allDates)):new Date();
   const custMap={};
-  orders.forEach(o=>{
+  src.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
-    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,LastOrder:null};
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,LastOrder:null,Phone:o.Phone||'—'};
     custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
     if(o.Order_Date&&(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder))custMap[name].LastOrder=o.Order_Date;
   });
-  const atRisk=Object.values(custMap).filter(c=>{
-    if(!c.LastOrder)return true;
-    const days=Math.floor((today-c.LastOrder)/(1000*60*60*24));
-    return days>=rptRisk;
-  }).map(c=>({
+  return{today,customers:Object.values(custMap).map(c=>({
     ...c,
     DaysInactive:c.LastOrder?Math.floor((today-c.LastOrder)/(1000*60*60*24)):999,
     AvgOrder:c.Sales/Math.max(1,c.Orders)
-  })).sort((a,b)=>b.DaysInactive-a.DaysInactive);
+  })).filter(c=>c.DaysInactive>=minDays).sort((a,b)=>b.DaysInactive-a.DaysInactive)};
+}
 
+function renderAtRisk(){
+  const {customers:atRisk}=getInactiveCustomers(30);
   const el=document.getElementById('risk-count');
-  if(el)el.textContent=`${atRisk.length} customers`;
-
+  if(el)el.textContent=atRisk.length+' customers';
   const totalAtRisk=atRisk.reduce((s,c)=>s+c.Sales,0);
   document.getElementById('rpt-risk-kpis').innerHTML=
-    kpi('At-Risk Customers',fmtFull(atRisk.length),'c-blu')+
+    kpi('Inactive 30+ Days',fmtFull(atRisk.length),'c-blu')+
     kpi('Their Total Sales',fmt(totalAtRisk),'','PKR')+
     kpi('Avg Days Inactive',atRisk.length?Math.round(atRisk.reduce((s,c)=>s+c.DaysInactive,0)/atRisk.length):0)+
-    kpi('B2B At-Risk',fmtFull(atRisk.filter(c=>c.Type==='B2B').length));
-
+    kpi('B2B Inactive',fmtFull(atRisk.filter(c=>c.Type==='B2B').length));
   const frag=document.createDocumentFragment();
   atRisk.forEach(c=>{
     const urgency=c.DaysInactive>90?'var(--red)':c.DaysInactive>60?'var(--acc)':'var(--t2)';
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:'DM Mono',monospace">${c.DaysInactive===999?'Unknown':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    const tr=document.createElement('tr');tr.className='r';
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer" onclick="goToDashboardCustomer('${esc(c.Customer)}')">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:'DM Mono',monospace">${c.DaysInactive===999?'—':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('rpt-risk-tbody');tb.innerHTML='';
-  if(!atRisk.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="7" style="text-align:center;padding:30px;color:var(--grn)">✓ No at-risk customers</td>';tb.appendChild(tr);}
+  if(!atRisk.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="7" style="text-align:center;padding:30px;color:var(--grn)">✓ No customers inactive 30+ days</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
 }
 
@@ -2280,6 +2415,145 @@ function downloadAtRiskExcel(){
   ];
   makeExcelDownload(rows,`tezz_at_risk_${rptRisk}days_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
   notif('✓ Downloaded at-risk customers report');
+}
+
+// ═══════════════════════════════════════════════
+// MARKETING TAB
+// ═══════════════════════════════════════════════
+function renderMarketing(){
+  renderMktWelcome();
+  renderMktQuiet();
+  renderMktReactivation();
+  renderMktVIP();
+}
+
+function getMktToday(){
+  const allDates=S.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
+  return allDates.length?new Date(Math.max(...allDates)):new Date();
+}
+
+function getMktCustMap(){
+  const m={};
+  S.orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!m[name])m[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,FirstOrder:null,LastOrder:null,Phone:o.Phone||'—',Address:o.Address||'—'};
+    m[name].Orders++;m[name].Sales+=o.Total_Sales;
+    if(o.Order_Date){
+      if(!m[name].FirstOrder||o.Order_Date<m[name].FirstOrder)m[name].FirstOrder=o.Order_Date;
+      if(!m[name].LastOrder||o.Order_Date>m[name].LastOrder)m[name].LastOrder=o.Order_Date;
+    }
+  });
+  return Object.values(m).map(c=>({...c,AvgOrder:c.Sales/Math.max(1,c.Orders)}));
+}
+
+function mktRow(cells,custName){
+  const tr=document.createElement('tr');tr.className='r';
+  tr.innerHTML=cells;
+  tr.onclick=()=>goToDashboardCustomer(custName);
+  tr.title='Click to view on Dashboard';
+  return tr;
+}
+
+function renderMktWelcome(){
+  const days=parseInt(document.getElementById('mkt-welcome-days')?.value)||14;
+  const today=getMktToday();
+  const cutoff=new Date(today.getTime()-days*86400000);
+  // New customers whose FIRST order is within last X days
+  const custs=getMktCustMap().filter(c=>c.FirstOrder&&c.FirstOrder>=cutoff).sort((a,b)=>b.FirstOrder-a.FirstOrder);
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer));});
+  const tb=document.getElementById('mkt-welcome-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No new customers in this period</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-welcome-count').textContent=custs.length+' new customers in last '+days+' days';
+}
+
+function renderMktQuiet(){
+  const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
+  const today=getMktToday();
+  const cutoff=new Date(today.getTime()-days*86400000);
+  // Ordered exactly once AND last order was more than X days ago
+  const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
+    .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)}))
+    .sort((a,b)=>a.DaysSilent-b.DaysSilent);
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  const tb=document.getElementById('mkt-quiet-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No one-time customers gone quiet</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-quiet-count').textContent=custs.length+' one-time customers silent '+days+'+ days';
+}
+
+function renderMktReactivation(){
+  const minD=parseInt(document.getElementById('mkt-react-min')?.value)||30;
+  const maxD=parseInt(document.getElementById('mkt-react-max')?.value)||60;
+  const today=getMktToday();
+  // Customers with 2+ orders who are inactive between minD and maxD days
+  const custs=getMktCustMap().filter(c=>{
+    if(c.Orders<2||!c.LastOrder)return false;
+    const d=Math.floor((today-c.LastOrder)/86400000);
+    return d>=minD&&d<=maxD;
+  }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
+  .sort((a,b)=>b.Sales-a.Sales);
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  const tb=document.getElementById('mkt-react-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No reactivation targets in this range</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-react-count').textContent=custs.length+' loyal customers inactive '+minD+'–'+maxD+' days';
+}
+
+function renderMktVIP(){
+  const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
+  const today=getMktToday();
+  const custs=getMktCustMap().filter(c=>c.AvgOrder>=threshold&&c.Orders>=2)
+    .sort((a,b)=>b.AvgOrder-a.AvgOrder);
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{
+    const daysSince=c.LastOrder?Math.floor((today-c.LastOrder)/86400000):999;
+    const recColor=daysSince>60?'var(--red)':daysSince>30?'var(--acc)':'var(--grn)';
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer));
+  });
+  const tb=document.getElementById('mkt-vip-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers meeting this threshold</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-vip-count').textContent=custs.length+' customers with avg order ≥ PKR '+threshold.toLocaleString();
+}
+
+function downloadMktList(type){
+  let rows,filename;
+  const today=getMktToday();
+  if(type==='welcome'){
+    const days=parseInt(document.getElementById('mkt-welcome-days')?.value)||14;
+    const cutoff=new Date(today.getTime()-days*86400000);
+    const custs=getMktCustMap().filter(c=>c.FirstOrder&&c.FirstOrder>=cutoff).sort((a,b)=>b.FirstOrder-a.FirstOrder);
+    rows=[['Customer','Type','Phone','First Order','First Order Value'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.FirstOrder),Math.round(c.Sales)])];
+    filename=`tezz_welcome_queue_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='quiet'){
+    const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
+    const cutoff=new Date(today.getTime()-days*86400000);
+    const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
+      .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>a.DaysSilent-b.DaysSilent);
+    rows=[['Customer','Type','Phone','Only Order Date','Days Silent','Order Value'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysSilent,Math.round(c.Sales)])];
+    filename=`tezz_gone_quiet_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='react'){
+    const minD=parseInt(document.getElementById('mkt-react-min')?.value)||30;
+    const maxD=parseInt(document.getElementById('mkt-react-max')?.value)||60;
+    const custs=getMktCustMap().filter(c=>{if(c.Orders<2||!c.LastOrder)return false;const d=Math.floor((today-c.LastOrder)/86400000);return d>=minD&&d<=maxD;})
+      .map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>b.Sales-a.Sales);
+    rows=[['Customer','Type','Phone','Last Order','Days Inactive','Total Orders','Total Sales'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.Orders,Math.round(c.Sales)])];
+    filename=`tezz_reactivation_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='vip'){
+    const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
+    const custs=getMktCustMap().filter(c=>c.AvgOrder>=threshold&&c.Orders>=2).sort((a,b)=>b.AvgOrder-a.AvgOrder);
+    rows=[['Customer','Type','Phone','Avg Order','Total Orders','Total Sales','Last Order'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,Math.round(c.AvgOrder),c.Orders,Math.round(c.Sales),c.LastOrder?fmtDate(c.LastOrder):'—'])];
+    filename=`tezz_bulk_vip_${new Date().toISOString().slice(0,10)}.csv`;
+  }
+  if(rows)makeExcelDownload(rows,filename);
 }
 
 // ═══════════════════════════════════════════════
