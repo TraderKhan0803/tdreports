@@ -2157,7 +2157,10 @@ function renderCustomerSummary(){
 
 function renderAtRisk(){
   const orders=getRptOrders();
-  const today=new Date();
+  // Use most recent order date as reference point, not actual today
+  // This prevents all customers appearing inactive if data is not current
+  const allDates=S.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
+  const today=allDates.length?new Date(Math.max(...allDates)):new Date();
   const custMap={};
   orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
@@ -2259,7 +2262,8 @@ function downloadCustomerExcel(){
 
 function downloadAtRiskExcel(){
   const orders=getRptOrders();
-  const today=new Date();
+  const allDates=S.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
+  const today=allDates.length?new Date(Math.max(...allDates)):new Date();
   const custMap={};
   orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
