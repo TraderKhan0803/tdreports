@@ -218,6 +218,129 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   .timebar{padding:0 10px;}
   .content{padding:10px;}
 }
+
+/* ── RAABTA ── */
+.rb-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
+.rb-panel.active{display:flex;}
+.rb-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.rb-card-hd{padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--sur2);}
+.rb-card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--txt);text-transform:uppercase;letter-spacing:.3px;}
+.rb-card-body{padding:14px;}
+.rb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px;}
+.rb-stat{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 13px;}
+.rb-stat-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--acc);line-height:1;}
+.rb-stat-lbl{font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;}
+.rb-stat.sg .rb-stat-num{color:var(--grn);}
+.rb-stat.sb .rb-stat-num{color:var(--blu);}
+.rb-stat.sr .rb-stat-num{color:var(--red);}
+.rb-stat.sp .rb-stat-num{color:var(--pur);}
+.rb-cust-row{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:border-color .15s;flex-wrap:wrap;margin-bottom:5px;}
+.rb-cust-row:hover{border-color:var(--acc);}
+.rb-av{width:34px;height:34px;border-radius:50%;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--acc);flex-shrink:0;}
+.rb-cname{font-weight:600;font-size:13px;color:var(--txt);}
+.rb-cmeta{font-size:10px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-tags{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+.rb-actions{display:flex;gap:5px;flex-shrink:0;}
+.rb-bdg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Mono',monospace;}
+.rb-new{background:rgba(59,130,246,.15);color:var(--blu);}
+.rb-active{background:rgba(34,197,94,.15);color:var(--grn);}
+.rb-vip{background:rgba(168,85,247,.15);color:var(--pur);}
+.rb-silent{background:rgba(249,115,22,.15);color:var(--acc);}
+.rb-winback{background:rgba(239,68,68,.15);color:var(--red);}
+.rb-en{background:rgba(59,130,246,.12);color:var(--blu);}
+.rb-ur{background:rgba(34,197,94,.12);color:var(--grn);}
+.rb-search{display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
+.rb-search input,.rb-search select{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:7px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;}
+.rb-search input:focus,.rb-search select:focus{outline:none;border-color:var(--acc);}
+.rb-search input{flex:1;min-width:140px;}
+.rb-search select option{background:var(--sur2);}
+.rb-mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;}
+.rb-mov.open{display:flex;}
+.rb-modal{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);width:100%;max-width:600px;margin:auto;overflow:hidden;animation:rbsu .2s ease;}
+@keyframes rbsu{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.rb-mhd{background:var(--sur2);border-bottom:1px solid var(--bdr);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.rb-mname{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--txt);}
+.rb-mphone{font-size:11px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-mcls{background:var(--sur3);border:1px solid var(--bdr);color:var(--t2);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.rb-mcls:hover{border-color:var(--red);color:var(--red);}
+.rb-mbody{padding:18px;}
+.rb-igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px;}
+@media(max-width:480px){.rb-igrid{grid-template-columns:1fr 1fr;}}
+.rb-ii{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;}
+.rb-il{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;}
+.rb-iv{font-size:12px;font-weight:600;color:var(--txt);margin-top:3px;font-family:'DM Mono',monospace;}
+.rb-dvd{height:1px;background:var(--bdr);margin:11px 0;}
+.rb-sec{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;margin-bottom:8px;}
+.rb-tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+@media(max-width:440px){.rb-tpl-grid{grid-template-columns:1fr;}}
+.rb-tpl-btn{padding:8px 10px;border-radius:var(--r2);border:1px solid var(--bdr);background:var(--sur2);cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;transition:border-color .15s;display:flex;flex-direction:column;gap:2px;}
+.rb-tpl-btn:hover{border-color:#25D366;background:rgba(37,211,102,.07);}
+.rb-tpl-btn .tn{font-size:11px;font-weight:600;color:var(--txt);}
+.rb-tpl-btn .tt{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;}
+.rb-log{padding:8px 11px;border-left:2px solid var(--acc);background:var(--sur2);border-radius:0 var(--r2) var(--r2) 0;margin-bottom:5px;font-size:12px;}
+.rb-lt{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;}
+.rb-la{font-weight:600;color:var(--txt);}
+.rb-lm{color:var(--t3);font-size:10px;font-family:'DM Mono',monospace;}
+.rb-ln{color:var(--t2);margin-top:3px;}
+.rb-lo{color:var(--acc);font-size:10px;margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-osel{padding:5px 9px;border-radius:var(--r2);border:1px solid var(--bdr);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt);background:var(--sur2);outline:none;}
+.rb-osel:focus{border-color:var(--acc);}
+.rb-osel option{background:var(--sur2);}
+.rb-tp-card{border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:7px;}
+.rb-tp-hd{padding:9px 13px;background:var(--sur2);border-bottom:1px solid transparent;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.rb-tp-card.open .rb-tp-hd{border-bottom-color:var(--bdr);}
+.rb-tp-num{font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;}
+.rb-tp-name{font-weight:600;font-size:12px;color:var(--txt);}
+.rb-tp-body{padding:12px;display:none;}
+.rb-tp-card.open .rb-tp-body{display:block;}
+.rb-tpl-text{background:var(--sur2);border-left:2px solid var(--grn);padding:10px 13px;border-radius:0 var(--r2) var(--r2) 0;font-size:12px;line-height:1.8;color:var(--txt);white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.rb-tpl-text.ur{direction:rtl;text-align:right;border-left:none;border-right:2px solid var(--acc);font-size:13px;}
+.rb-ltabs{display:flex;gap:5px;margin-bottom:8px;}
+.rb-ltab{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;transition:all .15s;}
+.rb-ltab.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+.rb-qi{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px;transition:border-color .15s;}
+.rb-qi:hover{border-color:var(--acc);}
+.rb-qdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.rb-qh{background:var(--red);}
+.rb-qm{background:var(--acc);}
+.rb-ql{background:var(--grn);}
+.rb-act-table{width:100%;border-collapse:collapse;}
+.rb-act-table th{text-align:left;padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);border-bottom:1px solid var(--bdr);background:var(--sur2);font-family:'DM Mono',monospace;}
+.rb-act-table td{padding:9px 11px;font-size:12px;border-bottom:1px solid var(--bdr);vertical-align:top;color:var(--t2);}
+.rb-act-table tr:last-child td{border-bottom:none;}
+.rb-act-table tr:hover td{background:var(--sur2);}
+.rb-hbr{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.rb-hbl{font-size:10px;width:58px;color:var(--t3);text-transform:capitalize;font-family:'DM Mono',monospace;}
+.rb-hbt{flex:1;background:var(--bdr);border-radius:4px;height:5px;overflow:hidden;}
+.rb-hbf{height:100%;border-radius:4px;transition:width .5s;}
+.rb-hbc{font-size:10px;font-weight:700;color:var(--txt);width:20px;text-align:right;font-family:'DM Mono',monospace;}
+.rb-empty{text-align:center;padding:28px;color:var(--t3);font-family:'DM Mono',monospace;font-size:11px;}
+.rb-wa-num-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);margin-bottom:5px;font-size:12px;}
+.rb-wa-num-row .num-label{flex:1;color:var(--txt);font-weight:500;}
+.rb-wa-num-row .num-val{color:var(--t2);font-family:'DM Mono',monospace;font-size:11px;}
+.rb-wa-num-row .num-def{padding:2px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;}
+.tab-sep{width:1px;height:20px;background:var(--bdr);margin:0 4px;flex-shrink:0;}
+
+/* ── TEMPLATE EDITOR ── */
+.tpl-editor-card{border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:8px;}
+.tpl-editor-hd{padding:10px 13px;background:var(--sur2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
+.tpl-editor-hd:hover{background:var(--sur3);}
+.tpl-editor-body{padding:13px;display:none;border-top:1px solid var(--bdr);}
+.tpl-editor-card.open .tpl-editor-body{display:block;}
+.tpl-editor-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;margin-bottom:5px;margin-top:10px;}
+.tpl-editor-label:first-child{margin-top:0;}
+.tpl-textarea{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:9px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.7;resize:vertical;outline:none;min-height:100px;}
+.tpl-textarea:focus{border-color:var(--acc);}
+.tpl-textarea.ur{direction:rtl;text-align:right;font-size:13px;}
+.tpl-editor-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.tpl-save-btn{padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tpl-reset-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.tpl-reset-btn:hover{border-color:var(--blu);color:var(--blu);}
+.tpl-del-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-left:auto;}
+.tpl-del-btn:hover{border-color:var(--red);color:var(--red);}
+.tpl-custom-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--blu);font-family:'DM Mono',monospace;font-weight:700;}
+.tpl-default-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(249,115,22,.12);color:var(--acc);font-family:'DM Mono',monospace;}
+.tpl-add-form{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:13px;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -267,12 +390,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="logo">TEZZ.</div>
-    <div class="tab active" onclick="switchTab('dashboard',this)">Dashboard</div>
-    <div class="tab" onclick="switchTab('customer',this)">Customer</div>
-    <div class="tab" onclick="switchTab('product',this)">Product</div>
-    <div class="tab" onclick="switchTab('productsearch',this)">Product Search</div>
-    <div class="tab" onclick="switchTab('reports',this)">Reports</div>
-    <div class="tab" onclick="switchTab('marketing',this)">Marketing</div>
+    <div class="tab active" onclick="switchTab('dashboard',this)" id="nav-dashboard">Dashboard</div>
+    <div class="tab" onclick="switchTab('customer',this)" id="nav-customer">Customer</div>
+    <div class="tab" onclick="switchTab('product',this)" id="nav-product">Product</div>
+    <div class="tab" onclick="switchTab('productsearch',this)" id="nav-productsearch">Product Search</div>
+    <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
+    <div class="tab" onclick="switchTab('marketing',this)" id="nav-marketing">Marketing</div>
+    <!-- Raabta separator + tabs -->
+    <div class="tab-sep" id="raabta-sep"></div>
+    <div class="tab" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers" style="color:var(--acc);opacity:.7">Customers</div>
+    <div class="tab" onclick="rbSwitchTab('rb-queue',this)" id="nav-rb-queue">Queue <span id="rb-qc" style="background:rgba(249,115,22,.2);color:var(--acc);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
+    <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates">Templates</div>
+    <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta">No data</span>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
@@ -634,10 +763,138 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       </div>
     </div>
 
+    <!-- ═══ RAABTA: CUSTOMERS ═══ -->
+    <div class="rb-panel" id="tab-rb-customers">
+      <div class="rb-stats" id="rb-stats-row"></div>
+      <div class="rb-card">
+        <div class="rb-card-hd">
+          <div class="rb-card-title">Customers</div>
+          <button onclick="rbOpenAdd()" style="padding:5px 13px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">+ Add</button>
+        </div>
+        <div class="rb-card-body">
+          <div class="rb-search">
+            <input type="text" placeholder="Search name, phone, city…" id="rb-cs" oninput="rbRenderCusts()">
+            <select id="rb-cfs" onchange="rbRenderCusts()">
+              <option value="">All Status</option>
+              <option value="new">New</option><option value="active">Active</option>
+              <option value="vip">VIP</option><option value="silent">Silent</option><option value="winback">Win-Back</option>
+            </select>
+            <select id="rb-cfl" onchange="rbRenderCusts()">
+              <option value="">All Languages</option>
+              <option value="en">English</option><option value="ur">Urdu</option>
+            </select>
+          </div>
+          <div id="rb-cust-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RAABTA: QUEUE ═══ -->
+    <div class="rb-panel" id="tab-rb-queue">
+      <div class="rb-card">
+        <div class="rb-card-hd">
+          <div class="rb-card-title">Today's Contact Queue</div>
+          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace" id="rb-qdate"></div>
+        </div>
+        <div class="rb-card-body" id="rb-queue-body"></div>
+      </div>
+    </div>
+
+    <!-- ═══ RAABTA: TEMPLATES ═══ -->
+    <div class="rb-panel" id="tab-rb-templates">
+      <div class="rb-card">
+        <div class="rb-card-hd"><div class="rb-card-title">Message Templates</div></div>
+        <div class="rb-card-body" id="rb-tpl-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ RAABTA: ACTIVITY ═══ -->
+    <div class="rb-panel" id="tab-rb-activity">
+      <div class="rb-card">
+        <div class="rb-card-hd">
+          <div class="rb-card-title">Activity Log</div>
+          <select class="rb-osel" id="rb-af" onchange="rbRenderAct()">
+            <option value="">All Users</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="rb-act-table">
+            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th></tr></thead>
+            <tbody id="rb-act-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /app -->
 
-<!-- ═══ LOADER ═══ -->
+<!-- ═══ RAABTA: CUSTOMER MODAL ═══ -->
+<div class="rb-mov" id="rb-cm">
+  <div class="rb-modal">
+    <div class="rb-mhd">
+      <div><div class="rb-mname" id="rb-mn"></div><div class="rb-mphone" id="rb-mp"></div></div>
+      <button class="rb-mcls" onclick="rbCloseCM()">✕</button>
+    </div>
+    <div class="rb-mbody">
+      <div class="rb-igrid" id="rb-mig"></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;">Status:</span>
+        <select class="rb-osel" id="rb-mss" onchange="rbUpdStatus()">
+          <option value="new">🆕 New</option><option value="active">✅ Active</option>
+          <option value="vip">⭐ VIP</option><option value="silent">😶 Silent</option><option value="winback">🔄 Win-Back</option>
+        </select>
+        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;">Language:</span>
+        <select class="rb-osel" id="rb-mls" onchange="rbUpdLang()">
+          <option value="en">🇬🇧 English</option><option value="ur">🇵🇰 Urdu</option><option value="?">❓ Unknown</option>
+        </select>
+      </div>
+      <div class="rb-dvd"></div>
+      <div class="rb-sec">Send via WhatsApp — tap to open pre-filled message</div>
+      <div class="rb-tpl-grid" id="rb-mt"></div>
+      <div class="rb-dvd"></div>
+      <div class="rb-sec">Log This Interaction</div>
+      <div style="display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;">
+        <select class="rb-osel" id="rb-mo">
+          <option value="">Select outcome…</option>
+          <option value="Responded Positively">😊 Responded Positively</option>
+          <option value="Placed Order">🛒 Placed Order</option>
+          <option value="No Response">😶 No Response</option>
+          <option value="Complaint Received">⚠️ Complaint Received</option>
+          <option value="Complaint Resolved">✅ Complaint Resolved</option>
+          <option value="Requested Callback">📞 Requested Callback</option>
+        </select>
+      </div>
+      <textarea id="rb-mnote" placeholder="Add a note about this conversation…" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;min-height:65px;resize:vertical;outline:none;margin-bottom:8px;display:block;"></textarea>
+      <button onclick="rbSaveLog()" style="padding:6px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);border-radius:var(--r2);color:var(--grn);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Save Interaction</button>
+      <div class="rb-dvd"></div>
+      <div class="rb-sec">Interaction History</div>
+      <div id="rb-mh"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RAABTA: ADD CUSTOMER MODAL ═══ -->
+<div class="rb-mov" id="rb-am">
+  <div class="rb-modal">
+    <div class="rb-mhd"><div><div class="rb-mname">Add Customer</div></div><button class="rb-mcls" onclick="document.getElementById('rb-am').classList.remove('open')">✕</button></div>
+    <div class="rb-mbody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Full Name *</label><input id="rb-an" class="adm-inp" placeholder="Ayesha Khan" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">WhatsApp Number *</label><input id="rb-aph" class="adm-inp" placeholder="923001234567" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">City</label><input id="rb-ac" class="adm-inp" placeholder="Karachi" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Language</label><select id="rb-al" class="adm-inp"><option value="?">Unknown</option><option value="en">English</option><option value="ur">Urdu</option></select></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Status</label><select id="rb-ast" class="adm-inp"><option value="new">New</option><option value="active">Active</option><option value="vip">VIP</option></select></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Last Order Date</label><input type="date" id="rb-ad" class="adm-inp" style="width:100%;"></div>
+      </div>
+      <div style="margin-top:9px;"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Notes</label><textarea id="rb-anotes" class="adm-inp" placeholder="Any notes…" style="width:100%;min-height:60px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:10px;">
+        <button onclick="document.getElementById('rb-am').classList.remove('open')" style="padding:6px 13px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="rbSaveNew()" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Add Customer</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="loader" style="display:none;position:fixed;inset:0;background:rgba(13,15,20,.88);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
   <div class="spin"></div>
   <div id="loader-msg" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--t2);">Loading…</div>
@@ -665,6 +922,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 <div class="overlay" id="admin-overlay">
   <div class="ov-inner">
     <div class="ov-hdr"><div class="ov-title">⚙ Admin Panel</div><button class="ov-close" onclick="closeModal('admin-overlay')">Close</button></div>
+
+    <!-- WhatsApp Numbers -->
+    <div class="adm-card mb12">
+      <div class="adm-title">📱 WhatsApp Numbers — Raabta</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add one or more WhatsApp numbers. The default number is used in all message deep links.</div>
+      <div class="adm-inp-row" style="flex-wrap:wrap;">
+        <input class="adm-inp" id="rb-wa-label" placeholder="Label (e.g. Main Orders)" style="flex:1;min-width:130px;">
+        <input class="adm-inp" id="rb-wa-num" placeholder="Number (e.g. 923001234567)" style="flex:1;min-width:150px;">
+        <button class="adm-add" onclick="rbAddWANumber()">+ Add</button>
+      </div>
+      <div id="rb-wa-list" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- Template Editor -->
+    <div class="adm-card mb12">
+      <div class="adm-title">💬 Message Templates — Raabta</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing notes. Changes save immediately and reflect in the Customers and Queue views. Fatima can personalise messages in WhatsApp before sending.</div>
+      <div id="tpl-editor-list"></div>
+
+      <!-- Add new template -->
+      <div class="tpl-add-form">
+        <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:10px;">+ Add New Template</div>
+        <div class="tpl-editor-label">Template Name</div>
+        <input class="adm-inp" id="tpl-new-name" placeholder="e.g. Ramadan Greetings" style="width:100%;margin-bottom:6px;">
+        <div class="tpl-editor-label">When to Send</div>
+        <input class="adm-inp" id="tpl-new-tim" placeholder="e.g. First day of Ramadan" style="width:100%;margin-bottom:6px;">
+        <div class="tpl-editor-label">English Message</div>
+        <textarea class="tpl-textarea" id="tpl-new-en" placeholder="Write English message here…"></textarea>
+        <div class="tpl-editor-label">Urdu Message (optional)</div>
+        <textarea class="tpl-textarea ur" id="tpl-new-ur" placeholder="اردو پیغام یہاں لکھیں…"></textarea>
+        <div style="margin-top:10px;">
+          <button class="tpl-save-btn" onclick="tplAddNew()">Add Template</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Data Management -->
     <div class="adm-card mb12">
@@ -724,26 +1016,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <!-- Customer Linking -->
     <div class="adm-card mb12" style="margin-top:12px;">
       <div class="adm-title">🔗 Customer Linking</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Link duplicate customer names to a single primary name. All data aggregates under the primary.</div>
-      <div class="adm-inp-row" style="margin-bottom:8px;">
-        <input class="adm-inp" id="link-search" placeholder="Search customer name…" oninput="searchLinkCustomers()" style="flex:2;">
-        <div style="flex:1;font-size:11px;color:var(--t3);padding:8px 0;">Type to search existing customers</div>
-      </div>
-      <div id="link-search-results" style="max-height:120px;overflow-y:auto;margin-bottom:10px;"></div>
-      <div id="link-builder" style="display:none;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:10px;">
-        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Primary name (shown in all reports):</div>
-        <input class="adm-inp" id="link-primary" placeholder="Primary customer name" style="width:100%;margin-bottom:8px;">
-        <div style="font-size:11px;color:var(--t3);margin-bottom:4px;">Aliases (these will be merged into the primary):</div>
-        <div id="link-aliases" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:24px;"></div>
-        <div style="display:flex;gap:8px;">
-          <input class="adm-inp" id="link-alias-inp" placeholder="Add alias…" style="flex:1;" onkeydown="if(event.key==='Enter')addLinkAlias()">
-          <button class="adm-add" onclick="addLinkAlias()">+ Alias</button>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Link duplicate customer names to a single primary name. All data aggregates under the primary.</div>
+
+      <!-- Builder -->
+      <div id="link-builder" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <!-- Primary -->
+          <div>
+            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Primary Name <span style="color:var(--t3)">(shown in all reports)</span></div>
+            <div style="position:relative;">
+              <input class="adm-inp" id="link-primary-search" placeholder="Search primary…" oninput="searchLinkField('primary')" autocomplete="off" style="width:100%;">
+              <div id="link-primary-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+            </div>
+            <div id="link-primary-selected" style="margin-top:6px;min-height:24px;"></div>
+          </div>
+          <!-- Aliases -->
+          <div>
+            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Add Alias <span style="color:var(--t3)">(names to merge in)</span></div>
+            <div style="position:relative;">
+              <input class="adm-inp" id="link-alias-search" placeholder="Search alias to add…" oninput="searchLinkField('alias')" autocomplete="off" style="width:100%;">
+              <div id="link-alias-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Alias rows -->
+        <div id="link-alias-rows" style="margin-bottom:10px;display:flex;flex-direction:column;gap:4px;"></div>
+        <!-- Actions -->
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button onclick="cancelLinkBuilder()" style="padding:6px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Clear</button>
           <button class="adm-add" onclick="saveLinkGroup()" style="background:var(--grn);">Save Link</button>
-          <button onclick="cancelLinkBuilder()" style="padding:7px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
         </div>
       </div>
+
       <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
-      <div class="adm-list" id="list-links" style="max-height:200px;"></div>
+      <div class="adm-list" id="list-links" style="max-height:240px;"></div>
     </div>
 
     <div class="adm-card mb12" style="margin-top:12px;">
@@ -1293,7 +1599,8 @@ function resetDrillPanels(){
 }
 
 function renderOrdersDrill(){
-  const orders=filtered.filter(o=>o.Customer===selCust).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
+  // Match all orders where the resolved (primary) name equals selCust
+  const orders=filtered.filter(o=>resolveCustomerName(o.Customer)===selCust).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
   document.getElementById('title-orders').textContent=selCust;
   document.getElementById('po-count').textContent=orders.length+' orders';
   const frag=document.createDocumentFragment();
@@ -1334,7 +1641,7 @@ function drillOrder(oid,orderTotal){
 }
 
 function showCustInfo(cust){
-  const custOrds=filtered.filter(o=>o.Customer===cust);
+  const custOrds=filtered.filter(o=>resolveCustomerName(o.Customer)===cust);
   const addr=custOrds[0]?.Address||'—';
   const phone=custOrds[0]?.Phone||'—';
   document.getElementById('cust-info-box').innerHTML=`
@@ -1931,11 +2238,11 @@ function logActivity(type,msg){if(!curUser)return;dbInsert('activity_log',[{user
 // ═══════════════════════════════════════════════
 let S_links=[]; // [{primary,aliases:[]}]
 let linkAliasesTemp=[];
+let linkPrimaryTemp='';
 
 async function loadLinks(){
   try{
     const rows=await dbGet('customer_links','select=*&order=primary_name.asc');
-    // Group by primary_name
     const map={};
     rows.forEach(r=>{
       if(!map[r.primary_name])map[r.primary_name]={primary:r.primary_name,aliases:[]};
@@ -1946,7 +2253,6 @@ async function loadLinks(){
 }
 
 function applyCustomerLinks(name){
-  // Returns primary name if this name is an alias, otherwise returns as-is
   for(const link of S_links){
     if(link.aliases.includes(name))return link.primary;
     if(link.primary===name)return name;
@@ -1956,14 +2262,94 @@ function applyCustomerLinks(name){
 
 function resolveCustomerName(name){return applyCustomerLinks(name);}
 
+// Get all known customer names from loaded orders
+function getAllCustNames(){
+  const set=new Set();
+  S.orders.forEach(o=>{if(o.Customer)set.add(o.Customer);});
+  return [...set].sort();
+}
+
+function searchLinkField(field){
+  const inputId=field==='primary'?'link-primary-search':'link-alias-search';
+  const resultsId=field==='primary'?'link-primary-results':'link-alias-results';
+  const q=document.getElementById(inputId).value.trim().toLowerCase();
+  const el=document.getElementById(resultsId);
+  if(!q){el.style.display='none';el.innerHTML='';return;}
+  const all=getAllCustNames();
+  const matches=all.filter(n=>n.toLowerCase().includes(q)&&n!==linkPrimaryTemp&&!linkAliasesTemp.includes(n)).slice(0,15);
+  if(!matches.length){el.innerHTML='<div style="padding:8px;font-size:11px;color:var(--t3)">No customers found</div>';el.style.display='block';return;}
+  el.innerHTML=matches.map(n=>{
+    // Count raw orders for this name
+    const cnt=S.orders.filter(o=>o.Customer===n).length;
+    return`<div onclick="selectLinkField('${field}','${esc(n)}')" style="padding:6px 10px;cursor:pointer;font-size:12px;color:var(--t2);display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''"><span>${esc(n)}</span><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${cnt} orders</span></div>`;
+  }).join('');
+  el.style.display='block';
+}
+
+function selectLinkField(field, name){
+  if(field==='primary'){
+    linkPrimaryTemp=name;
+    document.getElementById('link-primary-search').value='';
+    document.getElementById('link-primary-results').style.display='none';
+    document.getElementById('link-primary-selected').innerHTML=`<span style="background:var(--acc);color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${esc(name)}<button onclick="clearLinkPrimary()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:13px;padding:0;line-height:1;opacity:.7">×</button></span>`;
+    // Check if this primary already has an existing link — pre-fill aliases
+    const existing=S_links.find(l=>l.primary===name);
+    if(existing){
+      linkAliasesTemp=[...existing.aliases];
+      renderLinkAliasRows();
+      notif('Editing existing link for "'+name+'"');
+    }
+  }else{
+    // alias field
+    if(name===linkPrimaryTemp){notif('⚠ Alias cannot be the same as primary');return;}
+    if(linkAliasesTemp.includes(name)){notif('⚠ Already added');return;}
+    linkAliasesTemp.push(name);
+    document.getElementById('link-alias-search').value='';
+    document.getElementById('link-alias-results').style.display='none';
+    renderLinkAliasRows();
+  }
+}
+
+function clearLinkPrimary(){
+  linkPrimaryTemp='';
+  document.getElementById('link-primary-selected').innerHTML='';
+  document.getElementById('link-primary-search').value='';
+}
+
+function renderLinkAliasRows(){
+  const el=document.getElementById('link-alias-rows');
+  if(!linkAliasesTemp.length){el.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 0;">No aliases added yet — search and select names above.</div>';return;}
+  el.innerHTML=linkAliasesTemp.map((a,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:5px 10px;">
+      <span style="font-size:12px;color:var(--t2);">${esc(a)}</span>
+      <button onclick="removeLinkAlias(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;">×</button>
+    </div>`).join('');
+}
+
+function removeLinkAlias(i){linkAliasesTemp.splice(i,1);renderLinkAliasRows();}
+
+function cancelLinkBuilder(){
+  linkPrimaryTemp='';
+  linkAliasesTemp=[];
+  document.getElementById('link-primary-search').value='';
+  document.getElementById('link-alias-search').value='';
+  document.getElementById('link-primary-selected').innerHTML='';
+  document.getElementById('link-primary-results').style.display='none';
+  document.getElementById('link-alias-results').style.display='none';
+  renderLinkAliasRows();
+}
+
 function renderLinkList(){
   const el=document.getElementById('list-links');
   if(!S_links.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px">No links defined yet</div>';return;}
-  el.innerHTML=S_links.map((l,i)=>`
-    <div class="adm-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+  el.innerHTML=S_links.map((l)=>`
+    <div class="adm-item" style="flex-direction:column;align-items:flex-start;gap:5px;">
       <div style="display:flex;width:100%;align-items:center;justify-content:space-between;">
-        <span style="color:var(--txt);font-weight:600;">${esc(l.primary)}</span>
-        <button class="rm-btn" onclick="deleteLink('${esc(l.primary)}')">✕ Delink</button>
+        <span style="color:var(--txt);font-weight:600;font-size:12px;">${esc(l.primary)}</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="editLink('${esc(l.primary)}')" style="padding:3px 9px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;">Edit</button>
+          <button class="rm-btn" onclick="deleteLink('${esc(l.primary)}')">✕ Delink</button>
+        </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;">
         ${l.aliases.map(a=>`<span style="background:var(--sur2);border:1px solid var(--bdr);border-radius:10px;padding:1px 8px;font-size:10px;color:var(--t2);">${esc(a)}</span>`).join('')}
@@ -1971,73 +2357,36 @@ function renderLinkList(){
     </div>`).join('');
 }
 
-function searchLinkCustomers(){
-  const q=document.getElementById('link-search').value.trim().toLowerCase();
-  const el=document.getElementById('link-search-results');
-  if(!q){el.innerHTML='';return;}
-  const custMap={};
-  S.orders.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!custMap[n])custMap[n]=0;custMap[n]++;});
-  const matches=Object.keys(custMap).filter(c=>c.toLowerCase().includes(q)).sort().slice(0,15);
-  if(!matches.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px">No customers found</div>';return;}
-  el.innerHTML=matches.map(c=>`<div onclick="selectLinkCustomer('${esc(c)}')" style="padding:5px 9px;cursor:pointer;font-size:12px;border-radius:4px;color:var(--t2);" onmouseover="this.style.background='var(--sur2)'" onmouseout="this.style.background=''">${esc(c)} <span style="color:var(--t3);font-size:10px">(${custMap[c]} orders)</span></div>`).join('');
-}
-
-function selectLinkCustomer(name){
-  document.getElementById('link-search').value='';
-  document.getElementById('link-search-results').innerHTML='';
-  // Pre-fill builder
-  const existing=S_links.find(l=>l.primary===name||l.aliases.includes(name));
-  if(existing){
-    document.getElementById('link-primary').value=existing.primary;
-    linkAliasesTemp=[...existing.aliases];
-  }else{
-    document.getElementById('link-primary').value=name;
-    linkAliasesTemp=[];
-  }
-  document.getElementById('link-builder').style.display='block';
-  renderLinkAliases();
-}
-
-function renderLinkAliases(){
-  document.getElementById('link-aliases').innerHTML=linkAliasesTemp.map((a,i)=>`<span style="background:var(--sur2);border:1px solid var(--bdr);border-radius:10px;padding:2px 8px;font-size:11px;color:var(--t2);display:flex;align-items:center;gap:4px;">${esc(a)}<button onclick="removeLinkAlias(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button></span>`).join('');
-}
-
-function addLinkAlias(){
-  const inp=document.getElementById('link-alias-inp');
-  const v=inp.value.trim();
-  if(!v||linkAliasesTemp.includes(v))return;
-  linkAliasesTemp.push(v);
-  inp.value='';
-  renderLinkAliases();
-}
-
-function removeLinkAlias(i){linkAliasesTemp.splice(i,1);renderLinkAliases();}
-
-function cancelLinkBuilder(){
-  document.getElementById('link-builder').style.display='none';
-  document.getElementById('link-primary').value='';
-  linkAliasesTemp=[];
+function editLink(primary){
+  const existing=S_links.find(l=>l.primary===primary);
+  if(!existing)return;
+  // Pre-fill the builder
+  linkPrimaryTemp=primary;
+  linkAliasesTemp=[...existing.aliases];
+  document.getElementById('link-primary-selected').innerHTML=`<span style="background:var(--acc);color:#fff;border-radius:10px;padding:2px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${esc(primary)}<button onclick="clearLinkPrimary()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:13px;padding:0;line-height:1;opacity:.7">×</button></span>`;
+  document.getElementById('link-primary-search').value='';
+  renderLinkAliasRows();
+  // Scroll builder into view
+  document.getElementById('link-builder').scrollIntoView({behavior:'smooth',block:'start'});
+  notif('Editing link for "'+primary+'" — make changes and save');
 }
 
 async function saveLinkGroup(){
-  const primary=document.getElementById('link-primary').value.trim();
-  if(!primary||!linkAliasesTemp.length){notif('⚠ Set a primary name and at least one alias');return;}
+  if(!linkPrimaryTemp){notif('⚠ Select a primary name first');return;}
+  if(!linkAliasesTemp.length){notif('⚠ Add at least one alias');return;}
   try{
-    // Delete existing links for this primary
-    await sb('DELETE','customer_links?primary_name=eq.'+encodeURIComponent(primary)).catch(()=>{});
-    // Also delete any rows where aliases are primary elsewhere
+    await sb('DELETE','customer_links?primary_name=eq.'+encodeURIComponent(linkPrimaryTemp)).catch(()=>{});
     for(const alias of linkAliasesTemp){
       await sb('DELETE','customer_links?alias=eq.'+encodeURIComponent(alias)).catch(()=>{});
     }
-    // Insert new rows
     const now=new Date().toISOString();
-    const rows=linkAliasesTemp.map(a=>({alias:a,primary_name:primary,created_by:curUser.u,created_at:now}));
+    const rows=linkAliasesTemp.map(a=>({alias:a,primary_name:linkPrimaryTemp,created_by:curUser.u,created_at:now}));
     await dbInsert('customer_links',rows);
     await loadLinks();
     renderLinkList();
     cancelLinkBuilder();
-    notif(`✓ Linked ${linkAliasesTemp.length} alias(es) to "${primary}"`);
-    logActivity('admin',`Created customer link: ${primary} ← ${linkAliasesTemp.join(', ')}`);
+    notif(`✓ Linked ${linkAliasesTemp.length} alias(es) to "${linkPrimaryTemp}"`);
+    logActivity('admin',`Created customer link: ${linkPrimaryTemp} ← ${linkAliasesTemp.join(', ')}`);
     applyFilters();
   }catch(e){notif('❌ '+e.message);}
 }
@@ -2052,6 +2401,16 @@ async function deleteLink(primary){
     applyFilters();
   }catch(e){notif('❌ '+e.message);}
 }
+
+// Close dropdowns when clicking outside
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#link-builder')){
+    const pr=document.getElementById('link-primary-results');
+    const ar=document.getElementById('link-alias-results');
+    if(pr)pr.style.display='none';
+    if(ar)ar.style.display='none';
+  }
+});
 
 // ═══════════════════════════════════════════════
 // TEST RULES — DYNAMIC DELETION
@@ -2571,6 +2930,649 @@ function downloadMktList(type){
   }
   showLogin();
 })();
+
+// ═══════════════════════════════════════════════
+// RAABTA — STATE & STORAGE
+// ═══════════════════════════════════════════════
+let RB={custs:[],alog:[],waNumbers:[],acid:null,tplLangState:{}};
+
+function rbSave(){
+  localStorage.setItem('rb_custs',JSON.stringify(RB.custs));
+  localStorage.setItem('rb_alog',JSON.stringify(RB.alog));
+  localStorage.setItem('rb_wa',JSON.stringify(RB.waNumbers));
+}
+function rbLoad(){
+  try{RB.custs=JSON.parse(localStorage.getItem('rb_custs'))||[];}catch(e){RB.custs=[];}
+  try{RB.alog=JSON.parse(localStorage.getItem('rb_alog'))||[];}catch(e){RB.alog=[];}
+  try{RB.waNumbers=JSON.parse(localStorage.getItem('rb_wa'))||[];}catch(e){RB.waNumbers=[];}
+}
+function rbUid(){return Math.random().toString(36).substr(2,9);}
+
+// ── ROLE-BASED UI SETUP ───────────────────────────────────────────────────────
+// Patch onLoginSuccess to handle CRS (viewer) role
+const _origOnLoginSuccess=onLoginSuccess;
+function onLoginSuccess(){
+  _origOnLoginSuccess();
+  rbLoad();
+  rbSyncFromOrders();
+  rbRenderAll();
+  rbRenderWAList();
+  // Populate activity log user filter
+  const af=document.getElementById('rb-af');
+  if(af){
+    const users=[...new Set(RB.alog.map(l=>l.user))].sort();
+    af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  }
+  // Role: viewer (CRS like Fatima) — hide analytics, show only Raabta
+  if(curUser.role==='viewer'){
+    // Hide all dashboard navigation tabs
+    ['nav-dashboard','nav-customer','nav-product','nav-productsearch','nav-reports','nav-marketing','raabta-sep'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.style.display='none';
+    });
+    // Hide timebar and filterbar
+    document.querySelector('.timebar').style.display='none';
+    document.querySelector('.filter-drawer').style.display='none';
+    // Hide all analytics tab panels
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    // Show Raabta queue as default
+    rbSwitchTab('rb-queue');
+  } else {
+    // Admin/Super: default to dashboard analytics, Raabta tabs visible
+    rbSwitchTab('rb-customers');
+    // Keep dashboard active as current view
+    switchTab('dashboard',document.querySelector('.tab.active'));
+  }
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+let rbCurTab=null;
+function rbSwitchTab(name, el){
+  // Deactivate all analytics panels when switching to Raabta
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+  else{const nav=document.getElementById('nav-'+name);if(nav)nav.classList.add('active');}
+  rbCurTab=name;
+  if(name==='rb-customers'){rbRenderCusts();rbRenderStats();}
+  if(name==='rb-queue'){rbRenderQueue();}
+  if(name==='rb-templates'){rbRenderTpls();}
+  if(name==='rb-activity'){rbRenderAct();}
+}
+
+// Override switchTab to deactivate Raabta panels when switching to analytics
+const _origSwitchTab=switchTab;
+function switchTab(name,el,fromNav){
+  document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  _origSwitchTab(name,el,fromNav);
+}
+
+// ── SYNC FROM ORDER DATA ───────────────────────────────────────────────────────
+function rbSyncFromOrders(){
+  if(!S.orders||!S.orders.length) return;
+  // Build unique customer map from orders
+  const seen=new Set(RB.custs.map(c=>c.name.toLowerCase()));
+  const newCusts=[];
+  const custMap={};
+  S.orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custMap[name])custMap[name]={name,phone:o.Phone||'',city:o.City||'',lastOrder:null};
+    if(o.Order_Date&&(!custMap[name].lastOrder||o.Order_Date>custMap[name].lastOrder))
+      custMap[name].lastOrder=o.Order_Date;
+  });
+  Object.values(custMap).forEach(c=>{
+    if(!seen.has(c.name.toLowerCase())){
+      newCusts.push({
+        id:rbUid(), name:c.name, phone:c.phone, city:c.city,
+        lang:'?', status:'active',
+        lastOrder:c.lastOrder?c.lastOrder.toISOString().split('T')[0]:'',
+        notes:'', addedBy:'system'
+      });
+    }
+  });
+  if(newCusts.length){RB.custs=[...RB.custs,...newCusts];rbSave();}
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function rbRenderAll(){rbRenderStats();rbRenderCusts();rbRenderQueue();rbRenderTpls();rbRenderAct();}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function rbRenderStats(){
+  const c={new:0,active:0,vip:0,silent:0,winback:0};
+  RB.custs.forEach(x=>c[x.status]=(c[x.status]||0)+1);
+  const el=document.getElementById('rb-stats-row');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="rb-stat"><div class="rb-stat-num">${RB.custs.length}</div><div class="rb-stat-lbl">Total</div></div>
+    <div class="rb-stat sb"><div class="rb-stat-num">${c.new||0}</div><div class="rb-stat-lbl">New</div></div>
+    <div class="rb-stat sg"><div class="rb-stat-num">${c.active||0}</div><div class="rb-stat-lbl">Active</div></div>
+    <div class="rb-stat sp"><div class="rb-stat-num">${c.vip||0}</div><div class="rb-stat-lbl">VIP</div></div>
+    <div class="rb-stat"><div class="rb-stat-num">${c.silent||0}</div><div class="rb-stat-lbl">Silent</div></div>
+    <div class="rb-stat sr"><div class="rb-stat-num">${c.winback||0}</div><div class="rb-stat-lbl">Win-Back</div></div>
+    <div class="rb-stat sg"><div class="rb-stat-num">${RB.alog.length}</div><div class="rb-stat-lbl">Interactions</div></div>`;
+  // Update queue badge
+  const qb=document.getElementById('rb-qc');
+  if(qb)qb.textContent=rbBuildQueue().length;
+}
+
+// ── CUSTOMERS ─────────────────────────────────────────────────────────────────
+function rbRenderCusts(){
+  const s=(document.getElementById('rb-cs')?.value||'').toLowerCase();
+  const fs=document.getElementById('rb-cfs')?.value||'';
+  const fl=document.getElementById('rb-cfl')?.value||'';
+  const f=RB.custs.filter(c=>{
+    const ms=!s||c.name.toLowerCase().includes(s)||(c.phone||'').includes(s)||(c.city||'').toLowerCase().includes(s);
+    return ms&&(!fs||c.status===fs)&&(!fl||c.lang===fl);
+  });
+  const el=document.getElementById('rb-cust-list');
+  if(!el)return;
+  if(!f.length){el.innerHTML='<div class="rb-empty">No customers found</div>';return;}
+  el.innerHTML=f.map(c=>`
+    <div class="rb-cust-row" onclick="rbOpenC('${c.id}')">
+      <div class="rb-av">${c.name[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:100px;">
+        <div class="rb-cname">${esc(c.name)}</div>
+        <div class="rb-cmeta">${c.phone||'—'} · ${c.city||'—'} · last order: ${c.lastOrder||'?'}</div>
+      </div>
+      <div class="rb-tags">
+        <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
+        <span class="rb-bdg ${c.lang==='ur'?'rb-ur':c.lang==='en'?'rb-en':''}" style="${!c.lang||c.lang==='?'?'color:var(--t3)':''}">${c.lang==='ur'?'اردو':c.lang==='en'?'EN':'?'}</span>
+      </div>
+      <div class="rb-actions">
+        <button onclick="event.stopPropagation();rbQWA('${c.id}')" style="padding:4px 9px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);border-radius:4px;color:#25D366;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">💬 WA</button>
+      </div>
+    </div>`).join('');
+}
+
+function rbBc(s){return{new:'rb-new',active:'rb-active',vip:'rb-vip',silent:'rb-silent',winback:'rb-winback'}[s]||'rb-active';}
+
+function rbQWA(id){
+  const c=RB.custs.find(x=>x.id===id);if(!c)return;
+  const num=rbDefaultWA();
+  const msg=encodeURIComponent(RB_TEMPLATES[14].en.replace('[Name]',c.name));
+  const target=num?`https://wa.me/${num}?text=${msg}`:`https://wa.me/?text=${msg}`;
+  window.open(target,'_blank');
+  rbLogA(c.id,c.name,'Quick WA link opened','','');
+}
+
+function rbDefaultWA(){
+  const def=RB.waNumbers.find(n=>n.isDefault);
+  return def?def.number:(RB.waNumbers[0]?.number||'');
+}
+
+// ── CUSTOMER MODAL ────────────────────────────────────────────────────────────
+function rbOpenC(id){
+  const c=RB.custs.find(x=>x.id===id);if(!c)return;
+  RB.acid=id;
+  document.getElementById('rb-mn').textContent=c.name;
+  document.getElementById('rb-mp').textContent='📱 '+(c.phone||'—');
+  const d=c.lastOrder?Math.floor((Date.now()-new Date(c.lastOrder))/86400000):'?';
+  const dc=d>21?'var(--red)':d>14?'var(--acc)':'var(--grn)';
+  // Count orders from analytics data
+  const orderCount=S.orders?S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name).length:0;
+  document.getElementById('rb-mig').innerHTML=`
+    <div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 ${esc(c.city||'—')}</div></div>
+    <div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">${c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown'}</div></div>
+    <div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg ${rbBc(c.status)}">${c.status}</span></div></div>
+    <div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">${c.lastOrder||'?'}</div></div>
+    <div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:${dc}">${d}d</div></div>
+    <div class="rb-ii"><div class="rb-il">Total Orders</div><div class="rb-iv">${orderCount||'—'}</div></div>`;
+  document.getElementById('rb-mss').value=c.status;
+  document.getElementById('rb-mls').value=c.lang||'?';
+  const lang=c.lang==='ur'?'ur':'en';
+  const waNum=rbDefaultWA();
+  document.getElementById('rb-mt').innerHTML=RB_TEMPLATES.map(t=>{
+    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[نام]',c.name);
+    const lnk=waNum?`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
+    return`<button class="rb-tpl-btn" onclick="rbSTpl('${c.id}','${t.id}','${lnk}')"><span class="tn">${t.id}. ${t.name}</span><span class="tt">${t.tim}</span></button>`;
+  }).join('');
+  rbRenderMH(c);
+  document.getElementById('rb-mnote').value='';
+  document.getElementById('rb-mo').value='';
+  document.getElementById('rb-cm').classList.add('open');
+}
+
+function rbRenderMH(c){
+  const logs=RB.alog.filter(l=>l.customerId===c.id).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  document.getElementById('rb-mh').innerHTML=logs.length?logs.map(l=>`
+    <div class="rb-log">
+      <div class="rb-lt"><span class="rb-la">${esc(l.action)}</span><span class="rb-lm">${esc(l.user)} · ${rbFt(l.ts)}</span></div>
+      ${l.outcome?`<div class="rb-lo">${esc(l.outcome)}</div>`:''}
+      ${l.note?`<div class="rb-ln">${esc(l.note)}</div>`:''}
+    </div>`).join(''):'<div style="color:var(--t3);font-size:11px;padding:7px 0;font-family:\'DM Mono\',monospace;">No interactions logged yet.</div>';
+}
+
+function rbCloseCM(){document.getElementById('rb-cm').classList.remove('open');RB.acid=null;rbRenderAll();}
+
+function rbSTpl(cid,tid,lnk){
+  const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
+  window.open(lnk,'_blank');
+  rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','');
+  rbRenderMH(c);
+}
+
+function rbUpdStatus(){
+  const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
+  const ns=document.getElementById('rb-mss').value;
+  if(ns!==c.status){rbLogA(c.id,c.name,`Status: ${c.status} → ${ns}`,'','');c.status=ns;rbSave();notif('Status updated');}
+}
+
+function rbUpdLang(){
+  const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
+  const nl=document.getElementById('rb-mls').value;
+  if(nl!==c.lang){rbLogA(c.id,c.name,`Language set: ${nl}`,'','');c.lang=nl;rbSave();rbOpenC(RB.acid);}
+}
+
+function rbSaveLog(){
+  const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
+  const note=document.getElementById('rb-mnote').value.trim();
+  const outcome=document.getElementById('rb-mo').value;
+  rbLogA(c.id,c.name,'Interaction logged',outcome,note);
+  document.getElementById('rb-mnote').value='';document.getElementById('rb-mo').value='';
+  rbRenderMH(c);rbRenderAct();notif('Interaction saved');
+}
+
+function rbLogA(cid,cn,action,outcome,note){
+  RB.alog.unshift({id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note});
+  rbSave();
+}
+
+// ── ADD CUSTOMER ──────────────────────────────────────────────────────────────
+function rbOpenAdd(){
+  document.getElementById('rb-ad').value=new Date().toISOString().split('T')[0];
+  document.getElementById('rb-am').classList.add('open');
+}
+function rbSaveNew(){
+  const name=document.getElementById('rb-an').value.trim();
+  const phone=document.getElementById('rb-aph').value.trim();
+  if(!name||!phone){notif('⚠ Name and phone are required');return;}
+  const c={id:rbUid(),name,phone,city:document.getElementById('rb-ac').value.trim(),lang:document.getElementById('rb-al').value,status:document.getElementById('rb-ast').value,lastOrder:document.getElementById('rb-ad').value,notes:document.getElementById('rb-anotes').value.trim(),addedBy:curUser?.u||'manual'};
+  RB.custs.push(c);rbLogA(c.id,c.name,'Customer added manually','','');rbSave();rbRenderAll();
+  document.getElementById('rb-am').classList.remove('open');
+  ['rb-an','rb-aph','rb-ac','rb-anotes'].forEach(id=>document.getElementById(id).value='');
+  notif('Customer added');
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────────────
+function rbBuildQueue(){
+  return RB.custs.filter(c=>{
+    if(!c.lastOrder)return true;
+    const d=Math.floor((Date.now()-new Date(c.lastOrder))/86400000);
+    return c.status==='new'||c.status==='winback'||c.status==='silent'||(c.status==='active'&&d>=7);
+  }).sort((a,b)=>({winback:0,silent:1,new:2,active:3,vip:4}[a.status]||5)-({winback:0,silent:1,new:2,active:3,vip:4}[b.status]||5));
+}
+
+function rbQr(c){
+  if(!c.lastOrder)return'no order on record';
+  const d=Math.floor((Date.now()-new Date(c.lastOrder))/86400000);
+  if(c.status==='winback')return`${d}d — send win-back offer`;
+  if(c.status==='silent')return`${d}d silent — re-engage`;
+  if(c.status==='new')return'check in after first delivery';
+  return`${d}d since last order`;
+}
+function rbQdc(c){return{winback:'rb-qh',silent:'rb-qm',new:'rb-ql'}[c.status]||'rb-ql';}
+
+function rbRenderQueue(){
+  const q=rbBuildQueue();
+  const qb=document.getElementById('rb-qc');if(qb)qb.textContent=q.length;
+  const qd=document.getElementById('rb-qdate');
+  if(qd)qd.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const el=document.getElementById('rb-queue-body');if(!el)return;
+  el.innerHTML=q.length?q.map(c=>`
+    <div class="rb-qi">
+      <div class="rb-qdot ${rbQdc(c)}"></div>
+      <div class="rb-av" style="width:30px;height:30px;font-size:12px;">${c.name[0]}</div>
+      <div style="flex:1;min-width:90px;">
+        <div style="font-weight:600;font-size:13px;color:var(--txt)">${esc(c.name)}</div>
+        <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rbQr(c)}</div>
+      </div>
+      <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
+      <button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Contact →</button>
+    </div>`).join(''):'<div class="rb-empty">🎉 Queue is clear!</div>';
+}
+
+// ── TEMPLATES ─────────────────────────────────────────────────────────────────
+function rbRenderTpls(){
+  const el=document.getElementById('rb-tpl-list');if(!el)return;
+  el.innerHTML=RB_TEMPLATES.map(t=>`
+    <div class="rb-tp-card" id="rbtc-${t.id}">
+      <div class="rb-tp-hd" onclick="rbTogTpl('${t.id}')">
+        <div style="display:flex;align-items:center;gap:7px;"><span class="rb-tp-num">${t.id}</span><span class="rb-tp-name">${esc(t.name)}</span></div>
+        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${esc(t.tim)}</span><span style="color:var(--t3);font-size:11px">▾</span></div>
+      </div>
+      <div class="rb-tp-body">
+        <div class="rb-ltabs">
+          <div class="rb-ltab active" id="rblt-en-${t.id}" onclick="rbSLang('${t.id}','en')">🇬🇧 EN</div>
+          ${t.ur?`<div class="rb-ltab" id="rblt-ur-${t.id}" onclick="rbSLang('${t.id}','ur')">🇵🇰 UR</div>`:''}
+        </div>
+        <div class="rb-tpl-text" id="rbtb-${t.id}">${esc(t.en)}</div>
+        <div style="margin-top:9px;"><button onclick="rbCpTpl('${t.id}')" style="padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📋 Copy</button></div>
+      </div>
+    </div>`).join('');
+}
+function rbTogTpl(id){document.getElementById('rbtc-'+id).classList.toggle('open');}
+function rbSLang(id,lang){
+  RB.tplLangState[id]=lang;
+  const t=RB_TEMPLATES.find(x=>x.id===id);
+  const el=document.getElementById('rbtb-'+id);
+  el.textContent=(lang==='ur'&&t.ur)?t.ur:t.en;
+  el.className='rb-tpl-text'+(lang==='ur'?' ur':'');
+  document.getElementById('rblt-en-'+id).classList.toggle('active',lang==='en');
+  if(t.ur)document.getElementById('rblt-ur-'+id).classList.toggle('active',lang==='ur');
+}
+function rbCpTpl(id){
+  const t=RB_TEMPLATES.find(x=>x.id===id);
+  const lang=RB.tplLangState[id]||'en';
+  navigator.clipboard.writeText((lang==='ur'&&t.ur)?t.ur:t.en).then(()=>{
+    const b=event.target;b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000);
+  });
+}
+
+// ── ACTIVITY LOG ──────────────────────────────────────────────────────────────
+function rbRenderAct(){
+  const fu=document.getElementById('rb-af')?.value||'';
+  const logs=[...RB.alog].filter(l=>!fu||l.user===fu).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const tb=document.getElementById('rb-act-body');if(!tb)return;
+  if(!logs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
+  tb.innerHTML=logs.map(l=>`
+    <tr>
+      <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px">${rbFt(l.ts)}</td>
+      <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
+      <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
+      <td style="color:var(--txt)">${esc(l.action)}</td>
+      <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
+    </tr>`).join('');
+}
+
+// ── WHATSAPP NUMBERS ──────────────────────────────────────────────────────────
+function rbAddWANumber(){
+  const label=document.getElementById('rb-wa-label').value.trim();
+  const num=document.getElementById('rb-wa-num').value.trim().replace(/\D/g,'');
+  if(!label||!num){notif('⚠ Enter both label and number');return;}
+  const isFirst=!RB.waNumbers.length;
+  RB.waNumbers.push({id:rbUid(),label,number:num,isDefault:isFirst});
+  rbSave();rbRenderWAList();
+  document.getElementById('rb-wa-label').value='';
+  document.getElementById('rb-wa-num').value='';
+  notif('WhatsApp number added');
+}
+
+function rbSetDefault(id){
+  RB.waNumbers.forEach(n=>n.isDefault=n.id===id);
+  rbSave();rbRenderWAList();notif('Default number updated');
+}
+
+function rbRemoveWA(id){
+  RB.waNumbers=RB.waNumbers.filter(n=>n.id!==id);
+  if(RB.waNumbers.length&&!RB.waNumbers.find(n=>n.isDefault))RB.waNumbers[0].isDefault=true;
+  rbSave();rbRenderWAList();
+}
+
+function rbRenderWAList(){
+  const el=document.getElementById('rb-wa-list');if(!el)return;
+  if(!RB.waNumbers.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px;">No numbers added yet</div>';return;}
+  el.innerHTML=RB.waNumbers.map(n=>`
+    <div class="rb-wa-num-row">
+      <div class="num-label">${esc(n.label)}</div>
+      <div class="num-val">${n.number}</div>
+      <div class="num-def ${n.isDefault?'':''}">
+        ${n.isDefault
+          ?'<span style="background:rgba(34,197,94,.15);color:var(--grn);padding:2px 8px;border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;">DEFAULT</span>'
+          :`<button onclick="rbSetDefault('${n.id}')" style="padding:2px 8px;background:var(--sur3);border:1px solid var(--bdr);border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);cursor:pointer;">Set Default</button>`}
+      </div>
+      <button onclick="rbRemoveWA('${n.id}')" class="rm-btn">✕</button>
+    </div>`).join('');
+}
+
+// ── TEMPLATE EDITOR ───────────────────────────────────────────────────────────
+// RB_TEMPLATES is the master defaults array (defined at bottom of file)
+// rbGetTemplates() returns the live array — custom edits + additions from localStorage
+function rbGetTemplates(){
+  try{
+    const stored=JSON.parse(localStorage.getItem('rb_tpls'));
+    if(stored&&stored.length) return stored;
+  }catch(e){}
+  // First time — seed from defaults
+  const seeded=RB_TEMPLATES.map(t=>({...t,_isDefault:true,_defaultEn:t.en,_defaultUr:t.ur||null}));
+  localStorage.setItem('rb_tpls',JSON.stringify(seeded));
+  return seeded;
+}
+
+function rbSaveTemplates(tpls){
+  localStorage.setItem('rb_tpls',JSON.stringify(tpls));
+}
+
+// Replace live RB_TEMPLATES array reference with dynamic getter
+// All Raabta functions that use RB_TEMPLATES will now call rbGetTemplates()
+
+function tplRenderEditor(){
+  const el=document.getElementById('tpl-editor-list');
+  if(!el)return;
+  const tpls=rbGetTemplates();
+  el.innerHTML=tpls.map((t,i)=>`
+    <div class="tpl-editor-card" id="tple-${i}">
+      <div class="tpl-editor-hd" onclick="tplToggle(${i})">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+          <span style="font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;flex-shrink:0;">${t.id}</span>
+          <span style="font-weight:600;font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</span>
+          <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.tim)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          ${t._isDefault?`<span class="tpl-default-badge">default</span>`:`<span class="tpl-custom-badge">custom</span>`}
+          <span style="color:var(--t3);font-size:11px;">▾</span>
+        </div>
+      </div>
+      <div class="tpl-editor-body">
+        <div class="tpl-editor-label">Template Name</div>
+        <input class="adm-inp" id="tpln-${i}" value="${esc(t.name)}" style="width:100%;margin-bottom:6px;">
+        <div class="tpl-editor-label">When to Send</div>
+        <input class="adm-inp" id="tplt-${i}" value="${esc(t.tim)}" style="width:100%;margin-bottom:6px;">
+        <div class="tpl-editor-label">🇬🇧 English Message</div>
+        <textarea class="tpl-textarea" id="tplen-${i}">${esc(t.en)}</textarea>
+        <div class="tpl-editor-label">🇵🇰 Urdu Message ${t.ur?'':'(optional)'}</div>
+        <textarea class="tpl-textarea ur" id="tplur-${i}">${esc(t.ur||'')}</textarea>
+        <div class="tpl-editor-actions">
+          <button class="tpl-save-btn" onclick="tplSave(${i})">Save Changes</button>
+          ${t._isDefault?`<button class="tpl-reset-btn" onclick="tplReset(${i})">↺ Reset to Default</button>`:''}
+          ${!t._isDefault?`<button class="tpl-del-btn" onclick="tplDelete(${i})">✕ Delete</button>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function tplToggle(i){
+  document.getElementById('tple-'+i).classList.toggle('open');
+}
+
+function tplSave(i){
+  const tpls=rbGetTemplates();
+  const name=document.getElementById('tpln-'+i).value.trim();
+  const tim=document.getElementById('tplt-'+i).value.trim();
+  const en=document.getElementById('tplen-'+i).value.trim();
+  const ur=document.getElementById('tplur-'+i).value.trim();
+  if(!name||!en){notif('⚠ Name and English message are required');return;}
+  tpls[i].name=name;
+  tpls[i].tim=tim;
+  tpls[i].en=en;
+  tpls[i].ur=ur||null;
+  rbSaveTemplates(tpls);
+  tplRenderEditor();
+  // Re-open this card
+  setTimeout(()=>{
+    const card=document.getElementById('tple-'+i);
+    if(card)card.classList.add('open');
+  },50);
+  notif(`✓ Template "${name}" saved`);
+}
+
+function tplReset(i){
+  const tpls=rbGetTemplates();
+  const t=tpls[i];
+  if(!t._isDefault)return;
+  t.en=t._defaultEn;
+  t.ur=t._defaultUr;
+  // Reset name and timing from original RB_TEMPLATES
+  const orig=RB_TEMPLATES.find(x=>x.id===t.id);
+  if(orig){t.name=orig.name;t.tim=orig.tim;}
+  rbSaveTemplates(tpls);
+  tplRenderEditor();
+  setTimeout(()=>{
+    const card=document.getElementById('tple-'+i);
+    if(card)card.classList.add('open');
+  },50);
+  notif('↺ Template reset to default');
+}
+
+function tplDelete(i){
+  const tpls=rbGetTemplates();
+  const t=tpls[i];
+  if(t._isDefault){notif('⚠ Cannot delete a default template');return;}
+  if(!confirm(`Delete template "${t.name}"?`))return;
+  tpls.splice(i,1);
+  rbSaveTemplates(tpls);
+  tplRenderEditor();
+  notif('Template deleted');
+}
+
+function tplAddNew(){
+  const name=document.getElementById('tpl-new-name').value.trim();
+  const tim=document.getElementById('tpl-new-tim').value.trim();
+  const en=document.getElementById('tpl-new-en').value.trim();
+  const ur=document.getElementById('tpl-new-ur').value.trim();
+  if(!name||!en){notif('⚠ Name and English message are required');return;}
+  const tpls=rbGetTemplates();
+  // Generate next ID
+  const maxId=tpls.reduce((m,t)=>Math.max(m,parseInt(t.id)||0),0);
+  const newId=String(maxId+1).padStart(2,'0');
+  tpls.push({id:newId,name,tim:tim||'As needed',en,ur:ur||null,_isDefault:false});
+  rbSaveTemplates(tpls);
+  tplRenderEditor();
+  // Clear form
+  ['tpl-new-name','tpl-new-tim','tpl-new-en','tpl-new-ur'].forEach(id=>document.getElementById(id).value='');
+  notif(`✓ Template "${name}" added`);
+}
+
+// Patch rbRenderTpls to use live templates
+function rbRenderTpls(){
+  const tpls=rbGetTemplates();
+  const el=document.getElementById('rb-tpl-list');if(!el)return;
+  el.innerHTML=tpls.map(t=>`
+    <div class="rb-tp-card" id="rbtc-${t.id}">
+      <div class="rb-tp-hd" onclick="rbTogTpl('${t.id}')">
+        <div style="display:flex;align-items:center;gap:7px;"><span class="rb-tp-num">${t.id}</span><span class="rb-tp-name">${esc(t.name)}</span></div>
+        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${esc(t.tim)}</span><span style="color:var(--t3);font-size:11px">▾</span></div>
+      </div>
+      <div class="rb-tp-body">
+        <div class="rb-ltabs">
+          <div class="rb-ltab active" id="rblt-en-${t.id}" onclick="rbSLang('${t.id}','en')">🇬🇧 EN</div>
+          ${t.ur?`<div class="rb-ltab" id="rblt-ur-${t.id}" onclick="rbSLang('${t.id}','ur')">🇵🇰 UR</div>`:''}
+        </div>
+        <div class="rb-tpl-text" id="rbtb-${t.id}">${esc(t.en)}</div>
+        <div style="margin-top:9px;"><button onclick="rbCpTpl('${t.id}')" style="padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📋 Copy</button></div>
+      </div>
+    </div>`).join('');
+}
+
+// Patch rbCpTpl to use live templates
+function rbCpTpl(id){
+  const tpls=rbGetTemplates();
+  const t=tpls.find(x=>x.id===id);if(!t)return;
+  const lang=RB.tplLangState[id]||'en';
+  navigator.clipboard.writeText((lang==='ur'&&t.ur)?t.ur:t.en).then(()=>{
+    const b=event.target;b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000);
+  });
+}
+
+// Patch rbSLang to use live templates
+function rbSLang(id,lang){
+  RB.tplLangState[id]=lang;
+  const tpls=rbGetTemplates();
+  const t=tpls.find(x=>x.id===id);if(!t)return;
+  const el=document.getElementById('rbtb-'+id);if(!el)return;
+  el.textContent=(lang==='ur'&&t.ur)?t.ur:t.en;
+  el.className='rb-tpl-text'+(lang==='ur'?' ur':'');
+  const enBtn=document.getElementById('rblt-en-'+id);
+  const urBtn=document.getElementById('rblt-ur-'+id);
+  if(enBtn)enBtn.classList.toggle('active',lang==='en');
+  if(urBtn)urBtn.classList.toggle('active',lang==='ur');
+}
+
+// Patch rbOpenC to use live templates
+const _origRbOpenC=rbOpenC;
+function rbOpenC(id){
+  const c=RB.custs.find(x=>x.id===id);if(!c)return;
+  RB.acid=id;
+  document.getElementById('rb-mn').textContent=c.name;
+  document.getElementById('rb-mp').textContent='📱 '+(c.phone||'—');
+  const d=c.lastOrder?Math.floor((Date.now()-new Date(c.lastOrder))/86400000):'?';
+  const dc=d>21?'var(--red)':d>14?'var(--acc)':'var(--grn)';
+  const orderCount=S.orders?S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name).length:0;
+  document.getElementById('rb-mig').innerHTML=`
+    <div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 ${esc(c.city||'—')}</div></div>
+    <div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">${c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown'}</div></div>
+    <div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg ${rbBc(c.status)}">${c.status}</span></div></div>
+    <div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">${c.lastOrder||'?'}</div></div>
+    <div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:${dc}">${d}d</div></div>
+    <div class="rb-ii"><div class="rb-il">Total Orders</div><div class="rb-iv">${orderCount||'—'}</div></div>`;
+  document.getElementById('rb-mss').value=c.status;
+  document.getElementById('rb-mls').value=c.lang||'?';
+  const lang=c.lang==='ur'?'ur':'en';
+  const waNum=rbDefaultWA();
+  const tpls=rbGetTemplates();
+  document.getElementById('rb-mt').innerHTML=tpls.map(t=>{
+    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[نام]',c.name);
+    const lnk=waNum?`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
+    return`<button class="rb-tpl-btn" onclick="rbSTpl('${c.id}','${t.id}','${lnk}')"><span class="tn">${t.id}. ${esc(t.name)}</span><span class="tt">${esc(t.tim)}</span></button>`;
+  }).join('');
+  rbRenderMH(c);
+  document.getElementById('rb-mnote').value='';
+  document.getElementById('rb-mo').value='';
+  document.getElementById('rb-cm').classList.add('open');
+}
+
+// Patch showAdmin to render template editor when admin panel opens
+const _origShowAdmin=showAdmin;
+function showAdmin(){
+  _origShowAdmin();
+  tplRenderEditor();
+  rbRenderWAList();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function rbFt(ts){
+  const d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/1000);
+  if(diff<60)return'just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Close Raabta modals on overlay click
+document.getElementById('rb-cm').addEventListener('click',function(e){if(e.target===this)rbCloseCM();});
+document.getElementById('rb-am').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+// ═══════════════════════════════════════════════
+// RAABTA TEMPLATES
+// ═══════════════════════════════════════════════
+const RB_TEMPLATES=[
+  {id:'01',name:'Welcome — First Order',tim:'After order placed',en:`Hi [Name] 👋\n\nWelcome to Tezz Delivery! 🛒\nYour order has been received and is being prepared.\n\nWe deliver fresh groceries fast — we're just one message away whenever you need a restock.\n\nThank you for choosing Tezz! 🎉`,ur:`السلام علیکم [نام] 👋\n\nTezz Delivery میں خوش آمدید! 🛒\nآپ کا آرڈر مل گیا ہے اور تیار کیا جا رہا ہے۔\n\nتازہ گروسری، تیز ڈیلیوری — ہم ہمیشہ حاضر ہیں۔\n\nTezz کا انتخاب کرنے کا شکریہ! 🎉`},
+  {id:'02',name:'Order On the Way',tim:'When rider dispatched',en:`Hi [Name] 🛵\n\nGreat news — your Tezz order is on its way!\nEstimated arrival: [Time]\n\nIf you have any last-minute requests, let us know now.`,ur:`[نام]، خوشخبری! 🛵\n\nآپ کا Tezz آرڈر راستے میں ہے!\nمتوقع وقت: [وقت]\n\nکوئی آخری لمحے کی فرمائش ہو تو ابھی بتائیں۔`},
+  {id:'03',name:'Delivery Check-In',tim:'30–60 min after delivery',en:`Hi [Name] 😊\n\nYour Tezz order has been delivered — we hope everything looks perfect!\n\nIf anything is missing or not right, just reply here and we'll sort it out right away.\n\nWe'd love to serve you again soon! 🛒`,ur:`[نام]، السلام علیکم 😊\n\nآپ کا Tezz آرڈر پہنچ گیا — امید ہے سب کچھ بالکل ٹھیک ہے!\n\nاگر کوئی چیز کم ہو تو فوری بتائیں۔ جلد دوبارہ ملیں! 🛒`},
+  {id:'04',name:'Delay Apology',tim:'As soon as delay known',en:`Hi [Name],\n\nWe want to let you know your order is running slightly late — we're sorry for the wait! ⏳\n\nNew estimated arrival: [Time]\n\nThank you for your patience.`,ur:`[نام]، السلام علیکم،\n\nآپ کا آرڈر تھوڑی دیر سے پہنچے گا — معذرت! ⏳\n\nنیا متوقع وقت: [وقت]\n\nآپ کے صبر کا شکریہ۔`},
+  {id:'05',name:'Weekly Deals',tim:'Every Monday morning',en:`🛒 Tezz Weekly Deals are here!\n\n🥛 [Item 1] — Rs. [Price]\n🍅 [Item 2] — Rs. [Price]\n🧼 [Item 3] — Rs. [Price]\n\n🚚 Free delivery on orders above Rs. [Amount]\n\nReady to order? Just reply with your list! 📦`,ur:`🛒 Tezz کی ہفتہ وار خاص آفرز!\n\n🥛 [آئٹم 1] — روپے [قیمت]\n🍅 [آئٹم 2] — روپے [قیمت]\n\n🚚 [رقم] سے اوپر آرڈر پر فری ڈیلیوری\n\nبس اپنی لسٹ بھیجیں! 📦`},
+  {id:'06',name:'Re-engagement (2 wks)',tim:'Day 14 no new order',en:`Hi [Name] 👋\n\nIt's been a while — we miss you at Tezz! 😊\n\nWe've restocked a few things and have fresh deals on. Want us to send today's list?\n\nJust reply Yes 🛒`,ur:`[نام]، السلام علیکم 👋\n\nکافی وقت ہو گیا — آپ کی کمی محسوس ہوئی! 😊\n\nاس ہفتے کچھ نئی آفرز ہیں۔ کیا آج کی لسٹ بھیجیں؟\n\nبس ہاں لکھیں 🛒`},
+  {id:'07',name:'Win-Back (3+ wks)',tim:'Day 21–30 silent',en:`Hi [Name],\n\nWe haven't heard from you in a while 🙂\n\nAs a thank you:\n✅ Free delivery on your next order\n\nJust send us your grocery list!\nOffer valid this week only ⏰`,ur:`[نام]، السلام علیکم،\n\nکافی عرصے سے آپ سے بات نہیں ہوئی 🙂\n\nخاص آفر:\n✅ اگلے آرڈر پر فری ڈیلیوری\n\nبس اپنی لسٹ بھیجیں۔ صرف اس ہفتے! ⏰`},
+  {id:'08',name:'Complaint Response',tim:'Within 15 min',en:`Hi [Name],\n\nWe're really sorry to hear about this.\n\nWe're looking into it right now and will get back to you within [X] minutes.\n\nThank you for letting us know. 🙏`,ur:`[نام]، السلام علیکم،\n\nہمیں بہت افسوس ہے۔\n\nہم ابھی اس مسئلے کو دیکھ رہے ہیں اور [X] منٹ میں رابطہ کریں گے۔ 🙏`},
+  {id:'09',name:'Eid Greetings',tim:'2–3 days before Eid',en:`Eid Mubarak from the Tezz Delivery family! 🌙🎉\n\nWishing you and your loved ones a blessed Eid.\n\nSpecial Eid deals available — reply to order! 🛒`,ur:`Tezz Delivery کی طرف سے عید مبارک! 🌙🎉\n\nآپ کو اور آپ کے گھر والوں کو عید کی مبارکباد۔\n\nخاص عید آفرز دستیاب ہیں — ابھی آرڈر کریں! 🛒`},
+  {id:'10',name:'Loyalty Milestone',tim:'After 5th or 10th order',en:`Hi [Name] 🌟\n\nThis is your [5th/10th] order with Tezz — thank you!\n\n✅ Free delivery on your next 2 orders\n\nYou're part of the Tezz family! 💚`,ur:`[نام] 🌟\n\nTezz کے ساتھ آپ کا [5واں/10واں] آرڈر — شکریہ!\n\n✅ اگلے 2 آرڈرز پر فری ڈیلیوری\n\nآپ Tezz فیملی کا حصہ ہیں! 💚`},
+  {id:'11',name:'New Product',tim:'When new category added',en:`Hi [Name] 🎉\n\nExciting news — Tezz now delivers [New Category]!\n\nWant to see what's available? Reply Show me 😊`,ur:`[نام]، خوشخبری! 🎉\n\nTezz اب [نئی کیٹیگری] بھی ڈیلیور کرتا ہے!\n\nدیکھنا ہے؟ بس دکھائیں لکھیں 😊`},
+  {id:'12',name:'Referral Request',tim:'After positive delivery',en:`Hi [Name] 😊\n\nSo glad you're happy with Tezz!\n\n🎁 Your friend gets Rs. [X] off their first order\n🎁 You get free delivery on your next one\n\nShare our number: [Tezz WhatsApp]`,ur:`[نام]، شکریہ! 😊\n\n🎁 دوست کو پہلے آرڈر پر [X] روپے چھوٹ\n🎁 آپ کو فری ڈیلیوری\n\nنمبر: [Tezz WhatsApp]`},
+  {id:'13',name:'VIP Group Invite',tim:'Top customers, once only',en:`Hi [Name] 🌟\n\nWe're creating an exclusive group for our most valued customers.\n\n✅ First access to new products\n✅ Special deals before everyone\n✅ Priority delivery\n\nInterested? Reply Yes 💚`,ur:`[نام] 🌟\n\nخاص کسٹمرز کے لیے ایک خصوصی گروپ بنا رہے ہیں۔\n\n✅ نئی پروڈکٹس تک سب سے پہلے رسائی\n✅ ترجیحی ڈیلیوری\n\nدلچسپی ہے؟ ہاں لکھیں 💚`},
+  {id:'14',name:'Out of Stock Sub',tim:'During order packing',en:`Hi [Name],\n\n[Item] is currently out of stock.\n\nCan we substitute with [Alternative] at the same price?\n\nOr we can remove it — just let us know! ✅`,ur:`[نام]، السلام علیکم،\n\n[آئٹم] دستیاب نہیں ہے۔\n\nکیا [متبادل] ایک ہی قیمت پر چلے گا؟ بتائیں! ✅`},
+  {id:'15',name:'Language Preference',tim:'First contact only',en:`Hi! Welcome to Tezz Delivery 👋\n\nWould you prefer to chat in:\n\n🇬🇧 Reply English\n🇵🇰 Reply اردو\n\nWe want to make your experience comfortable! 😊`,ur:null},
+];
 </script>
 </body>
 </html>
