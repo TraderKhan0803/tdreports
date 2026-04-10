@@ -209,17 +209,49 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 ::-webkit-scrollbar-track{background:var(--sur);}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
 
-/* ── MOBILE ── */
-@media(max-width:600px){
-  .panels-container{flex-direction:column;}
-  .panel{resize:none;min-width:unset;}
-  .kpi-row{grid-template-columns:repeat(2,1fr);}
-  .topbar{padding:0 10px;}
-  .timebar{padding:0 10px;}
-  .content{padding:10px;}
-}
+/* ── MOBILE & RESPONSIVE ── */
+.topbar{flex-wrap:nowrap;overflow:hidden;}
+#analytics-tabs::-webkit-scrollbar,#raabta-tabs::-webkit-scrollbar{display:none;}
+#analytics-tabs,#raabta-tabs{flex:1;overflow-x:auto;scrollbar-width:none;}
+.content{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab-panel{overflow-y:auto;}
+.rb-panel{overflow-y:auto;}
 
-/* ── RAABTA ── */
+/* Already actioned badge */
+.actioned-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:2px 8px;font-size:10px;color:var(--grn);font-family:'DM Mono',monospace;white-space:nowrap;}
+.actioned-badge.warn{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:var(--acc);}
+
+/* Mode indicator in logo */
+.mode-label{font-size:9px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:8px;font-weight:700;letter-spacing:.5px;}
+.mode-analytics{background:rgba(249,115,22,.15);color:var(--acc);}
+.mode-raabta{background:rgba(34,197,94,.15);color:var(--grn);}
+
+@media(max-width:768px){
+  .topbar{height:auto;min-height:48px;padding:8px 12px;flex-wrap:wrap;gap:6px;}
+  #analytics-tabs,#raabta-tabs{order:3;width:100%;border-top:1px solid var(--bdr);padding-top:4px;margin-top:2px;}
+  .topbar-right{margin-left:auto;}
+  .tab{padding:0 10px;height:36px;font-size:11px;}
+  .content{padding:10px 12px;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .panels-container{flex-direction:column;}
+  .panel{resize:none;min-width:unset;max-height:280px;}
+  .two,.three-cust,.adm-grid{grid-template-columns:1fr;}
+  .chart-box{display:none;}
+  .timebar{padding:0 10px;height:auto;flex-wrap:wrap;gap:4px;padding:6px 12px;}
+  .ov-inner{padding:10px;}
+  .rb-tpl-grid{grid-template-columns:1fr;}
+  .rb-igrid{grid-template-columns:1fr 1fr;}
+  .meta{display:none;}
+  #logo-wrap{flex-shrink:0;}
+}
+@media(max-width:480px){
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .auth-box{padding:24px 18px;}
+  .panel{max-height:220px;}
+  .rb-card-body{padding:10px;}
+  .hbtn{font-size:10px;padding:4px 8px;}
+}
+</style>
 .rb-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
 .rb-panel.active{display:flex;}
 .rb-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
@@ -385,21 +417,39 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="logo">TEZZ.</div>
-    <div class="tab active" onclick="switchTab('dashboard',this)" id="nav-dashboard">Dashboard</div>
-    <div class="tab" onclick="switchTab('customer',this)" id="nav-customer">Customer</div>
-    <div class="tab" onclick="switchTab('product',this)" id="nav-product">Product</div>
-    <div class="tab" onclick="switchTab('productsearch',this)" id="nav-productsearch">Product Search</div>
-    <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
-    <div class="tab" onclick="switchTab('marketing',this)" id="nav-marketing">Marketing</div>
-    <!-- Raabta separator + tabs -->
-    <div class="tab-sep" id="raabta-sep"></div>
-    <div class="tab" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers" style="color:var(--acc);opacity:.7">Customers</div>
-    <div class="tab" onclick="rbSwitchTab('rb-queue',this)" id="nav-rb-queue">Queue <span id="rb-qc" style="background:rgba(249,115,22,.2);color:var(--acc);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
-    <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates">Templates</div>
-    <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
+    <!-- Logo with dropdown -->
+    <div style="position:relative;" id="logo-wrap">
+      <div class="logo" onclick="toggleLogoMenu()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;">TEZZ. <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">▾</span></div>
+      <div id="logo-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r);min-width:180px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.3);">
+        <div onclick="setMode('analytics')" id="lm-analytics" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
+          <span style="font-size:16px;">📊</span>
+          <div><div>Tezz Analytics</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Data &amp; reports</div></div>
+        </div>
+        <div style="height:1px;background:var(--bdr);"></div>
+        <div onclick="setMode('raabta')" id="lm-raabta" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
+          <span style="font-size:16px;">💬</span>
+          <div><div>Tezz Raabta</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Customer messaging</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Analytics tabs -->
+    <div id="analytics-tabs" style="display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
+      <div class="tab active" onclick="switchTab('dashboard',this)" id="nav-dashboard">Dashboard</div>
+      <div class="tab" onclick="switchTab('customer',this)" id="nav-customer">Customer</div>
+      <div class="tab" onclick="switchTab('product',this)" id="nav-product">Product</div>
+      <div class="tab" onclick="switchTab('productsearch',this)" id="nav-productsearch" class="hide-mobile">Product Search</div>
+      <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
+      <div class="tab" onclick="switchTab('marketing',this)" id="nav-marketing">Marketing</div>
+    </div>
+    <!-- Raabta tabs -->
+    <div id="raabta-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
+      <div class="tab active" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers">Customers</div>
+      <div class="tab" onclick="rbSwitchTab('rb-queue',this)" id="nav-rb-queue">Queue <span id="rb-qc" style="background:rgba(249,115,22,.2);color:var(--acc);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
+      <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates">Templates</div>
+      <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
+    </div>
     <div class="topbar-right">
-      <span class="meta" id="hdr-meta">No data</span>
+      <span class="meta" id="hdr-meta" style="display:none">No data</span>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--pur);color:var(--pur)" onclick="showSuper()">★ Super</button>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
@@ -917,139 +967,147 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 <!-- ═══ ADMIN OVERLAY ═══ -->
 <div class="overlay" id="admin-overlay">
   <div class="ov-inner">
-    <div class="ov-hdr"><div class="ov-title">⚙ Admin Panel</div><button class="ov-close" onclick="closeModal('admin-overlay')">Close</button></div>
-
-    <!-- WhatsApp Numbers -->
-    <div class="adm-card mb12">
-      <div class="adm-title">📱 WhatsApp Numbers — Raabta</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add one or more WhatsApp numbers. The default is used in all message deep links.</div>
-      <div class="adm-inp-row" style="flex-wrap:wrap;">
-        <input class="adm-inp" id="rb-wa-label" placeholder="Label (e.g. Main Orders)" style="flex:1;min-width:130px;">
-        <input class="adm-inp" id="rb-wa-num" placeholder="Number (e.g. 923001234567)" style="flex:1;min-width:150px;">
-        <button class="adm-add" onclick="rbAddWANumber()">+ Add</button>
-      </div>
-      <div id="rb-wa-list" style="margin-top:8px;"></div>
+    <div class="ov-hdr">
+      <div class="ov-title">⚙ Admin Panel</div>
+      <button class="ov-close" onclick="closeModal('admin-overlay')">Close</button>
+    </div>
+    <!-- Admin tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:16px;">
+      <div id="adm-tab-analytics" onclick="switchAdminTab('analytics')" style="padding:10px 20px;cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);border-bottom:2px solid var(--acc);font-family:'Syne',sans-serif;">📊 Tezz Analytics</div>
+      <div id="adm-tab-raabta" onclick="switchAdminTab('raabta')" style="padding:10px 20px;cursor:pointer;font-size:13px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">💬 Tezz Raabta</div>
     </div>
 
-    <!-- Template Editor -->
-    <div class="adm-card mb12">
-      <div class="adm-title">💬 Message Templates — Raabta</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing. Changes save instantly and reflect everywhere in Raabta. Fatima can personalise messages in WhatsApp before sending.</div>
-      <div id="tpl-editor-list"></div>
-      <div class="tpl-add-form">
-        <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:10px;">+ Add New Template</div>
-        <div class="tpl-editor-label">Template Name</div>
-        <input class="adm-inp" id="tpl-new-name" placeholder="e.g. Ramadan Greetings" style="width:100%;margin-bottom:6px;">
-        <div class="tpl-editor-label">When to Send</div>
-        <input class="adm-inp" id="tpl-new-tim" placeholder="e.g. First day of Ramadan" style="width:100%;margin-bottom:6px;">
-        <div class="tpl-editor-label">🇬🇧 English Message</div>
-        <textarea class="tpl-textarea" id="tpl-new-en" placeholder="Write English message here…"></textarea>
-        <div class="tpl-editor-label">🇵🇰 Urdu Message (optional)</div>
-        <textarea class="tpl-textarea ur" id="tpl-new-ur" placeholder="اردو پیغام یہاں لکھیں…"></textarea>
-        <div style="margin-top:10px;"><button class="tpl-save-btn" onclick="tplAddNew()">Add Template</button></div>
-      </div>
-    </div>
-
-    <!-- Data Management -->
-    <div class="adm-card mb12">
-      <div class="adm-title">📂 Data Management</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files <span title="Date of most recently uploaded order record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-orders-last-date" style="color:var(--txt);font-weight:600">—</span></div>
-          <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-orders-last-file" style="color:var(--t2)">—</span></div>
-          <label class="up-btn" id="adm-lbl-orders">
-            <span>📁</span><span id="adm-txt-orders">Select one or more .xlsx files</span>
-            <input type="file" id="adm-file-orders" accept=".xlsx,.xls" multiple onchange="admFilesSelected('orders',this.files)">
-          </label>
-          <div style="font-size:10px;color:var(--t3);">Multiple files supported — processed in order.</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files <span title="Date of most recently uploaded product record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-prods-last-date" style="color:var(--txt);font-weight:600">—</span></div>
-          <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-prods-last-file" style="color:var(--t2)">—</span></div>
-          <label class="up-btn" id="adm-lbl-products">
-            <span>📁</span><span id="adm-txt-products">Select one or more .xlsx files</span>
-            <input type="file" id="adm-file-products" accept=".xlsx,.xls" multiple onchange="admFilesSelected('products',this.files)">
-          </label>
-          <div style="font-size:10px;color:var(--t3);">Orders must be uploaded before Products.</div>
-        </div>
-      </div>
-      <div class="up-log" id="adm-upload-log"></div>
-      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
-        <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">⬆ Upload Selected Files</button>
-        <button onclick="recalcNewCustomers()" title="Re-runs New/Recurring calculation in chronological order across all data" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">↺ Recalc New Customers</button>
-        <div style="flex:1;"></div>
-        <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
-      </div>
-    </div>
-
-    <div class="adm-grid">
-      <div class="adm-card">
-        <div class="adm-title">🏢 B2B Customers</div>
-        <div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Enter multiple names separated by commas.</div>
-        <div class="adm-inp-row">
-          <input class="adm-inp" id="inp-b2b" placeholder="Name 1, Name 2…">
-          <button class="adm-add" onclick="addB2B()">+ Add</button>
-        </div>
-        <div class="adm-list" id="list-b2b"></div>
-      </div>
-      <div class="adm-card">
-        <div class="adm-title">🧪 Test Record Filters</div>
-        <div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Matching records removed on upload.</div>
-        <div class="adm-inp-row">
-          <input class="adm-inp" id="inp-tc" placeholder="Customer name">
-          <input class="adm-inp" id="inp-ts" placeholder="Status (opt)">
-          <button class="adm-add" onclick="addTestFilter()">+ Add</button>
-        </div>
-        <div class="adm-list" id="list-tests"></div>
-      </div>
-    </div>
-    <!-- Customer Linking -->
-    <div class="adm-card mb12" style="margin-top:12px;">
-      <div class="adm-title">🔗 Customer Linking</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Link duplicate customer names to a single primary name. All data aggregates under the primary.</div>
-
-      <!-- Builder -->
-      <div id="link-builder" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:12px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <!-- Primary -->
+    <!-- ANALYTICS ADMIN CONTENT -->
+    <div id="adm-content-analytics">
+      <!-- Data Management -->
+      <div class="adm-card mb12">
+        <div class="adm-title">📂 Data Management</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Primary Name <span style="color:var(--t3)">(shown in all reports)</span></div>
-            <div style="position:relative;">
-              <input class="adm-inp" id="link-primary-search" placeholder="Search primary…" oninput="searchLinkField('primary')" autocomplete="off" style="width:100%;">
-              <div id="link-primary-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
-            </div>
-            <div id="link-primary-selected" style="margin-top:6px;min-height:24px;"></div>
+            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files <span title="Date of most recently uploaded order record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
+            <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-orders-last-date" style="color:var(--txt);font-weight:600">—</span></div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-orders-last-file" style="color:var(--t2)">—</span></div>
+            <label class="up-btn" id="adm-lbl-orders">
+              <span>📁</span><span id="adm-txt-orders">Select one or more .xlsx files</span>
+              <input type="file" id="adm-file-orders" accept=".xlsx,.xls" multiple onchange="admFilesSelected('orders',this.files)">
+            </label>
+            <div style="font-size:10px;color:var(--t3);">Multiple files supported — processed in order.</div>
           </div>
-          <!-- Aliases -->
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Add Alias <span style="color:var(--t3)">(names to merge in)</span></div>
-            <div style="position:relative;">
-              <input class="adm-inp" id="link-alias-search" placeholder="Search alias to add…" oninput="searchLinkField('alias')" autocomplete="off" style="width:100%;">
-              <div id="link-alias-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
-            </div>
+            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files <span title="Date of most recently uploaded product record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
+            <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-prods-last-date" style="color:var(--txt);font-weight:600">—</span></div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-prods-last-file" style="color:var(--t2)">—</span></div>
+            <label class="up-btn" id="adm-lbl-products">
+              <span>📁</span><span id="adm-txt-products">Select one or more .xlsx files</span>
+              <input type="file" id="adm-file-products" accept=".xlsx,.xls" multiple onchange="admFilesSelected('products',this.files)">
+            </label>
+            <div style="font-size:10px;color:var(--t3);">Orders must be uploaded before Products.</div>
           </div>
         </div>
-        <!-- Alias rows -->
-        <div id="link-alias-rows" style="margin-bottom:10px;display:flex;flex-direction:column;gap:4px;"></div>
-        <!-- Actions -->
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button onclick="cancelLinkBuilder()" style="padding:6px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Clear</button>
-          <button class="adm-add" onclick="saveLinkGroup()" style="background:var(--grn);">Save Link</button>
+        <div class="up-log" id="adm-upload-log"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+          <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">⬆ Upload Selected Files</button>
+          <button onclick="recalcNewCustomers()" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">↺ Recalc New Customers</button>
+          <div style="flex:1;"></div>
+          <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
         </div>
       </div>
 
-      <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
-      <div class="adm-list" id="list-links" style="max-height:240px;"></div>
+      <div class="adm-grid">
+        <div class="adm-card">
+          <div class="adm-title">🏢 B2B Customers</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Enter multiple names separated by commas.</div>
+          <div class="adm-inp-row">
+            <input class="adm-inp" id="inp-b2b" placeholder="Name 1, Name 2…">
+            <button class="adm-add" onclick="addB2B()">+ Add</button>
+          </div>
+          <div class="adm-list" id="list-b2b"></div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-title">🧪 Test Record Filters</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Matching records removed on upload.</div>
+          <div class="adm-inp-row">
+            <input class="adm-inp" id="inp-tc" placeholder="Customer name">
+            <input class="adm-inp" id="inp-ts" placeholder="Status (opt)">
+            <button class="adm-add" onclick="addTestFilter()">+ Add</button>
+          </div>
+          <div class="adm-list" id="list-tests"></div>
+        </div>
+      </div>
+
+      <!-- Customer Linking -->
+      <div class="adm-card mb12" style="margin-top:12px;">
+        <div class="adm-title">🔗 Customer Linking</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Link duplicate customer names to a single primary name. All data aggregates under the primary.</div>
+        <div id="link-builder" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Primary Name <span style="color:var(--t3)">(shown in all reports)</span></div>
+              <div style="position:relative;">
+                <input class="adm-inp" id="link-primary-search" placeholder="Search primary…" oninput="searchLinkField('primary')" autocomplete="off" style="width:100%;">
+                <div id="link-primary-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+              </div>
+              <div id="link-primary-selected" style="margin-top:6px;min-height:24px;"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Add Alias <span style="color:var(--t3)">(names to merge in)</span></div>
+              <div style="position:relative;">
+                <input class="adm-inp" id="link-alias-search" placeholder="Search alias to add…" oninput="searchLinkField('alias')" autocomplete="off" style="width:100%;">
+                <div id="link-alias-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+              </div>
+            </div>
+          </div>
+          <div id="link-alias-rows" style="margin-bottom:10px;display:flex;flex-direction:column;gap:4px;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="cancelLinkBuilder()" style="padding:6px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Clear</button>
+            <button class="adm-add" onclick="saveLinkGroup()" style="background:var(--grn);">Save Link</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
+        <div class="adm-list" id="list-links" style="max-height:240px;"></div>
+      </div>
+
+      <div class="adm-card mb12" style="margin-top:12px;">
+        <div class="adm-title">🗺 Unrecognised Addresses — Assign City</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">These addresses couldn't be auto-matched. Enter city name and save.</div>
+        <div id="list-cities"><div style="color:var(--t3);font-size:12px;padding:8px;">✓ All addresses recognised</div></div>
+        <button class="save-btn" onclick="saveCities()">Save City Assignments</button>
+      </div>
     </div>
 
-    <div class="adm-card mb12" style="margin-top:12px;">
-      <div class="adm-title">🗺 Unrecognised Addresses — Assign City</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">These addresses couldn't be auto-matched. Enter city name and save.</div>
-      <div id="list-cities"><div style="color:var(--t3);font-size:12px;padding:8px;">✓ All addresses recognised</div></div>
-      <button class="save-btn" onclick="saveCities()">Save City Assignments</button>
+    <!-- RAABTA ADMIN CONTENT -->
+    <div id="adm-content-raabta" style="display:none;">
+      <!-- WhatsApp Numbers -->
+      <div class="adm-card mb12">
+        <div class="adm-title">📱 WhatsApp Numbers</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add one or more WhatsApp numbers. The default is used in all message deep links.</div>
+        <div class="adm-inp-row" style="flex-wrap:wrap;">
+          <input class="adm-inp" id="rb-wa-label" placeholder="Label (e.g. Main Orders)" style="flex:1;min-width:130px;">
+          <input class="adm-inp" id="rb-wa-num" placeholder="Number (e.g. 923001234567)" style="flex:1;min-width:150px;">
+          <button class="adm-add" onclick="rbAddWANumber()">+ Add</button>
+        </div>
+        <div id="rb-wa-list" style="margin-top:8px;"></div>
+      </div>
+      <!-- Template Editor -->
+      <div class="adm-card mb12">
+        <div class="adm-title">💬 Message Templates</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing. Changes save instantly and reflect everywhere in Raabta.</div>
+        <div id="tpl-editor-list"></div>
+        <div class="tpl-add-form">
+          <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:10px;">+ Add New Template</div>
+          <div class="tpl-editor-label">Template Name</div>
+          <input class="adm-inp" id="tpl-new-name" placeholder="e.g. Ramadan Greetings" style="width:100%;margin-bottom:6px;">
+          <div class="tpl-editor-label">When to Send</div>
+          <input class="adm-inp" id="tpl-new-tim" placeholder="e.g. First day of Ramadan" style="width:100%;margin-bottom:6px;">
+          <div class="tpl-editor-label">🇬🇧 English Message</div>
+          <textarea class="tpl-textarea" id="tpl-new-en" placeholder="Write English message here…"></textarea>
+          <div class="tpl-editor-label">🇵🇰 Urdu Message (optional)</div>
+          <textarea class="tpl-textarea ur" id="tpl-new-ur" placeholder="اردو پیغام یہاں لکھیں…"></textarea>
+          <div style="margin-top:10px;"><button class="tpl-save-btn" onclick="tplAddNew()">Add Template</button></div>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -1889,8 +1947,7 @@ function updateMeta(){
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
   renderAdminLists();buildCityAssign();updateUploadMeta();renderLinkList();
-  rbRenderWAList();
-  tplRenderEditor();
+  switchAdminTab('analytics');
   document.getElementById('admin-overlay').style.display='block';
 }
 async function showSuper(){
@@ -2805,7 +2862,13 @@ function getMktCustMap(){
 
 function mktRow(cells,custName){
   const tr=document.createElement('tr');tr.className='r';
-  tr.innerHTML=cells;
+  // Inject actioned badge after customer name in first td
+  const badge=rbActionedBadge(custName);
+  const cellsWithBadge=badge?cells.replace(
+    /(<td[^>]*>)(<span[^>]*>)(.*?)(<\/span><\/td>)/,
+    `$1$2$3$4<td style="padding:6px 8px;">${badge}</td>`
+  ):cells;
+  tr.innerHTML=cellsWithBadge;
   tr.onclick=()=>goToDashboardCustomer(custName);
   tr.title='Click to view on Dashboard';
   return tr;
@@ -2954,22 +3017,92 @@ function rbInit(){
   rbSyncFromOrders();
   rbRenderAll();
   rbRenderWAList();
-  // Populate activity log user filter
   const af=document.getElementById('rb-af');
   if(af){
     const users=[...new Set(RB.alog.map(l=>l.user))].sort();
     af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
   }
-  // Role: viewer (CRS like Fatima) — hide analytics, show only Raabta
   if(curUser.role==='viewer'){
-    ['nav-dashboard','nav-customer','nav-product','nav-productsearch','nav-reports','nav-marketing','raabta-sep'].forEach(id=>{
-      const el=document.getElementById(id);if(el)el.style.display='none';
-    });
+    // CRS: hide logo dropdown, show only Raabta
+    document.getElementById('logo-wrap').querySelector('#logo-menu').style.display='none';
+    document.querySelector('.logo').style.cursor='default';
     document.querySelector('.timebar').style.display='none';
     document.querySelector('.filter-drawer').style.display='none';
     document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    const meta=document.getElementById('hdr-meta');if(meta)meta.style.display='none';
+    setMode('raabta');
+  } else {
+    // Admin/Super: start in Analytics mode
+    setMode('analytics');
+  }
+}
+
+let currentMode='analytics';
+
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('logo-menu').style.display='none';
+  const aTabs=document.getElementById('analytics-tabs');
+  const rTabs=document.getElementById('raabta-tabs');
+  const timebar=document.querySelector('.timebar');
+  const filterDrawer=document.querySelector('.filter-drawer');
+  const meta=document.getElementById('hdr-meta');
+
+  // Update logo menu active states
+  document.getElementById('lm-analytics').style.background=mode==='analytics'?'var(--sur3)':'';
+  document.getElementById('lm-raabta').style.background=mode==='raabta'?'var(--sur3)':'';
+
+  if(mode==='analytics'){
+    aTabs.style.display='flex';
+    rTabs.style.display='none';
+    if(timebar)timebar.style.display='';
+    if(meta)meta.style.display='';
+    // Hide Raabta panels, show analytics
+    document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='');
+    // Re-activate dashboard
+    const active=document.querySelector('.tab-panel.active');
+    if(!active){
+      document.getElementById('tab-dashboard').classList.add('active');
+      document.querySelectorAll('#analytics-tabs .tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById('nav-dashboard').classList.add('active');
+    }
+  } else {
+    aTabs.style.display='none';
+    rTabs.style.display='flex';
+    if(timebar&&curUser.role!=='viewer')timebar.style.display='none';
+    if(filterDrawer)filterDrawer.style.display='none';
+    if(meta)meta.style.display='none';
+    // Hide analytics panels
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    // Show Raabta queue by default
     rbSwitchTab('rb-queue');
   }
+}
+
+function toggleLogoMenu(){
+  if(curUser&&curUser.role==='viewer')return;
+  const m=document.getElementById('logo-menu');
+  m.style.display=m.style.display==='none'?'block':'none';
+}
+
+// Close logo menu on outside click
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#logo-wrap')){
+    const m=document.getElementById('logo-menu');
+    if(m)m.style.display='none';
+  }
+});
+
+function switchAdminTab(tab){
+  const isAnalytics=tab==='analytics';
+  document.getElementById('adm-content-analytics').style.display=isAnalytics?'':'none';
+  document.getElementById('adm-content-raabta').style.display=isAnalytics?'none':'';
+  document.getElementById('adm-tab-analytics').style.color=isAnalytics?'var(--acc)':'var(--t3)';
+  document.getElementById('adm-tab-analytics').style.borderBottomColor=isAnalytics?'var(--acc)':'transparent';
+  document.getElementById('adm-tab-raabta').style.color=isAnalytics?'var(--t3)':'var(--grn)';
+  document.getElementById('adm-tab-raabta').style.borderBottomColor=isAnalytics?'transparent':'var(--grn)';
+  if(tab==='raabta'){tplRenderEditor();rbRenderWAList();}
 }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────────────
@@ -3199,17 +3332,28 @@ function rbRenderQueue(){
   const qd=document.getElementById('rb-qdate');
   if(qd)qd.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const el=document.getElementById('rb-queue-body');if(!el)return;
-  el.innerHTML=q.length?q.map(c=>`
-    <div class="rb-qi">
+  el.innerHTML=q.length?q.map(c=>{
+    // Check if already actioned today
+    const todayStr=new Date().toISOString().slice(0,10);
+    const todayLogs=RB.alog.filter(l=>l.customerId===c.id&&l.action.includes('Template')&&l.ts.slice(0,10)===todayStr);
+    const actionedBadge=todayLogs.length
+      ?`<span class="actioned-badge" title="Already contacted today">✓ ${esc(todayLogs[0].user)} · ${rbFt(todayLogs[0].ts)}</span>`
+      :'';
+    return`<div class="rb-qi" style="${todayLogs.length?'opacity:.65;':''}">
       <div class="rb-qdot ${rbQdc(c)}"></div>
       <div class="rb-av" style="width:30px;height:30px;font-size:12px;">${c.name[0]}</div>
-      <div style="flex:1;min-width:90px;">
+      <div style="flex:1;min-width:80px;">
         <div style="font-weight:600;font-size:13px;color:var(--txt)">${esc(c.name)}</div>
         <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rbQr(c)}</div>
+        ${actionedBadge?`<div style="margin-top:4px;">${actionedBadge}</div>`:''}
       </div>
       <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
-      <button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Contact →</button>
-    </div>`).join(''):'<div class="rb-empty">🎉 Queue is clear!</div>';
+      ${todayLogs.length
+        ?`<button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;white-space:nowrap;">View</button>`
+        :`<button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Contact →</button>`
+      }
+    </div>`;
+  }).join(''):'<div class="rb-empty">🎉 Queue is clear!</div>';
 }
 
 // ── TEMPLATES ─────────────────────────────────────────────────────────────────
@@ -3400,6 +3544,18 @@ function tplAddNew(){
   rbSaveTemplates(tpls);tplRenderEditor();
   ['tpl-new-name','tpl-new-tim','tpl-new-en','tpl-new-ur'].forEach(id=>document.getElementById(id).value='');
   notif(`✓ Template "${name}" added`);
+}
+
+// ── ACTIONED INDICATOR ────────────────────────────────────────────────────────
+// Returns HTML badge if this customer has been contacted recently via Raabta
+function rbActionedBadge(customerName){
+  if(!RB||!RB.alog)return'';
+  // Find most recent interaction log for this customer
+  const logs=RB.alog.filter(l=>l.customerName&&l.customerName.toLowerCase()===customerName.toLowerCase()&&l.action.includes('Template'));
+  if(!logs.length)return'';
+  const last=logs[0]; // already sorted newest first
+  const when=rbFt(last.ts);
+  return`<span class="actioned-badge" title="Last contacted by ${esc(last.user)} — ${esc(when)}">✓ ${esc(last.user)} · ${esc(when)}</span>`;
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
