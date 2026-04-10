@@ -320,27 +320,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .rb-wa-num-row .num-val{color:var(--t2);font-family:'DM Mono',monospace;font-size:11px;}
 .rb-wa-num-row .num-def{padding:2px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;}
 .tab-sep{width:1px;height:20px;background:var(--bdr);margin:0 4px;flex-shrink:0;}
-
-/* ── TEMPLATE EDITOR ── */
 .tpl-editor-card{border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:8px;}
-.tpl-editor-hd{padding:10px 13px;background:var(--sur2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
+.tpl-editor-hd{padding:9px 13px;background:var(--sur2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
 .tpl-editor-hd:hover{background:var(--sur3);}
-.tpl-editor-body{padding:13px;display:none;border-top:1px solid var(--bdr);}
+.tpl-editor-body{padding:12px;display:none;border-top:1px solid var(--bdr);}
 .tpl-editor-card.open .tpl-editor-body{display:block;}
-.tpl-editor-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;margin-bottom:5px;margin-top:10px;}
+.tpl-editor-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:9px;}
 .tpl-editor-label:first-child{margin-top:0;}
-.tpl-textarea{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:9px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.7;resize:vertical;outline:none;min-height:100px;}
+.tpl-textarea{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.7;resize:vertical;outline:none;min-height:95px;}
 .tpl-textarea:focus{border-color:var(--acc);}
 .tpl-textarea.ur{direction:rtl;text-align:right;font-size:13px;}
 .tpl-editor-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;}
 .tpl-save-btn{padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.tpl-reset-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.tpl-reset-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .tpl-reset-btn:hover{border-color:var(--blu);color:var(--blu);}
-.tpl-del-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-left:auto;}
+.tpl-del-btn{padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:auto;}
 .tpl-del-btn:hover{border-color:var(--red);color:var(--red);}
-.tpl-custom-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--blu);font-family:'DM Mono',monospace;font-weight:700;}
-.tpl-default-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(249,115,22,.12);color:var(--acc);font-family:'DM Mono',monospace;}
-.tpl-add-form{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:13px;margin-top:12px;}
+.tpl-add-form{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -926,7 +922,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <!-- WhatsApp Numbers -->
     <div class="adm-card mb12">
       <div class="adm-title">📱 WhatsApp Numbers — Raabta</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add one or more WhatsApp numbers. The default number is used in all message deep links.</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add one or more WhatsApp numbers. The default is used in all message deep links.</div>
       <div class="adm-inp-row" style="flex-wrap:wrap;">
         <input class="adm-inp" id="rb-wa-label" placeholder="Label (e.g. Main Orders)" style="flex:1;min-width:130px;">
         <input class="adm-inp" id="rb-wa-num" placeholder="Number (e.g. 923001234567)" style="flex:1;min-width:150px;">
@@ -938,23 +934,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <!-- Template Editor -->
     <div class="adm-card mb12">
       <div class="adm-title">💬 Message Templates — Raabta</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing notes. Changes save immediately and reflect in the Customers and Queue views. Fatima can personalise messages in WhatsApp before sending.</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing. Changes save instantly and reflect everywhere in Raabta. Fatima can personalise messages in WhatsApp before sending.</div>
       <div id="tpl-editor-list"></div>
-
-      <!-- Add new template -->
       <div class="tpl-add-form">
         <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:10px;">+ Add New Template</div>
         <div class="tpl-editor-label">Template Name</div>
         <input class="adm-inp" id="tpl-new-name" placeholder="e.g. Ramadan Greetings" style="width:100%;margin-bottom:6px;">
         <div class="tpl-editor-label">When to Send</div>
         <input class="adm-inp" id="tpl-new-tim" placeholder="e.g. First day of Ramadan" style="width:100%;margin-bottom:6px;">
-        <div class="tpl-editor-label">English Message</div>
+        <div class="tpl-editor-label">🇬🇧 English Message</div>
         <textarea class="tpl-textarea" id="tpl-new-en" placeholder="Write English message here…"></textarea>
-        <div class="tpl-editor-label">Urdu Message (optional)</div>
+        <div class="tpl-editor-label">🇵🇰 Urdu Message (optional)</div>
         <textarea class="tpl-textarea ur" id="tpl-new-ur" placeholder="اردو پیغام یہاں لکھیں…"></textarea>
-        <div style="margin-top:10px;">
-          <button class="tpl-save-btn" onclick="tplAddNew()">Add Template</button>
-        </div>
+        <div style="margin-top:10px;"><button class="tpl-save-btn" onclick="tplAddNew()">Add Template</button></div>
       </div>
     </div>
 
@@ -1322,6 +1314,7 @@ function launchApp(){
   updateMeta();
   updateUploadMeta();
   applyPanelLayout();
+  rbInit();
 }
 
 // ═══════════════════════════════════════════════
@@ -1344,6 +1337,9 @@ function switchTab(name,el,fromNav){
   if(curUser&&elapsed>2)logActivity('pageview','Spent '+elapsed+'s on '+curTab);
   if(!fromNav&&curTab&&curTab!==name){navHistory.push(curTab);if(navHistory.length>10)navHistory.shift();}
   curTab=name;tabStart=Date.now();
+  // Deactivate Raabta panels
+  document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
+  rbCurTab=null;
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
@@ -1893,6 +1889,8 @@ function updateMeta(){
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
   renderAdminLists();buildCityAssign();updateUploadMeta();renderLinkList();
+  rbRenderWAList();
+  tplRenderEditor();
   document.getElementById('admin-overlay').style.display='block';
 }
 async function showSuper(){
@@ -2949,10 +2947,9 @@ function rbLoad(){
 function rbUid(){return Math.random().toString(36).substr(2,9);}
 
 // ── ROLE-BASED UI SETUP ───────────────────────────────────────────────────────
-// Patch onLoginSuccess to handle CRS (viewer) role
-const _origOnLoginSuccess=onLoginSuccess;
-function onLoginSuccess(){
-  _origOnLoginSuccess();
+let rbCurTab=null;
+
+function rbInit(){
   rbLoad();
   rbSyncFromOrders();
   rbRenderAll();
@@ -2965,33 +2962,23 @@ function onLoginSuccess(){
   }
   // Role: viewer (CRS like Fatima) — hide analytics, show only Raabta
   if(curUser.role==='viewer'){
-    // Hide all dashboard navigation tabs
     ['nav-dashboard','nav-customer','nav-product','nav-productsearch','nav-reports','nav-marketing','raabta-sep'].forEach(id=>{
       const el=document.getElementById(id);if(el)el.style.display='none';
     });
-    // Hide timebar and filterbar
     document.querySelector('.timebar').style.display='none';
     document.querySelector('.filter-drawer').style.display='none';
-    // Hide all analytics tab panels
     document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
-    // Show Raabta queue as default
     rbSwitchTab('rb-queue');
-  } else {
-    // Admin/Super: default to dashboard analytics, Raabta tabs visible
-    rbSwitchTab('rb-customers');
-    // Keep dashboard active as current view
-    switchTab('dashboard',document.querySelector('.tab.active'));
   }
 }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────────────
-let rbCurTab=null;
 function rbSwitchTab(name, el){
-  // Deactivate all analytics panels when switching to Raabta
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
+  const panel=document.getElementById('tab-'+name);
+  if(panel)panel.classList.add('active');
   if(el)el.classList.add('active');
   else{const nav=document.getElementById('nav-'+name);if(nav)nav.classList.add('active');}
   rbCurTab=name;
@@ -2999,14 +2986,6 @@ function rbSwitchTab(name, el){
   if(name==='rb-queue'){rbRenderQueue();}
   if(name==='rb-templates'){rbRenderTpls();}
   if(name==='rb-activity'){rbRenderAct();}
-}
-
-// Override switchTab to deactivate Raabta panels when switching to analytics
-const _origSwitchTab=switchTab;
-function switchTab(name,el,fromNav){
-  document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  _origSwitchTab(name,el,fromNav);
 }
 
 // ── SYNC FROM ORDER DATA ───────────────────────────────────────────────────────
@@ -3327,40 +3306,31 @@ function rbRenderWAList(){
 }
 
 // ── TEMPLATE EDITOR ───────────────────────────────────────────────────────────
-// RB_TEMPLATES is the master defaults array (defined at bottom of file)
-// rbGetTemplates() returns the live array — custom edits + additions from localStorage
 function rbGetTemplates(){
   try{
     const stored=JSON.parse(localStorage.getItem('rb_tpls'));
-    if(stored&&stored.length) return stored;
+    if(stored&&stored.length)return stored;
   }catch(e){}
-  // First time — seed from defaults
   const seeded=RB_TEMPLATES.map(t=>({...t,_isDefault:true,_defaultEn:t.en,_defaultUr:t.ur||null}));
   localStorage.setItem('rb_tpls',JSON.stringify(seeded));
   return seeded;
 }
 
-function rbSaveTemplates(tpls){
-  localStorage.setItem('rb_tpls',JSON.stringify(tpls));
-}
-
-// Replace live RB_TEMPLATES array reference with dynamic getter
-// All Raabta functions that use RB_TEMPLATES will now call rbGetTemplates()
+function rbSaveTemplates(tpls){localStorage.setItem('rb_tpls',JSON.stringify(tpls));}
 
 function tplRenderEditor(){
-  const el=document.getElementById('tpl-editor-list');
-  if(!el)return;
+  const el=document.getElementById('tpl-editor-list');if(!el)return;
   const tpls=rbGetTemplates();
   el.innerHTML=tpls.map((t,i)=>`
     <div class="tpl-editor-card" id="tple-${i}">
       <div class="tpl-editor-hd" onclick="tplToggle(${i})">
         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
           <span style="font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;flex-shrink:0;">${t.id}</span>
-          <span style="font-weight:600;font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</span>
-          <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.tim)}</span>
+          <span style="font-weight:600;font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.name)}</span>
+          <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${esc(t.tim)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          ${t._isDefault?`<span class="tpl-default-badge">default</span>`:`<span class="tpl-custom-badge">custom</span>`}
+          ${t._isDefault?`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(249,115,22,.12);color:var(--acc);font-family:'DM Mono',monospace;">default</span>`:`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--blu);font-family:'DM Mono',monospace;">custom</span>`}
           <span style="color:var(--t3);font-size:11px;">▾</span>
         </div>
       </div>
@@ -3382,9 +3352,7 @@ function tplRenderEditor(){
     </div>`).join('');
 }
 
-function tplToggle(i){
-  document.getElementById('tple-'+i).classList.toggle('open');
-}
+function tplToggle(i){document.getElementById('tple-'+i).classList.toggle('open');}
 
 function tplSave(i){
   const tpls=rbGetTemplates();
@@ -3393,47 +3361,30 @@ function tplSave(i){
   const en=document.getElementById('tplen-'+i).value.trim();
   const ur=document.getElementById('tplur-'+i).value.trim();
   if(!name||!en){notif('⚠ Name and English message are required');return;}
-  tpls[i].name=name;
-  tpls[i].tim=tim;
-  tpls[i].en=en;
-  tpls[i].ur=ur||null;
+  tpls[i].name=name;tpls[i].tim=tim;tpls[i].en=en;tpls[i].ur=ur||null;
   rbSaveTemplates(tpls);
   tplRenderEditor();
-  // Re-open this card
-  setTimeout(()=>{
-    const card=document.getElementById('tple-'+i);
-    if(card)card.classList.add('open');
-  },50);
+  setTimeout(()=>{const c=document.getElementById('tple-'+i);if(c)c.classList.add('open');},50);
   notif(`✓ Template "${name}" saved`);
 }
 
 function tplReset(i){
   const tpls=rbGetTemplates();
-  const t=tpls[i];
-  if(!t._isDefault)return;
-  t.en=t._defaultEn;
-  t.ur=t._defaultUr;
-  // Reset name and timing from original RB_TEMPLATES
+  const t=tpls[i];if(!t._isDefault)return;
+  t.en=t._defaultEn;t.ur=t._defaultUr;
   const orig=RB_TEMPLATES.find(x=>x.id===t.id);
   if(orig){t.name=orig.name;t.tim=orig.tim;}
   rbSaveTemplates(tpls);
   tplRenderEditor();
-  setTimeout(()=>{
-    const card=document.getElementById('tple-'+i);
-    if(card)card.classList.add('open');
-  },50);
+  setTimeout(()=>{const c=document.getElementById('tple-'+i);if(c)c.classList.add('open');},50);
   notif('↺ Template reset to default');
 }
 
 function tplDelete(i){
   const tpls=rbGetTemplates();
-  const t=tpls[i];
-  if(t._isDefault){notif('⚠ Cannot delete a default template');return;}
-  if(!confirm(`Delete template "${t.name}"?`))return;
-  tpls.splice(i,1);
-  rbSaveTemplates(tpls);
-  tplRenderEditor();
-  notif('Template deleted');
+  if(tpls[i]._isDefault){notif('⚠ Cannot delete a default template');return;}
+  if(!confirm(`Delete template "${tpls[i].name}"?`))return;
+  tpls.splice(i,1);rbSaveTemplates(tpls);tplRenderEditor();notif('Template deleted');
 }
 
 function tplAddNew(){
@@ -3443,101 +3394,12 @@ function tplAddNew(){
   const ur=document.getElementById('tpl-new-ur').value.trim();
   if(!name||!en){notif('⚠ Name and English message are required');return;}
   const tpls=rbGetTemplates();
-  // Generate next ID
   const maxId=tpls.reduce((m,t)=>Math.max(m,parseInt(t.id)||0),0);
   const newId=String(maxId+1).padStart(2,'0');
   tpls.push({id:newId,name,tim:tim||'As needed',en,ur:ur||null,_isDefault:false});
-  rbSaveTemplates(tpls);
-  tplRenderEditor();
-  // Clear form
+  rbSaveTemplates(tpls);tplRenderEditor();
   ['tpl-new-name','tpl-new-tim','tpl-new-en','tpl-new-ur'].forEach(id=>document.getElementById(id).value='');
   notif(`✓ Template "${name}" added`);
-}
-
-// Patch rbRenderTpls to use live templates
-function rbRenderTpls(){
-  const tpls=rbGetTemplates();
-  const el=document.getElementById('rb-tpl-list');if(!el)return;
-  el.innerHTML=tpls.map(t=>`
-    <div class="rb-tp-card" id="rbtc-${t.id}">
-      <div class="rb-tp-hd" onclick="rbTogTpl('${t.id}')">
-        <div style="display:flex;align-items:center;gap:7px;"><span class="rb-tp-num">${t.id}</span><span class="rb-tp-name">${esc(t.name)}</span></div>
-        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${esc(t.tim)}</span><span style="color:var(--t3);font-size:11px">▾</span></div>
-      </div>
-      <div class="rb-tp-body">
-        <div class="rb-ltabs">
-          <div class="rb-ltab active" id="rblt-en-${t.id}" onclick="rbSLang('${t.id}','en')">🇬🇧 EN</div>
-          ${t.ur?`<div class="rb-ltab" id="rblt-ur-${t.id}" onclick="rbSLang('${t.id}','ur')">🇵🇰 UR</div>`:''}
-        </div>
-        <div class="rb-tpl-text" id="rbtb-${t.id}">${esc(t.en)}</div>
-        <div style="margin-top:9px;"><button onclick="rbCpTpl('${t.id}')" style="padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📋 Copy</button></div>
-      </div>
-    </div>`).join('');
-}
-
-// Patch rbCpTpl to use live templates
-function rbCpTpl(id){
-  const tpls=rbGetTemplates();
-  const t=tpls.find(x=>x.id===id);if(!t)return;
-  const lang=RB.tplLangState[id]||'en';
-  navigator.clipboard.writeText((lang==='ur'&&t.ur)?t.ur:t.en).then(()=>{
-    const b=event.target;b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000);
-  });
-}
-
-// Patch rbSLang to use live templates
-function rbSLang(id,lang){
-  RB.tplLangState[id]=lang;
-  const tpls=rbGetTemplates();
-  const t=tpls.find(x=>x.id===id);if(!t)return;
-  const el=document.getElementById('rbtb-'+id);if(!el)return;
-  el.textContent=(lang==='ur'&&t.ur)?t.ur:t.en;
-  el.className='rb-tpl-text'+(lang==='ur'?' ur':'');
-  const enBtn=document.getElementById('rblt-en-'+id);
-  const urBtn=document.getElementById('rblt-ur-'+id);
-  if(enBtn)enBtn.classList.toggle('active',lang==='en');
-  if(urBtn)urBtn.classList.toggle('active',lang==='ur');
-}
-
-// Patch rbOpenC to use live templates
-const _origRbOpenC=rbOpenC;
-function rbOpenC(id){
-  const c=RB.custs.find(x=>x.id===id);if(!c)return;
-  RB.acid=id;
-  document.getElementById('rb-mn').textContent=c.name;
-  document.getElementById('rb-mp').textContent='📱 '+(c.phone||'—');
-  const d=c.lastOrder?Math.floor((Date.now()-new Date(c.lastOrder))/86400000):'?';
-  const dc=d>21?'var(--red)':d>14?'var(--acc)':'var(--grn)';
-  const orderCount=S.orders?S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name).length:0;
-  document.getElementById('rb-mig').innerHTML=`
-    <div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 ${esc(c.city||'—')}</div></div>
-    <div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">${c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown'}</div></div>
-    <div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg ${rbBc(c.status)}">${c.status}</span></div></div>
-    <div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">${c.lastOrder||'?'}</div></div>
-    <div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:${dc}">${d}d</div></div>
-    <div class="rb-ii"><div class="rb-il">Total Orders</div><div class="rb-iv">${orderCount||'—'}</div></div>`;
-  document.getElementById('rb-mss').value=c.status;
-  document.getElementById('rb-mls').value=c.lang||'?';
-  const lang=c.lang==='ur'?'ur':'en';
-  const waNum=rbDefaultWA();
-  const tpls=rbGetTemplates();
-  document.getElementById('rb-mt').innerHTML=tpls.map(t=>{
-    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[نام]',c.name);
-    const lnk=waNum?`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
-    return`<button class="rb-tpl-btn" onclick="rbSTpl('${c.id}','${t.id}','${lnk}')"><span class="tn">${t.id}. ${esc(t.name)}</span><span class="tt">${esc(t.tim)}</span></button>`;
-  }).join('');
-  rbRenderMH(c);
-  document.getElementById('rb-mnote').value='';
-  document.getElementById('rb-mo').value='';
-  document.getElementById('rb-cm').classList.add('open');
-}
-
-// Patch showAdmin to render template editor when admin panel opens
-const _origShowAdmin=showAdmin;
-function showAdmin(){
-  _origShowAdmin();
-  tplRenderEditor();
-  rbRenderWAList();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
