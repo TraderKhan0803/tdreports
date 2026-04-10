@@ -11,6 +11,7 @@
 :root{--bg:#0d0f14;--sur:#151820;--sur2:#1c2030;--sur3:#242840;--bdr:#2a2f45;--acc:#f97316;--grn:#22c55e;--blu:#3b82f6;--pur:#a855f7;--red:#ef4444;--txt:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:10px;--r2:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px;}
+/* ── Tezz Analytics v7 ── */
 
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
@@ -444,6 +445,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div id="raabta-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
       <div class="tab active" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers">Customers</div>
       <div class="tab" onclick="rbSwitchTab('rb-queue',this)" id="nav-rb-queue">Queue <span id="rb-qc" style="background:rgba(249,115,22,.2);color:var(--acc);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
+      <div class="tab" onclick="rbSwitchTab('rb-outreach',this)" id="nav-rb-outreach">Outreach</div>
       <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates">Templates</div>
       <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
     </div>
@@ -609,22 +611,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
     <!-- ═══ PRODUCT ═══ -->
     <div class="tab-panel" id="tab-product" style="overflow-y:auto;">
-      <div class="chart-box">
-        <div class="stitle mb12" style="margin-bottom:10px;">Top 20 Products by Quantity · <span class="hint">Click bar or row to highlight</span></div>
-        <canvas id="chart-prods" height="150"></canvas>
+      <div class="chart-box" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+          <div class="stitle">Top Products by Quantity · <span class="hint">Click bar or row to highlight</span></div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:11px;color:var(--t3);">Show top</span>
+            <select id="prod-chart-n" onchange="renderProduct()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:3px 8px;border-radius:4px;font-size:11px;">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+        <canvas id="chart-prods" height="90"></canvas>
       </div>
       <div class="two">
         <div>
           <div class="sh mb12"><div class="stitle">Products by Volume</div><div class="hint">Click → highlight</div></div>
           <div class="tw st" style="max-height:300px;"><table class="dt" id="tbl-prods">
-            <thead><tr><th>Product</th><th style="text-align:right">Qty</th><th style="text-align:right">Revenue</th></tr></thead>
+            <thead><tr>
+              <th onclick="sortTable('prods','name')" style="cursor:pointer;">Product ↕</th>
+              <th onclick="sortTable('prods','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
+              <th onclick="sortTable('prods','rev')" style="text-align:right;cursor:pointer;">Revenue ↕</th>
+            </tr></thead>
             <tbody id="body-prods"></tbody>
           </table></div>
         </div>
         <div>
           <div class="sh mb12"><div class="stitle" id="title-prod-orders">Order Details</div></div>
           <div class="tw st" style="max-height:300px;"><table class="dt" id="tbl-prod-orders">
-            <thead><tr><th>Customer</th><th>Date</th><th style="text-align:right">Qty</th></tr></thead>
+            <thead><tr>
+              <th onclick="sortTable('prod-orders','cust')" style="cursor:pointer;">Customer ↕</th>
+              <th>Date</th>
+              <th onclick="sortTable('prod-orders','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
+            </tr></thead>
             <tbody id="body-prod-orders"></tbody>
           </table></div>
         </div>
@@ -633,19 +654,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
     <!-- ═══ PRODUCT SEARCH ═══ -->
     <div class="tab-panel" id="tab-productsearch" style="overflow-y:auto;">
-      <input type="text" class="psbar" id="prod-q" placeholder="Type a product name to search…">
+      <input type="text" class="psbar" id="prod-q" placeholder="Type a product name to search… (respects active date filter)">
       <div class="two">
         <div>
           <div class="sh mb12"><div class="stitle">Matching Products</div><div class="hint">Click → see orders</div></div>
           <div class="tw st" style="max-height:400px;"><table class="dt" id="tbl-ps-left">
-            <thead><tr><th>Product</th><th style="text-align:right">Total Qty</th><th style="text-align:right">Revenue</th></tr></thead>
+            <thead><tr>
+              <th onclick="sortTable('ps-left','name')" style="cursor:pointer;">Product ↕</th>
+              <th onclick="sortTable('ps-left','qty')" style="text-align:right;cursor:pointer;">Total Qty ↕</th>
+              <th onclick="sortTable('ps-left','rev')" style="text-align:right;cursor:pointer;">Revenue ↕</th>
+            </tr></thead>
             <tbody id="body-ps-left"></tbody>
           </table></div>
         </div>
         <div>
           <div class="sh mb12"><div class="stitle" id="title-ps-right">Order Details</div></div>
           <div class="tw st" style="max-height:400px;"><table class="dt" id="tbl-ps-right">
-            <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th style="text-align:right">Qty</th><th style="text-align:right">Total</th></tr></thead>
+            <thead><tr>
+              <th onclick="sortTable('ps-right','oid')" style="cursor:pointer;">Order ID ↕</th>
+              <th onclick="sortTable('ps-right','cust')" style="cursor:pointer;">Customer ↕</th>
+              <th onclick="sortTable('ps-right','date')" style="cursor:pointer;">Date ↕</th>
+              <th onclick="sortTable('ps-right','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
+              <th onclick="sortTable('ps-right','total')" style="text-align:right;cursor:pointer;">Total ↕</th>
+            </tr></thead>
             <tbody id="body-ps-right"></tbody>
           </table></div>
         </div>
@@ -845,6 +876,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       </div>
     </div>
 
+    <!-- ═══ RAABTA: OUTREACH ═══ -->
+    <div class="rb-panel" id="tab-rb-outreach" style="overflow-y:auto;padding:0;">
+      <div id="rb-outreach-body"></div>
+    </div>
+
     <!-- ═══ RAABTA: TEMPLATES ═══ -->
     <div class="rb-panel" id="tab-rb-templates">
       <div class="rb-card">
@@ -913,8 +949,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
       <textarea id="rb-mnote" placeholder="Add a note about this conversation…" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;min-height:65px;resize:vertical;outline:none;margin-bottom:8px;display:block;"></textarea>
       <button onclick="rbSaveLog()" style="padding:6px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);border-radius:var(--r2);color:var(--grn);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Save Interaction</button>
       <div class="rb-dvd"></div>
-      <div class="rb-sec">Interaction History</div>
-      <div id="rb-mh"></div>
+      <div class="rb-sec" style="cursor:pointer;" onclick="rbToggleHistory()">Interaction History <span style="color:var(--blu);font-size:10px;">(click to expand)</span></div>
+      <div id="rb-hist-panel" style="max-height:0;overflow:hidden;transition:max-height .3s ease;">
+        <div id="rb-mh" style="padding-bottom:8px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1410,25 +1448,51 @@ function switchTab(name,el,fromNav){
   updateBackBar();
 }
 
+// ── ENHANCED NAVIGATION ───────────────────────────────────────────────────────
+// navStack stores full origin snapshots: {mode, tab, custId, scrollTop, label}
+let navStack=[];
+
+function pushNav(label){
+  navStack.push({
+    mode:currentMode,
+    tab:currentMode==='raabta'?rbCurTab:curTab,
+    custId:RB.acid||null,
+    label
+  });
+  if(navStack.length>10)navStack.shift();
+}
+
 function updateBackBar(){
   const bar=document.getElementById('back-bar');
-  const prev=navHistory.length?navHistory[navHistory.length-1]:null;
-  const labels={customer:'Customer',reports:'Reports',marketing:'Marketing',product:'Product',productsearch:'Product Search',dashboard:'Dashboard'};
-  if(prev&&curTab==='dashboard'&&prev!=='dashboard'){
-    document.getElementById('back-label').textContent='Back to '+(labels[prev]||prev);
-    document.getElementById('back-context').textContent=selCust?'· Viewing: '+selCust:'';
+  const prev=navStack.length?navStack[navStack.length-1]:null;
+  if(prev&&curTab==='dashboard'){
+    document.getElementById('back-label').textContent='← Back to '+(prev.label||prev.tab);
+    document.getElementById('back-context').textContent=selCust?'· '+selCust:'';
     bar.style.display='flex';
   }else{bar.style.display='none';}
 }
 
 function goBack(){
-  if(!navHistory.length)return;
-  const prev=navHistory.pop();
-  switchTab(prev,null,true);
+  if(!navStack.length)return;
+  const prev=navStack.pop();
+  if(prev.mode==='raabta'){
+    setMode('raabta');
+    if(prev.tab)rbSwitchTab(prev.tab);
+    // Re-open customer modal if there was one
+    if(prev.custId){
+      setTimeout(()=>rbOpenC(prev.custId),50);
+    }
+  } else {
+    setMode('analytics');
+    switchTab(prev.tab,null,true);
+  }
+  updateBackBar();
 }
 
-function goToDashboardCustomer(custName){
+function goToDashboardCustomer(custName, originLabel){
+  pushNav(originLabel||'previous');
   selCust=custName;selOrder=null;
+  setMode('analytics');
   switchTab('dashboard',null);
   renderDashboard(custName);
   renderOrdersDrill();
@@ -1725,7 +1789,7 @@ function renderCustomer(pinnedCust){
     totO+=c.Orders;totS+=c.Sales;
     const tr=document.createElement('tr');
     tr.className='r'+(selRankedCust===c.Customer?' sel':'');
-    tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>{
       selRankedCust=selRankedCust===c.Customer?null:c.Customer;
       renderCustomer(selRankedCust||undefined);
@@ -1765,17 +1829,18 @@ function showCustTabInfo(c){
 // ═══════════════════════════════════════════════
 let prodChartData=[];
 function renderProduct(){
+  const n=parseInt(document.getElementById('prod-chart-n')?.value||'10');
   const filtIds=new Set(filtered.map(o=>o.Order_ID));
   const fp=S.prods.filter(p=>filtIds.has(p.Order_ID));
   const pm={};
   fp.forEach(p=>{if(!pm[p.Product_Name])pm[p.Product_Name]={name:p.Product_Name,qty:0,rev:0,lines:[]};pm[p.Product_Name].qty+=p.Qty;pm[p.Product_Name].rev+=p.Total_Price;pm[p.Product_Name].lines.push(p);});
   const sorted=Object.values(pm).sort((a,b)=>b.qty-a.qty);
   prodChartData=sorted;
-  const top20=sorted.slice(0,20);
+  const topN=sorted.slice(0,n);
   if(charts.prods)charts.prods.destroy();
-  charts.prods=new Chart(document.getElementById('chart-prods'),{type:'bar',data:{labels:top20.map(p=>p.name.length>16?p.name.slice(0,16)+'…':p.name),datasets:[{data:top20.map(p=>p.qty),backgroundColor:top20.map((_,i)=>i===selProdIdx?'rgba(249,115,22,.9)':'rgba(59,130,246,.7)'),borderRadius:3}]},options:{responsive:true,onClick:(evt,els)=>{if(els.length)selectProduct(top20[els[0].index].name,els[0].index);},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  charts.prods=new Chart(document.getElementById('chart-prods'),{type:'bar',data:{labels:topN.map(p=>p.name.length>14?p.name.slice(0,14)+'…':p.name),datasets:[{data:topN.map(p=>p.qty),backgroundColor:topN.map((_,i)=>i===selProdIdx?'rgba(249,115,22,.9)':'rgba(59,130,246,.7)'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:true,onClick:(evt,els)=>{if(els.length)selectProduct(topN[els[0].index].name,els[0].index);},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
   const frag=document.createDocumentFragment();
-  sorted.forEach((p,i)=>{const tr=document.createElement('tr');tr.className='r'+(selProd===p.name?' sel':'');tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;tr.onclick=()=>selectProduct(p.name,i);frag.appendChild(tr);});
+  sorted.forEach((p,i)=>{const tr=document.createElement('tr');tr.className='r'+(selProd===p.name?' sel':'');tr.dataset.name=p.name;tr.dataset.qty=p.qty;tr.dataset.rev=p.rev;tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;tr.onclick=()=>selectProduct(p.name,i);frag.appendChild(tr);});
   const tb=document.getElementById('body-prods');tb.innerHTML='';
   if(!sorted.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">No product data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -1797,6 +1862,7 @@ function renderProdOrders(p){
 // ═══════════════════════════════════════════════
 let psTimer=null,psIndex=null;
 function initProdSearch(){
+  // Uses filtered (date-aware) orders
   const filtIds=new Set(filtered.map(o=>o.Order_ID));
   const orderMap={};filtered.forEach(o=>orderMap[o.Order_ID]=o);
   const pm={};
@@ -1814,7 +1880,12 @@ function doProductSearch(){
   const q=(document.getElementById('prod-q')?.value||'').toLowerCase().trim();
   const results=psIndex?psIndex.filter(p=>!q||p.name.toLowerCase().includes(q)):[];
   const frag=document.createDocumentFragment();
-  results.slice(0,100).forEach(p=>{const tr=document.createElement('tr');tr.className='r';tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;tr.onclick=()=>showPSDetail(p);frag.appendChild(tr);});
+  results.slice(0,100).forEach(p=>{
+    const tr=document.createElement('tr');tr.className='r';
+    tr.dataset.name=p.name;tr.dataset.qty=p.qty;tr.dataset.rev=p.rev;
+    tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;
+    tr.onclick=()=>showPSDetail(p);frag.appendChild(tr);
+  });
   const tb=document.getElementById('body-ps-left');tb.innerHTML='';
   if(!results.length){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">${q?'No products found':'Type to search'}</td>`;tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -1822,10 +1893,18 @@ function doProductSearch(){
 function showPSDetail(p){
   document.getElementById('title-ps-right').textContent=p.name.slice(0,28)+(p.name.length>28?'…':'');
   const frag=document.createDocumentFragment();
-  p.lines.sort((a,b)=>b.Qty-a.Qty).forEach(l=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--acc)">${esc(l.Order_ID)}</td><td>${esc(l.cust)}</td><td style="font-size:10px;font-family:'DM Mono',monospace">${esc(l.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${l.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(l.Total_Price)}</td>`;frag.appendChild(tr);});
+  p.lines.sort((a,b)=>b.Qty-a.Qty).forEach(l=>{
+    const tr=document.createElement('tr');
+    tr.dataset.oid=l.Order_ID;tr.dataset.cust=l.cust;tr.dataset.date=l.date;tr.dataset.qty=l.Qty;tr.dataset.total=l.Total_Price;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;" onclick="gotoOrderFromPS('${esc(l.cust)}')" title="Go to dashboard for this customer">${esc(l.Order_ID)}</span></td><td>${esc(l.cust)}</td><td style="font-size:10px;font-family:'DM Mono',monospace">${esc(l.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${l.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(l.Total_Price)}</td>`;
+    frag.appendChild(tr);
+  });
   const tb=document.getElementById('body-ps-right');tb.innerHTML='';
   if(!p.lines.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+}
+function gotoOrderFromPS(custName){
+  goToDashboardCustomer(custName,'Product Search');
 }
 
 // ═══════════════════════════════════════════════
@@ -3014,6 +3093,15 @@ let rbCurTab=null;
 function rbInit(){
   rbLoad();
   rbSyncFromOrders();
+  // Auto-assign status based on last order date for system-added customers
+  let changed=false;
+  RB.custs.forEach(c=>{
+    if(c.addedBy==='system'){
+      const auto=rbAutoStatus(c.lastOrder);
+      if(c.status!==auto){c.status=auto;changed=true;}
+    }
+  });
+  if(changed)rbSave();
   rbRenderAll();
   rbRenderWAList();
   const af=document.getElementById('rb-af');
@@ -3021,19 +3109,8 @@ function rbInit(){
     const users=[...new Set(RB.alog.map(l=>l.user))].sort();
     af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
   }
-  if(curUser.role==='viewer'){
-    // CRS: hide logo dropdown, show only Raabta
-    document.getElementById('logo-wrap').querySelector('#logo-menu').style.display='none';
-    document.querySelector('.logo').style.cursor='default';
-    document.querySelector('.timebar').style.display='none';
-    document.querySelector('.filter-drawer').style.display='none';
-    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
-    const meta=document.getElementById('hdr-meta');if(meta)meta.style.display='none';
-    setMode('raabta');
-  } else {
-    // Admin/Super: start in Analytics mode
-    setMode('analytics');
-  }
+  // All roles (including viewer/CRS) get full access to both modes
+  setMode('analytics');
 }
 
 let currentMode='analytics';
@@ -3054,11 +3131,12 @@ function setMode(mode){
   if(mode==='analytics'){
     aTabs.style.display='flex';
     rTabs.style.display='none';
-    if(timebar)timebar.style.display='';
+    if(timebar)timebar.style.removeProperty('display');
+    if(filterDrawer)filterDrawer.style.removeProperty('display');
     if(meta)meta.style.display='';
     // Hide Raabta panels, show analytics
     document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.removeProperty('display'));
     // Re-activate dashboard
     const active=document.querySelector('.tab-panel.active');
     if(!active){
@@ -3116,6 +3194,7 @@ function rbSwitchTab(name, el){
   rbCurTab=name;
   if(name==='rb-customers'){rbRenderCusts();rbRenderStats();}
   if(name==='rb-queue'){rbRenderQueue();}
+  if(name==='rb-outreach'){rbRenderOutreach();}
   if(name==='rb-templates'){rbRenderTpls();}
   if(name==='rb-activity'){rbRenderAct();}
 }
@@ -3217,33 +3296,52 @@ function rbDefaultWA(){
 function rbOpenC(id){
   const c=RB.custs.find(x=>x.id===id);if(!c)return;
   RB.acid=id;
-  document.getElementById('rb-mn').textContent=c.name;
-  document.getElementById('rb-mp').textContent='📱 '+(c.phone||'—');
+  const nm=document.getElementById('rb-mn');
+  if(nm)nm.innerHTML='<span style="cursor:pointer;text-decoration:underline;color:var(--acc);" onclick="rbGoToDash(\'' + esc(c.name) + '\')" title="View full order history">'+esc(c.name)+'</span>';
+  const mp=document.getElementById('rb-mp');if(mp)mp.textContent='📱 '+(c.phone||'—');
   const d=c.lastOrder?Math.floor((Date.now()-new Date(c.lastOrder))/86400000):'?';
   const dc=d>21?'var(--red)':d>14?'var(--acc)':'var(--grn)';
-  // Count orders from analytics data
   const orderCount=S.orders?S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name).length:0;
-  document.getElementById('rb-mig').innerHTML=`
-    <div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 ${esc(c.city||'—')}</div></div>
-    <div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">${c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown'}</div></div>
-    <div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg ${rbBc(c.status)}">${c.status}</span></div></div>
-    <div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">${c.lastOrder||'?'}</div></div>
-    <div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:${dc}">${d}d</div></div>
-    <div class="rb-ii"><div class="rb-il">Total Orders</div><div class="rb-iv">${orderCount||'—'}</div></div>`;
-  document.getElementById('rb-mss').value=c.status;
-  document.getElementById('rb-mls').value=c.lang||'?';
+  const intCount=RB.alog.filter(l=>l.customerId===id).length;
+  const mig=document.getElementById('rb-mig');
+  if(mig)mig.innerHTML=
+    '<div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 '+esc(c.city||'—')+'</div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">'+(c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown')+'</div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg '+rbBc(c.status)+'">'+c.status+'</span></div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">'+(c.lastOrder||'?')+'</div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:'+dc+'">'+d+'d</div></div>'+
+    '<div class="rb-ii" onclick="rbToggleHistory()" style="cursor:pointer;border-color:rgba(59,130,246,.3);"><div class="rb-il">Interactions</div><div class="rb-iv" style="color:var(--blu);text-decoration:underline;">'+intCount+' logged ↓</div></div>';
+  const mss=document.getElementById('rb-mss');if(mss)mss.value=c.status;
+  const mls=document.getElementById('rb-mls');if(mls)mls.value=c.lang||'?';
   const lang=c.lang==='ur'?'ur':'en';
   const waNum=rbDefaultWA();
-  document.getElementById('rb-mt').innerHTML=RB_TEMPLATES.map(t=>{
-    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[نام]',c.name);
-    const lnk=waNum?`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
-    return`<button class="rb-tpl-btn" onclick="rbSTpl('${c.id}','${t.id}','${lnk}')"><span class="tn">${t.id}. ${t.name}</span><span class="tt">${t.tim}</span></button>`;
+  const tpls=rbGetTemplates();
+  const mt=document.getElementById('rb-mt');
+  if(mt)mt.innerHTML=tpls.map(function(t){
+    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[\u0646\u0627\u0645]',c.name);
+    const lnk=waNum?'https://wa.me/'+waNum+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
+    return '<button class="rb-tpl-btn" onclick="rbSTpl(\''+c.id+'\',\''+t.id+'\',\''+lnk+'\')"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
   }).join('');
+  const hist=document.getElementById('rb-hist-panel');
+  if(hist){hist.style.maxHeight='0';hist.style.overflow='hidden';}
   rbRenderMH(c);
-  document.getElementById('rb-mnote').value='';
-  document.getElementById('rb-mo').value='';
-  document.getElementById('rb-cm').classList.add('open');
+  const note=document.getElementById('rb-mnote');if(note)note.value='';
+  const mo=document.getElementById('rb-mo');if(mo)mo.value='';
+  const cm=document.getElementById('rb-cm');if(cm)cm.classList.add('open');
 }
+
+function rbToggleHistory(){
+  const p=document.getElementById('rb-hist-panel');if(!p)return;
+  const open=p.style.maxHeight!=='0px'&&p.style.maxHeight!=='';
+  p.style.maxHeight=open?'0':'600px';
+  p.style.overflow=open?'hidden':'auto';
+}
+
+function rbGoToDash(name){
+  rbCloseCM();
+  goToDashboardCustomer(name,'Raabta');
+}
+
 
 function rbRenderMH(c){
   const logs=RB.alog.filter(l=>l.customerId===c.id).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
@@ -3570,9 +3668,148 @@ function rbFt(ts){
 document.getElementById('rb-cm').addEventListener('click',function(e){if(e.target===this)rbCloseCM();});
 document.getElementById('rb-am').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 
+// Escape key closes all modals
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  // Raabta modals
+  if(document.getElementById('rb-cm').classList.contains('open')){rbCloseCM();return;}
+  if(document.getElementById('rb-am').classList.contains('open')){document.getElementById('rb-am').classList.remove('open');return;}
+  // Analytics overlays
+  ['admin-overlay','super-overlay','clear-modal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&el.style.display==='block'){el.style.display='none';}
+  });
+});
+
 // ═══════════════════════════════════════════════
 // RAABTA TEMPLATES
 // ═══════════════════════════════════════════════
+// ── TABLE SORT STATE ─────────────────────────────────────────────────────────
+const sortState={};
+function sortTable(tableId, col){
+  const key=tableId+'_'+col;
+  sortState[key]=sortState[key]==='asc'?'desc':'asc';
+  const dir=sortState[key]==='asc'?1:-1;
+  const tbody=document.getElementById('body-'+tableId);
+  if(!tbody)return;
+  const rows=[...tbody.querySelectorAll('tr')];
+  rows.sort((a,b)=>{
+    const ac=a.dataset[col]||a.cells[colIndex(tableId,col)]?.textContent||'';
+    const bc=b.dataset[col]||b.cells[colIndex(tableId,col)]?.textContent||'';
+    const an=parseFloat(ac.replace(/[^0-9.-]/g,''));
+    const bn=parseFloat(bc.replace(/[^0-9.-]/g,''));
+    if(!isNaN(an)&&!isNaN(bn))return(an-bn)*dir;
+    return ac.localeCompare(bc)*dir;
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+function colIndex(tableId, col){
+  const maps={
+    'prods':{name:0,qty:1,rev:2},
+    'prod-orders':{cust:0,date:1,qty:2},
+    'ps-left':{name:0,qty:1,rev:2},
+    'ps-right':{oid:0,cust:1,date:2,qty:3,total:4},
+    'ranked':{name:1,type:2,orders:3,sales:4},
+  };
+  return maps[tableId]?.[col]??0;
+}
+
+// ── AUTO-STATUS FROM LAST ORDER DATE ─────────────────────────────────────────
+function rbAutoStatus(lastOrderDate){
+  if(!lastOrderDate)return'new';
+  const days=Math.floor((Date.now()-new Date(lastOrderDate))/86400000);
+  if(days<30)return'active';
+  if(days<90)return'silent';
+  if(days<180)return'winback';
+  return'inactive';
+}
+
+// ── OUTREACH TAB (Marketing lists in Raabta) ──────────────────────────────────
+function rbRenderOutreach(){
+  const el=document.getElementById('rb-outreach-body');if(!el)return;
+  if(!S.orders||!S.orders.length){
+    el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first to see outreach lists.</div>';
+    return;
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+
+  function custMap(){
+    const m={};
+    S.orders.forEach(o=>{
+      const n=resolveCustomerName(o.Customer);
+      if(!m[n])m[n]={name:n,type:o.Customer_Type,phone:o.Phone||'',orders:0,sales:0,firstOrder:null,lastOrder:null};
+      m[n].orders++;m[n].sales+=o.Total_Sales;
+      if(o.Order_Date){
+        if(!m[n].firstOrder||o.Order_Date<m[n].firstOrder)m[n].firstOrder=o.Order_Date;
+        if(!m[n].lastOrder||o.Order_Date>m[n].lastOrder)m[n].lastOrder=o.Order_Date;
+      }
+    });
+    return Object.values(m);
+  }
+
+  const all=custMap();
+  const cutoff14=new Date(today.getTime()-14*86400000);
+  const welcome=all.filter(c=>c.firstOrder&&c.firstOrder>=cutoff14).sort((a,b)=>b.firstOrder-a.firstOrder);
+  const quiet=all.filter(c=>c.orders===1&&c.lastOrder&&c.lastOrder<cutoff14).sort((a,b)=>Math.floor((today-b.lastOrder)/86400000)-Math.floor((today-a.lastOrder)/86400000));
+  const react=all.filter(c=>{if(c.orders<2||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=30&&d<=60;}).sort((a,b)=>b.sales-a.sales);
+  const vip=all.filter(c=>c.orders>=2&&(c.sales/c.orders)>=50000).sort((a,b)=>(b.sales/b.orders)-(a.sales/a.orders));
+
+  function actionTag(custName){
+    const logs=RB.alog.filter(l=>l.customerName&&l.customerName.toLowerCase()===custName.toLowerCase()&&l.action.includes('Template'));
+    if(!logs.length)return'';
+    const l=logs[0];
+    const outcome=l.outcome||'';
+    let color='var(--grn)';let bg='rgba(34,197,94,.12)';let border='rgba(34,197,94,.25)';
+    if(outcome.includes('Complaint')){color='var(--red)';bg='rgba(239,68,68,.12)';border='rgba(239,68,68,.25)';}
+    else if(outcome==='No Response'||!outcome){color='var(--acc)';bg='rgba(249,115,22,.1)';border='rgba(249,115,22,.25)';}
+    return`<span style="background:${bg};border:1px solid ${border};border-radius:10px;padding:2px 8px;font-size:10px;color:${color};font-family:'DM Mono',monospace;white-space:nowrap;margin-left:6px;">✓ ${esc(l.user)} · ${rbFt(l.ts)}</span>`;
+  }
+
+  function outreachTable(title, color, rows, cols, hint){
+    if(!rows.length)return`<div style="padding:6px 0;font-size:11px;color:var(--t3);">No customers in this list currently.</div>`;
+    const hdrCells=cols.map(c=>`<th style="cursor:default;">${c}</th>`).join('');
+    const bodyRows=rows.map(r=>`<tr class="r" onclick="rbOpenOutreachCust('${esc(r.name)}')" style="cursor:pointer;">${r.cells}</tr>`).join('');
+    return`<table class="dt" style="width:100%;"><thead><tr>${hdrCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  }
+
+  const sections=[
+    {title:'🎉 Welcome Queue',color:'var(--grn)',hint:'New customers — send a welcome note',rows:welcome.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px">${c.firstOrder?fmtDate(c.firstOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td><td style="font-size:11px">${esc(c.phone)}</td>`})),cols:['Customer','Type','First Order','Value','Phone']},
+    {title:'🔇 Gone Quiet',color:'var(--acc)',hint:'Ordered once, not seen since',rows:quiet.map(c=>{const d=c.lastOrder?Math.floor((today-c.lastOrder)/86400000):0;return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),cols:['Customer','Type','Only Order','Days Silent','Value']},
+    {title:'♻ Reactivation Targets',color:'var(--pur)',hint:'Were loyal — now gone quiet 30–60 days',rows:react.map(c=>{const d=c.lastOrder?Math.floor((today-c.lastOrder)/86400000):0;return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),cols:['Customer','Type','Last Order','Days','Orders','Total Sales']},
+    {title:'💎 Bulk & VIP',color:'var(--blu)',hint:'Consistent high-value customers',rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),cols:['Customer','Type','Avg Order','Orders','Total Sales']},
+  ];
+
+  el.innerHTML=sections.map(s=>`
+    <div class="rb-card" style="margin:0 0 12px;">
+      <div class="rb-card-hd">
+        <div class="rb-card-title" style="color:${s.color}">${s.title}</div>
+        <span style="font-size:11px;color:var(--t3);">${s.hint}</span>
+      </div>
+      <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+        ${outreachTable(s.title,s.color,s.rows,s.cols,s.hint)}
+      </div>
+    </div>`).join('');
+}
+
+function rbOpenOutreachCust(name){
+  // Find in RB.custs or create temp record
+  let c=RB.custs.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(!c){
+    // Pull from orders data
+    const orders=S.orders.filter(o=>resolveCustomerName(o.Customer)===name);
+    if(!orders.length){notif('Customer not found in Raabta');return;}
+    const lastOrd=orders.reduce((m,o)=>o.Order_Date&&(!m||o.Order_Date>m)?o.Order_Date:m,null);
+    c={id:'tmp_'+rbUid(),name,phone:orders[0].Phone||'',city:orders[0].City||'',lang:'?',
+      status:rbAutoStatus(lastOrd?lastOrd.toISOString().split('T')[0]:''),
+      lastOrder:lastOrd?lastOrd.toISOString().split('T')[0]:'',notes:''};
+    RB.custs.push(c);rbSave();
+  }
+  RB.acid=c.id;
+  rbOpenC(c.id);
+}
+
+// ── UPDATED rbInit — Fatima = full access ─────────────────────────────────────
+
 const RB_TEMPLATES=[
   {id:'01',name:'Welcome — First Order',tim:'After order placed',en:`Hi [Name] 👋\n\nWelcome to Tezz Delivery! 🛒\nYour order has been received and is being prepared.\n\nWe deliver fresh groceries fast — we're just one message away whenever you need a restock.\n\nThank you for choosing Tezz! 🎉`,ur:`السلام علیکم [نام] 👋\n\nTezz Delivery میں خوش آمدید! 🛒\nآپ کا آرڈر مل گیا ہے اور تیار کیا جا رہا ہے۔\n\nتازہ گروسری، تیز ڈیلیوری — ہم ہمیشہ حاضر ہیں۔\n\nTezz کا انتخاب کرنے کا شکریہ! 🎉`},
   {id:'02',name:'Order On the Way',tim:'When rider dispatched',en:`Hi [Name] 🛵\n\nGreat news — your Tezz order is on its way!\nEstimated arrival: [Time]\n\nIf you have any last-minute requests, let us know now.`,ur:`[نام]، خوشخبری! 🛵\n\nآپ کا Tezz آرڈر راستے میں ہے!\nمتوقع وقت: [وقت]\n\nکوئی آخری لمحے کی فرمائش ہو تو ابھی بتائیں۔`},
