@@ -210,7 +210,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
 
 /* ── MOBILE & RESPONSIVE ── */
-.topbar{flex-wrap:nowrap;overflow:hidden;}
+.topbar{flex-wrap:nowrap;overflow:visible;}
 #analytics-tabs::-webkit-scrollbar,#raabta-tabs::-webkit-scrollbar{display:none;}
 #analytics-tabs,#raabta-tabs{flex:1;overflow-x:auto;scrollbar-width:none;}
 .content{overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -419,7 +419,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <!-- Logo with dropdown -->
     <div style="position:relative;" id="logo-wrap">
       <div class="logo" onclick="toggleLogoMenu()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;">TEZZ. <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">▾</span></div>
-      <div id="logo-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r);min-width:180px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.3);">
+      <div id="logo-menu" style="display:none;position:fixed;top:54px;left:12px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r);min-width:200px;z-index:9999;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.6);">
         <div onclick="setMode('analytics')" id="lm-analytics" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
           <span style="font-size:16px;">📊</span>
           <div><div>Tezz Analytics</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Data &amp; reports</div></div>
