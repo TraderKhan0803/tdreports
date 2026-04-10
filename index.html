@@ -11,7 +11,7 @@
 :root{--bg:#0d0f14;--sur:#151820;--sur2:#1c2030;--sur3:#242840;--bdr:#2a2f45;--acc:#f97316;--grn:#22c55e;--blu:#3b82f6;--pur:#a855f7;--red:#ef4444;--txt:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:10px;--r2:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px;}
-/* ── Tezz Analytics v7 ── */
+/* ── Tezz Analytics v8 ── */
 
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
@@ -1152,42 +1152,191 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 <div class="overlay" id="super-overlay">
   <div class="ov-inner">
     <div class="ov-hdr"><div class="ov-title" style="color:var(--pur)">★ Super Admin</div><button class="ov-close" onclick="closeModal('super-overlay')">Close</button></div>
-    <div class="adm-grid mb12">
+
+    <!-- Super Admin tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:16px;flex-wrap:wrap;">
+      <div id="sup-tab-users"   onclick="switchSuperTab('users')"   style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--pur);border-bottom:2px solid var(--pur);font-family:'Syne',sans-serif;">👥 Users</div>
+      <div id="sup-tab-exec"    onclick="switchSuperTab('exec')"    style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">📊 Exec Finance</div>
+      <div id="sup-tab-logs"    onclick="switchSuperTab('logs')"    style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">📋 Logs</div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="sup-content-users">
       <div class="adm-card">
-        <div class="adm-title" style="color:var(--pur)">Session Activity</div>
-        <div id="log-sessions" style="max-height:260px;overflow-y:auto;"></div>
-      </div>
-      <div class="adm-card">
-        <div class="adm-title" style="color:var(--pur)">Admin Changes &amp; Uploads</div>
-        <div id="log-admin-changes" style="max-height:260px;overflow-y:auto;"></div>
-      </div>
-    </div>
-    <div class="adm-card mb12">
-      <div class="adm-title" style="color:var(--pur)">Page Time Tracking</div>
-      <div id="log-page-time" style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;"></div>
-    </div>
-    <div class="adm-card">
-      <div class="adm-title" style="color:var(--pur)">👥 User Management</div>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Viewer = read only · Admin = upload &amp; data access · Super = full access</div>
-      <div class="adm-inp-row" style="flex-wrap:wrap;">
-        <input class="adm-inp" id="inp-uname" placeholder="Username">
-        <input class="adm-inp" id="inp-uemail" placeholder="Email address">
-        <input class="adm-inp" type="password" id="inp-upass" placeholder="Temp password">
-        <select class="adm-inp" id="inp-urole" style="flex:0.6;">
-          <option value="viewer">Viewer</option>
-          <option value="admin">Admin</option>
-          <option value="super">Super Admin</option>
-        </select>
-        <button class="adm-add" onclick="addUser()">+ Add User</button>
-      </div>
-      <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
-      <div id="list-users"></div>
-      <!-- Password reset requests -->
-      <div style="margin-top:12px;">
-        <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px;">Password Reset Requests</div>
-        <div id="reset-requests" style="font-size:11px;color:var(--t3);">No pending requests.</div>
+        <div class="adm-title" style="color:var(--pur)">👥 User Management</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Viewer = read only · Admin = upload &amp; data access · Super = full access</div>
+        <div class="adm-inp-row" style="flex-wrap:wrap;">
+          <input class="adm-inp" id="inp-uname" placeholder="Username">
+          <input class="adm-inp" id="inp-uemail" placeholder="Email address">
+          <input class="adm-inp" type="password" id="inp-upass" placeholder="Temp password">
+          <select class="adm-inp" id="inp-urole" style="flex:0.6;">
+            <option value="viewer">Viewer</option>
+            <option value="admin">Admin</option>
+            <option value="super">Super Admin</option>
+          </select>
+          <button class="adm-add" onclick="addUser()">+ Add User</button>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
+        <div id="list-users"></div>
+        <div style="margin-top:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px;">Password Reset Requests</div>
+          <div id="reset-requests" style="font-size:11px;color:var(--t3);">No pending requests.</div>
+        </div>
       </div>
     </div>
+
+    <!-- EXEC FINANCE TAB -->
+    <div id="sup-content-exec" style="display:none;">
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+        <button id="ex-tab-pl"       onclick="switchExecTab('pl')"       class="dbtn on"  style="font-size:11px;">P&amp;L Summary</button>
+        <button id="ex-tab-revenue"  onclick="switchExecTab('revenue')"  class="dbtn"     style="font-size:11px;">Revenue</button>
+        <button id="ex-tab-expenses" onclick="switchExecTab('expenses')" class="dbtn"     style="font-size:11px;">Expenses</button>
+        <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn"     style="font-size:11px;">✏ Data Entry</button>
+        <button id="ex-tab-settings" onclick="switchExecTab('settings')" class="dbtn"     style="font-size:11px;">⚙ Settings</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--t3);">Currency:</span>
+          <button id="ex-cur-pkr" onclick="setExCurrency('PKR')" style="padding:4px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;font-weight:700;">PKR</button>
+          <button id="ex-cur-usd" onclick="setExCurrency('USD')" style="padding:4px 10px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;">USD</button>
+        </div>
+      </div>
+
+      <!-- P&L SUMMARY -->
+      <div id="ex-content-pl">
+        <div class="adm-card mb12">
+          <div class="adm-title">P&amp;L Summary <span id="ex-pl-currency-label" style="color:var(--t3);font-weight:400;font-size:11px;">(PKR)</span></div>
+          <div style="overflow-x:auto;margin-top:8px;">
+            <table class="dt" id="ex-pl-table" style="min-width:700px;">
+              <thead id="ex-pl-thead"></thead>
+              <tbody id="ex-pl-tbody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;">
+            <button onclick="exDownloadExcel('pl')" style="padding:6px 14px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">⬇ Download Excel</button>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-title">Monthly Trend</div>
+          <canvas id="ex-pl-chart" height="80" style="margin-top:10px;"></canvas>
+        </div>
+      </div>
+
+      <!-- REVENUE BREAKDOWN -->
+      <div id="ex-content-revenue" style="display:none;">
+        <div class="adm-card mb12">
+          <div class="adm-title">Revenue by Category <span id="ex-rev-currency-label" style="color:var(--t3);font-weight:400;font-size:11px;">(PKR)</span></div>
+          <div style="overflow-x:auto;margin-top:8px;">
+            <table class="dt" id="ex-rev-table" style="min-width:700px;">
+              <thead id="ex-rev-thead"></thead>
+              <tbody id="ex-rev-tbody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px;">
+            <button onclick="exDownloadExcel('revenue')" style="padding:6px 14px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">⬇ Download Excel</button>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-title">Revenue Trend</div>
+          <canvas id="ex-rev-chart" height="80" style="margin-top:10px;"></canvas>
+        </div>
+      </div>
+
+      <!-- EXPENSES BREAKDOWN -->
+      <div id="ex-content-expenses" style="display:none;">
+        <div class="adm-card mb12">
+          <div class="adm-title">Expenses by Category <span id="ex-exp-currency-label" style="color:var(--t3);font-weight:400;font-size:11px;">(PKR)</span></div>
+          <div style="overflow-x:auto;margin-top:8px;">
+            <table class="dt" id="ex-exp-table" style="min-width:900px;">
+              <thead id="ex-exp-thead"></thead>
+              <tbody id="ex-exp-tbody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px;">
+            <button onclick="exDownloadExcel('expenses')" style="padding:6px 14px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">⬇ Download Excel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATA ENTRY -->
+      <div id="ex-content-input" style="display:none;">
+        <div class="adm-card mb12">
+          <div class="adm-title">✏ Monthly Data Entry</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Enter data for months not covered by the uploaded spreadsheet (Oct 2025 onwards).</div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+            <div>
+              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">YEAR</div>
+              <select id="ex-input-year" onchange="exRenderInputForm()" class="adm-inp" style="width:90px;">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">MONTH</div>
+              <select id="ex-input-month" onchange="exRenderInputForm()" class="adm-inp" style="width:100px;">
+                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                <option value="9" selected>October</option><option value="10">November</option><option value="11">December</option>
+              </select>
+            </div>
+          </div>
+          <div id="ex-input-form"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="ex-content-settings" style="display:none;">
+        <div class="adm-card mb12">
+          <div class="adm-title">⚙ Exchange Rate Settings</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Default PKR/USD rate used for manually entered months. Historical rates from the spreadsheet are preserved.</div>
+          <div class="adm-inp-row">
+            <input class="adm-inp" id="ex-default-rate" type="number" step="0.01" placeholder="280.46" style="width:120px;">
+            <button class="adm-add" onclick="exSaveDefaultRate()">Save Rate</button>
+          </div>
+          <div style="font-size:11px;color:var(--t3);margin-top:6px;" id="ex-current-rate-label"></div>
+        </div>
+
+        <div class="adm-card mb12">
+          <div class="adm-title">💰 Revenue Categories</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add or remove revenue categories. Changes affect the Data Entry form and all reports.</div>
+          <div class="adm-inp-row">
+            <input class="adm-inp" id="ex-new-rev-cat" placeholder="New category name…">
+            <button class="adm-add" onclick="exAddRevCat()">+ Add</button>
+          </div>
+          <div id="ex-rev-cat-list" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="adm-card">
+          <div class="adm-title">📋 Expense Categories</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Add or remove expense categories.</div>
+          <div class="adm-inp-row">
+            <input class="adm-inp" id="ex-new-exp-cat" placeholder="New category name…">
+            <button class="adm-add" onclick="exAddExpCat()">+ Add</button>
+          </div>
+          <div id="ex-exp-cat-list" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS TAB -->
+    <div id="sup-content-logs" style="display:none;">
+      <div class="adm-grid mb12">
+        <div class="adm-card">
+          <div class="adm-title" style="color:var(--pur)">Session Activity</div>
+          <div id="log-sessions" style="max-height:260px;overflow-y:auto;"></div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-title" style="color:var(--pur)">Admin Changes &amp; Uploads</div>
+          <div id="log-admin-changes" style="max-height:260px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div class="adm-card mb12">
+        <div class="adm-title" style="color:var(--pur)">Page Time Tracking</div>
+        <div id="log-page-time" style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2031,7 +2180,462 @@ function showAdmin(){
 async function showSuper(){
   if(!curUser||curUser.role!=='super')return;
   renderUserList();await renderSuperLog();loadResetRequests();
+  switchSuperTab('users');
+  exLoadData();
   document.getElementById('super-overlay').style.display='block';
+}
+
+function switchSuperTab(tab){
+  ['users','exec','logs'].forEach(t=>{
+    const btn=document.getElementById('sup-tab-'+t);
+    const cont=document.getElementById('sup-content-'+t);
+    const isActive=t===tab;
+    if(btn){btn.style.color=isActive?'var(--pur)':'var(--t3)';btn.style.borderBottomColor=isActive?'var(--pur)':'transparent';}
+    if(cont)cont.style.display=isActive?'':'none';
+  });
+  if(tab==='exec')exRenderAll();
+}
+
+// ═══════════════════════════════════════════════
+// EXEC FINANCIAL MODULE
+// ═══════════════════════════════════════════════
+
+// ── HARDCODED HISTORICAL DATA ─────────────────
+const EX_HISTORICAL={
+  // PKR data by month key "YYYY-MM"
+  pkr:{
+    // 2023
+    '2023-10':{revenue:112000,expenses:427950,profit:-315950,revCats:{'POS Profit':112000},expCats:{}},
+    '2023-11':{revenue:131629,expenses:395600,profit:-263971,revCats:{'POS Profit':131629},expCats:{}},
+    '2023-12':{revenue:111206,expenses:390960,profit:-279754,revCats:{'POS Profit':111206},expCats:{}},
+    // 2024
+    '2024-01':{revenue:158946,expenses:370100,profit:-211154,revCats:{'POS Profit':158946},expCats:{}},
+    '2024-02':{revenue:144246,expenses:374800,profit:-230554,revCats:{'POS Profit':144246},expCats:{}},
+    '2024-03':{revenue:138134,expenses:405900,profit:-267766,revCats:{'POS Profit':138134},expCats:{}},
+    '2024-04':{revenue:561534,expenses:406180,profit:155354,revCats:{'POS Profit':561534},expCats:{}},
+    '2024-05':{revenue:121510,expenses:379400,profit:-257890,revCats:{'POS Profit':121510},expCats:{}},
+    '2024-06':{revenue:102483,expenses:344332,profit:-241849,revCats:{'POS Profit':102483},expCats:{}},
+    '2024-07':{revenue:115355,expenses:375300,profit:-259945,revCats:{'POS Profit':115355},expCats:{}},
+    '2024-08':{revenue:143297,expenses:423200,profit:-279903,revCats:{'POS Profit':143297},expCats:{}},
+    '2024-09':{revenue:94443,expenses:420791,profit:-326348,revCats:{'POS Profit':94443},expCats:{}},
+    '2024-10':{revenue:106616,expenses:380400,profit:-273784,revCats:{'POS Profit':106616},expCats:{}},
+    '2024-11':{revenue:202434,expenses:485900,profit:-283466,revCats:{'POS Profit':202434},expCats:{}},
+    '2024-12':{revenue:553873,expenses:552000,profit:1873,revCats:{'POS Profit':553873},expCats:{}},
+    // 2025 Jan-Sep (from Profits 2025 + Expenses 2025)
+    '2025-01':{revenue:684646,expenses:671715,profit:12931,
+      revCats:{'POS Profit':362700,'Dwatson':143908,'WHT Profit':119065,'ST Credit':58973},
+      expCats:{'Warehouse Rent':60500,'POL Van':29500,'POL Riders':9500,'Salaries':424000,'Management Expense':25000,'POL Admin':2500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':12652,'Taxes & Tolls':42879,'Repair & Maintenance':13650,'Electricity':8875,'Accounting Services':25000}},
+    '2025-02':{revenue:357637,expenses:573171,profit:-215534,
+      revCats:{'POS Profit':185346,'Dwatson':120997,'WHT Profit':36294,'ST Credit':15000},
+      expCats:{'Warehouse Rent':60500,'POL Van':23500,'Salaries':395000,'Management Expense':25000,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':14894,'Printing & Equipment':550,'Taxes & Tolls':11068,'Accounting Services':25000}},
+    '2025-03':{revenue:1340268,expenses:607903,profit:732365,
+      revCats:{'POS Profit':983923,'Dwatson':156220,'WHT Profit':134975,'ST Credit':65150},
+      expCats:{'Warehouse Rent':60500,'POL Van':11500,'POL Riders':26000,'Salaries':372387,'Management Expense':50000,'QB':7000,'Onelink':3100,'Nayatel':4559,'Bonuses & Commissions':20000,'Subscriptions & Bills':3000,'Purchase Additional Expenses':29581,'Purchase & Delivery Expense':4000,'Printing & Equipment':4000,'Taxes & Tolls':300,'Repair & Maintenance':1450,'Electricity':8526}},
+    '2025-04':{revenue:569869,expenses:579480,profit:-9611,
+      revCats:{'POS Profit':329653,'Dwatson':131676,'WHT Profit':75540,'ST Credit':33000},
+      expCats:{'Warehouse Rent':60500,'POL Van':20500,'POL Riders':27200,'Salaries':304520,'Management Expense':80000,'POL Admin':6500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':26359,'Purchase & Delivery Expense':3100,'Printing & Equipment':1732,'Advertising & Branding':19950,'Taxes & Tolls':800,'Repair & Maintenance':9650,'Electricity':500,'Misc Purchase Expense':510,'Accounting Services':25000}},
+    '2025-05':{revenue:326352,expenses:638539,profit:-312187,
+      revCats:{'POS Profit':120884,'Dwatson':136430,'WHT Profit':43897,'ST Credit':25141},
+      expCats:{'Warehouse Rent':60500,'POL Van':17500,'POL Riders':27000,'Salaries':381500,'Management Expense':45000,'POL Admin':5500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':7880,'Printing & Equipment':2000,'Advertising & Branding':12000,'Taxes & Tolls':20000,'Repair & Maintenance':5000,'Electricity':12000,'Accounting Services':25000}},
+    '2025-06':{revenue:428478,expenses:584859,profit:-156381,
+      revCats:{'POS Profit':209117,'Dwatson':120986,'WHT Profit':86900,'ST Credit':11475},
+      expCats:{'Warehouse Rent':60500,'POL Van':16500,'POL Riders':27000,'Salaries':333500,'Management Expense':30000,'POL Admin':7500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':46700,'Printing & Equipment':2500,'Advertising & Branding':15000,'Taxes & Tolls':5000,'Repair & Maintenance':8000,'Electricity':15000}},
+    '2025-07':{revenue:388107,expenses:603139,profit:-215032,
+      revCats:{'POS Profit':163338,'Dwatson':158552,'WHT Profit':43670,'ST Credit':22547},
+      expCats:{'Warehouse Rent':60500,'POL Van':19500,'POL Riders':27000,'Salaries':333500,'Management Expense':55000,'POL Admin':8000,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':25480,'Printing & Equipment':1500,'Advertising & Branding':15000,'Taxes & Tolls':10000,'Repair & Maintenance':15000,'Electricity':15000}},
+    '2025-08':{revenue:412945,expenses:624449,profit:-211504,
+      revCats:{'POS Profit':158381,'Dwatson':163014,'WHT Profit':57400,'ST Credit':34150},
+      expCats:{'Warehouse Rent':60500,'POL Van':22000,'POL Riders':33000,'Salaries':384500,'Management Expense':40000,'POL Admin':7500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':25290,'Printing & Equipment':1000,'Advertising & Branding':12000,'Electricity':21000}},
+    '2025-09':{revenue:285100,expenses:628444,profit:-343344,
+      revCats:{'POS Profit':48000,'Dwatson':180000,'WHT Profit':23750,'ST Credit':33350},
+      expCats:{'Warehouse Rent':60500,'POL Van':18000,'POL Riders':34000,'Salaries':363000,'Management Expense':65000,'POL Admin':9500,'QB':7000,'Onelink':3100,'Nayatel':4559,'Subscriptions & Bills':3000,'Purchase Additional Expenses':16285,'Printing & Equipment':4500,'Advertising & Branding':18000,'Electricity':22000}},
+  },
+  // USD exchange rates by month key
+  rates:{
+    '2023-10':279.45,'2023-11':285.01,'2023-12':281.47,
+    '2024-01':279.45,'2024-02':285.01,'2024-03':281.47,
+    '2024-04':279.53,'2024-05':278.62,'2024-06':278.60,
+    '2024-07':278.11,'2024-08':278.30,'2024-09':278.47,
+    '2024-10':278.41,'2024-11':278.57,'2024-12':278.34,
+    '2025-01':278.97,'2025-02':279.66,'2025-03':280.16,
+    '2025-04':280.46,'2025-05':280.46,'2025-06':280.46,
+    '2025-07':280.46,'2025-08':280.46,'2025-09':280.46,
+  }
+};
+
+const EX_DEFAULT_RATE=280.46;
+const EX_DEFAULT_REV_CATS=['POS Profit','Dwatson','WHT Profit','ST Credit'];
+const EX_DEFAULT_EXP_CATS=['Warehouse Rent','POL Van','POL Riders','Salaries','Management Expense','POL Admin','QB','Onelink','Nayatel','Bonuses & Commissions','Subscriptions & Bills','Purchase Additional Expenses','Purchase & Delivery Expense','Printing & Equipment','Advertising & Branding','Taxes & Tolls','Repair & Maintenance','Electricity','Misc Purchase Expense','Accounting Services','Phone Expense'];
+
+let exData={manual:{},settings:{defaultRate:EX_DEFAULT_RATE,revCats:[...EX_DEFAULT_REV_CATS],expCats:[...EX_DEFAULT_EXP_CATS]}};
+let exCurrency='PKR';
+let exCurTab='pl';
+let exCharts={};
+
+function exLoadData(){
+  try{const d=JSON.parse(localStorage.getItem('ex_data'));if(d)exData=d;}catch(e){}
+  // Ensure defaults
+  if(!exData.settings)exData.settings={defaultRate:EX_DEFAULT_RATE,revCats:[...EX_DEFAULT_REV_CATS],expCats:[...EX_DEFAULT_EXP_CATS]};
+  if(!exData.manual)exData.manual={};
+  // Update rate display
+  const rl=document.getElementById('ex-current-rate-label');
+  if(rl)rl.textContent='Current default rate: PKR '+exData.settings.defaultRate+' per USD';
+  const ri=document.getElementById('ex-default-rate');
+  if(ri)ri.value=exData.settings.defaultRate;
+}
+
+function exSaveData(){localStorage.setItem('ex_data',JSON.stringify(exData));}
+
+function exGetRate(monthKey){
+  return EX_HISTORICAL.rates[monthKey]||exData.settings.defaultRate;
+}
+
+function exGetAllMonths(){
+  // Merge historical + manual, sorted
+  const keys=new Set([...Object.keys(EX_HISTORICAL.pkr),...Object.keys(exData.manual)]);
+  return [...keys].sort();
+}
+
+function exGetMonthData(monthKey){
+  const hist=EX_HISTORICAL.pkr[monthKey];
+  const manual=exData.manual[monthKey];
+  if(hist&&!manual)return hist;
+  if(manual)return manual;
+  return null;
+}
+
+function exGetValue(monthKey,field){
+  const d=exGetMonthData(monthKey);
+  if(!d)return 0;
+  const pkrVal=d[field]||0;
+  if(exCurrency==='PKR')return pkrVal;
+  return pkrVal/exGetRate(monthKey);
+}
+
+function exFmt(v){
+  if(exCurrency==='PKR')return Math.round(v).toLocaleString();
+  return v.toFixed(0);
+}
+
+function exFmtSign(v){
+  const f=exFmt(Math.abs(v));
+  return v>=0?f:'('+f+')';
+}
+
+function setExCurrency(cur){
+  exCurrency=cur;
+  document.getElementById('ex-cur-pkr').style.background=cur==='PKR'?'var(--acc)':'transparent';
+  document.getElementById('ex-cur-pkr').style.color=cur==='PKR'?'#fff':'var(--t2)';
+  document.getElementById('ex-cur-pkr').style.border=cur==='PKR'?'none':'1px solid var(--bdr)';
+  document.getElementById('ex-cur-usd').style.background=cur==='USD'?'var(--acc)':'transparent';
+  document.getElementById('ex-cur-usd').style.color=cur==='USD'?'#fff':'var(--t2)';
+  document.getElementById('ex-cur-usd').style.border=cur==='USD'?'none':'1px solid var(--bdr)';
+  exRenderAll();
+}
+
+function switchExecTab(tab){
+  exCurTab=tab;
+  ['pl','revenue','expenses','input','settings'].forEach(t=>{
+    const btn=document.getElementById('ex-tab-'+t);
+    const cont=document.getElementById('ex-content-'+t);
+    const isActive=t===tab;
+    if(btn)btn.className='dbtn'+(isActive?' on':'');
+    if(cont)cont.style.display=isActive?'':'none';
+  });
+  if(tab==='pl')exRenderPL();
+  if(tab==='revenue')exRenderRevenue();
+  if(tab==='expenses')exRenderExpenses();
+  if(tab==='input')exRenderInputForm();
+  if(tab==='settings')exRenderSettings();
+}
+
+function exRenderAll(){
+  if(exCurTab==='pl')exRenderPL();
+  else if(exCurTab==='revenue')exRenderRevenue();
+  else if(exCurTab==='expenses')exRenderExpenses();
+}
+
+// ── P&L SUMMARY ──────────────────────────────────────────────────────────────
+function exRenderPL(){
+  const months=exGetAllMonths();
+  const cur=exCurrency;
+  const lbl=document.getElementById('ex-pl-currency-label');
+  if(lbl)lbl.textContent='('+cur+')';
+
+  // Build quarterly groups
+  const qMap={};
+  const yearMap={};
+  months.forEach(mk=>{
+    const [y,m]=mk.split('-').map(Number);
+    const q='Q'+Math.ceil(m/3)+' '+y;
+    const yr=''+y;
+    if(!qMap[q])qMap[q]=[];
+    qMap[q].push(mk);
+    if(!yearMap[yr])yearMap[yr]=[];
+    yearMap[yr].push(mk);
+  });
+
+  // Header
+  const thead=document.getElementById('ex-pl-thead');
+  const headerMonths=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+String(y).slice(2);});
+  thead.innerHTML=`<tr><th style="min-width:140px;">Metric</th>${headerMonths.map(m=>`<th style="text-align:right;white-space:nowrap">${m}</th>`).join('')}<th style="text-align:right;background:var(--sur3)">Total</th></tr>`;
+
+  // Rows
+  const rows=[
+    {label:'Gross Revenue',field:'revenue',color:'var(--grn)'},
+    {label:'Total Expenses',field:'expenses',color:'var(--red)'},
+    {label:'Net Profit',field:'profit',color:'var(--acc)',bold:true},
+    {label:'Profit %',field:'pct',color:'var(--t2)'},
+  ];
+
+  const tbody=document.getElementById('ex-pl-tbody');
+  tbody.innerHTML=rows.map(row=>{
+    let total=0;
+    const cells=months.map(mk=>{
+      const d=exGetMonthData(mk);
+      if(!d)return`<td style="text-align:right;color:var(--t3)">—</td>`;
+      let v;
+      if(row.field==='pct'){
+        const rev=exGetValue(mk,'revenue');const exp=exGetValue(mk,'expenses');
+        v=rev>0?((rev-exp)/rev*100):0;
+        return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:${v>=0?'var(--grn)':'var(--red)'}">${v.toFixed(1)}%</td>`;
+      }
+      v=exGetValue(mk,row.field);
+      total+=v;
+      const c=row.field==='profit'?(v>=0?'var(--grn)':'var(--red)'):row.color;
+      return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:${c}">${row.field==='profit'?exFmtSign(v):exFmt(v)}</td>`;
+    }).join('');
+    let totalCell='';
+    if(row.field==='pct'){
+      const totRev=months.reduce((s,mk)=>{const d=exGetMonthData(mk);return s+(d?exGetValue(mk,'revenue'):0);},0);
+      const totExp=months.reduce((s,mk)=>{const d=exGetMonthData(mk);return s+(d?exGetValue(mk,'expenses'):0);},0);
+      const pct=totRev>0?((totRev-totExp)/totRev*100):0;
+      totalCell=`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:${pct>=0?'var(--grn)':'var(--red)'};font-weight:700">${pct.toFixed(1)}%</td>`;
+    }else{
+      const c=row.field==='profit'?(total>=0?'var(--grn)':'var(--red)'):row.color;
+      totalCell=`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:${c};font-weight:700">${row.field==='profit'?exFmtSign(total):exFmt(total)}</td>`;
+    }
+    return`<tr><td style="font-weight:${row.bold?700:500};color:${row.color};font-size:12px">${row.label}</td>${cells}${totalCell}</tr>`;
+  }).join('');
+
+  // Chart
+  const revVals=months.map(mk=>{const d=exGetMonthData(mk);return d?exGetValue(mk,'revenue'):null;});
+  const expVals=months.map(mk=>{const d=exGetMonthData(mk);return d?exGetValue(mk,'expenses'):null;});
+  const profVals=months.map(mk=>{const d=exGetMonthData(mk);return d?exGetValue(mk,'profit'):null;});
+  const labels=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+String(y).slice(2);});
+  if(exCharts.pl)exCharts.pl.destroy();
+  const ctx=document.getElementById('ex-pl-chart');
+  if(ctx)exCharts.pl=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'Revenue',data:revVals,backgroundColor:'rgba(34,197,94,.7)',borderRadius:2},
+    {label:'Expenses',data:expVals,backgroundColor:'rgba(239,68,68,.6)',borderRadius:2},
+    {label:'Profit',data:profVals,type:'line',borderColor:'var(--acc)',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3},
+  ]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>exCurrency==='PKR'?Math.round(v/1000)+'K':'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+
+// ── REVENUE BREAKDOWN ─────────────────────────────────────────────────────────
+function exRenderRevenue(){
+  const months=exGetAllMonths();
+  const cats=exData.settings.revCats;
+  const lbl=document.getElementById('ex-rev-currency-label');
+  if(lbl)lbl.textContent='('+exCurrency+')';
+  const monthLabels=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+String(y).slice(2);});
+  const thead=document.getElementById('ex-rev-thead');
+  thead.innerHTML=`<tr><th style="min-width:160px;">Category</th>${monthLabels.map(m=>`<th style="text-align:right;white-space:nowrap">${m}</th>`).join('')}<th style="text-align:right;background:var(--sur3)">Total</th></tr>`;
+  const tbody=document.getElementById('ex-rev-tbody');
+  const rate=mk=>exGetRate(mk);
+  const rows=cats.map(cat=>{
+    let total=0;
+    const cells=months.map(mk=>{
+      const d=exGetMonthData(mk);
+      const pkrV=d?.revCats?.[cat]||0;
+      const v=exCurrency==='PKR'?pkrV:pkrV/rate(mk);
+      total+=v;
+      return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--t2)">${v>0?exFmt(v):'—'}</td>`;
+    }).join('');
+    return`<tr><td style="font-size:12px;color:var(--txt)">${esc(cat)}</td>${cells}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--acc);font-weight:700">${exFmt(total)}</td></tr>`;
+  });
+  // Total row
+  const totals=months.map(mk=>{const d=exGetMonthData(mk);const pkrV=d?.revenue||0;const v=exCurrency==='PKR'?pkrV:pkrV/rate(mk);return v;});
+  const grandTotal=totals.reduce((s,v)=>s+v,0);
+  rows.push(`<tr style="border-top:2px solid var(--bdr)"><td style="font-weight:700;color:var(--grn);font-size:12px">Total Revenue</td>${totals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--grn);font-weight:600">${v>0?exFmt(v):'—'}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--grn);font-weight:700">${exFmt(grandTotal)}</td></tr>`);
+  tbody.innerHTML=rows.join('');
+  // Chart
+  if(exCharts.rev)exCharts.rev.destroy();
+  const colours=['rgba(249,115,22,.8)','rgba(59,130,246,.8)','rgba(168,85,247,.8)','rgba(34,197,94,.8)','rgba(239,68,68,.8)'];
+  const ctx=document.getElementById('ex-rev-chart');
+  if(ctx)exCharts.rev=new Chart(ctx,{type:'bar',data:{labels:monthLabels,datasets:cats.map((cat,i)=>({label:cat,data:months.map(mk=>{const d=exGetMonthData(mk);const pkrV=d?.revCats?.[cat]||0;return exCurrency==='PKR'?pkrV:pkrV/rate(mk);}),backgroundColor:colours[i%colours.length],borderRadius:2,stack:'rev'}))},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{stacked:true,ticks:{color:'#64748b',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{stacked:true,ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+
+// ── EXPENSES BREAKDOWN ────────────────────────────────────────────────────────
+function exRenderExpenses(){
+  const months=exGetAllMonths().filter(mk=>exGetMonthData(mk));
+  const cats=exData.settings.expCats;
+  const lbl=document.getElementById('ex-exp-currency-label');
+  if(lbl)lbl.textContent='('+exCurrency+')';
+  const rate=mk=>exGetRate(mk);
+  const monthLabels=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+String(y).slice(2);});
+  const thead=document.getElementById('ex-exp-thead');
+  thead.innerHTML=`<tr><th style="min-width:200px;">Expense Category</th>${monthLabels.map(m=>`<th style="text-align:right;white-space:nowrap;font-size:10px">${m}</th>`).join('')}<th style="text-align:right;background:var(--sur3)">Total</th></tr>`;
+  const tbody=document.getElementById('ex-exp-tbody');
+  const rows=cats.map(cat=>{
+    let total=0;
+    const cells=months.map(mk=>{
+      const d=exGetMonthData(mk);
+      const pkrV=d?.expCats?.[cat]||0;
+      const v=exCurrency==='PKR'?pkrV:pkrV/rate(mk);
+      total+=v;
+      return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--t2)">${v>0?exFmt(v):'—'}</td>`;
+    }).join('');
+    if(total===0)return'';
+    return`<tr><td style="font-size:11px;color:var(--txt)">${esc(cat)}</td>${cells}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:10px;background:var(--sur3);color:var(--red);font-weight:700">${exFmt(total)}</td></tr>`;
+  }).filter(Boolean);
+  // Total row
+  const totals=months.map(mk=>{const d=exGetMonthData(mk);const pkrV=d?.expenses||0;return exCurrency==='PKR'?pkrV:pkrV/rate(mk);});
+  rows.push(`<tr style="border-top:2px solid var(--bdr)"><td style="font-weight:700;color:var(--red);font-size:12px">Total Expenses</td>${totals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--red);font-weight:600">${exFmt(v)}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--red);font-weight:700">${exFmt(totals.reduce((s,v)=>s+v,0))}</td></tr>`);
+  tbody.innerHTML=rows.join('');
+}
+
+// ── DATA ENTRY ────────────────────────────────────────────────────────────────
+function exRenderInputForm(){
+  const year=document.getElementById('ex-input-year')?.value||'2025';
+  const month=parseInt(document.getElementById('ex-input-month')?.value||'9');
+  const mk=year+'-'+(String(month+1).padStart(2,'0'));
+  const existing=exData.manual[mk]||{revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+  const isHistorical=!!EX_HISTORICAL.pkr[mk];
+  const rate=EX_HISTORICAL.rates[mk]||exData.settings.defaultRate;
+  const el=document.getElementById('ex-input-form');
+  if(!el)return;
+  if(isHistorical){
+    el.innerHTML=`<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--acc);">⚠ ${MONTHS[month]} ${year} already exists in the historical spreadsheet data. To override, enter values below — they will take precedence.</div><br>`;
+  }else{el.innerHTML='';}
+  const revCats=exData.settings.revCats;
+  const expCats=exData.settings.expCats;
+  el.innerHTML+=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="adm-card">
+        <div class="adm-title" style="color:var(--grn);margin-bottom:10px;">💰 Revenue (PKR)</div>
+        ${revCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-rev-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.revCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
+        <div style="font-size:10px;color:var(--t3);margin-top:8px;">Exchange rate: 1 USD = ${rate} PKR</div>
+      </div>
+      <div class="adm-card">
+        <div class="adm-title" style="color:var(--red);margin-bottom:10px;">📋 Expenses (PKR)</div>
+        ${expCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-exp-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.expCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;">
+      <button onclick="exSaveInputForm('${mk}')" style="padding:8px 20px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Save ${MONTHS[month]} ${year}</button>
+      ${exData.manual[mk]?`<button onclick="exDeleteManual('${mk}')" style="padding:8px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">Delete Entry</button>`:''}
+    </div>`;
+}
+
+function exSaveInputForm(mk){
+  const revCats=exData.settings.revCats;
+  const expCats=exData.settings.expCats;
+  const revData={};let totalRev=0;
+  revCats.forEach(cat=>{
+    const v=parseFloat(document.getElementById('ex-in-rev-'+mk+'-'+cat.replace(/\W/g,'_'))?.value)||0;
+    if(v)revData[cat]=v;totalRev+=v;
+  });
+  const expData={};let totalExp=0;
+  expCats.forEach(cat=>{
+    const v=parseFloat(document.getElementById('ex-in-exp-'+mk+'-'+cat.replace(/\W/g,'_'))?.value)||0;
+    if(v)expData[cat]=v;totalExp+=v;
+  });
+  exData.manual[mk]={revenue:totalRev,expenses:totalExp,profit:totalRev-totalExp,revCats:revData,expCats:expData};
+  exSaveData();
+  const[y,m]=mk.split('-').map(Number);
+  notif(`✓ ${MONTHS[m-1]} ${y} saved`);
+  exRenderAll();
+}
+
+function exDeleteManual(mk){
+  delete exData.manual[mk];exSaveData();
+  const[y,m]=mk.split('-').map(Number);
+  notif(`Entry for ${MONTHS[m-1]} ${y} deleted`);
+  exRenderInputForm();exRenderAll();
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function exSaveDefaultRate(){
+  const v=parseFloat(document.getElementById('ex-default-rate')?.value);
+  if(!v||isNaN(v)){notif('⚠ Enter a valid rate');return;}
+  exData.settings.defaultRate=v;exSaveData();
+  document.getElementById('ex-current-rate-label').textContent='Current default rate: PKR '+v+' per USD';
+  notif('✓ Exchange rate updated to '+v);
+}
+
+function exRenderSettings(){
+  const rl=document.getElementById('ex-current-rate-label');
+  if(rl)rl.textContent='Current default rate: PKR '+exData.settings.defaultRate+' per USD';
+  const ri=document.getElementById('ex-default-rate');
+  if(ri)ri.value=exData.settings.defaultRate;
+  exRenderRevCatList();
+  exRenderExpCatList();
+}
+
+function exRenderRevCatList(){
+  const el=document.getElementById('ex-rev-cat-list');if(!el)return;
+  el.innerHTML=exData.settings.revCats.map((c,i)=>`<div class="adm-item"><span>${esc(c)}</span><button class="rm-btn" onclick="exRemoveRevCat(${i})">✕</button></div>`).join('');
+}
+function exRenderExpCatList(){
+  const el=document.getElementById('ex-exp-cat-list');if(!el)return;
+  el.innerHTML=exData.settings.expCats.map((c,i)=>`<div class="adm-item"><span>${esc(c)}</span><button class="rm-btn" onclick="exRemoveExpCat(${i})">✕</button></div>`).join('');
+}
+function exAddRevCat(){
+  const inp=document.getElementById('ex-new-rev-cat');const v=inp?.value.trim();if(!v)return;
+  if(!exData.settings.revCats.includes(v)){exData.settings.revCats.push(v);exSaveData();}
+  inp.value='';exRenderRevCatList();notif('Revenue category added');
+}
+function exAddExpCat(){
+  const inp=document.getElementById('ex-new-exp-cat');const v=inp?.value.trim();if(!v)return;
+  if(!exData.settings.expCats.includes(v)){exData.settings.expCats.push(v);exSaveData();}
+  inp.value='';exRenderExpCatList();notif('Expense category added');
+}
+function exRemoveRevCat(i){exData.settings.revCats.splice(i,1);exSaveData();exRenderRevCatList();}
+function exRemoveExpCat(i){exData.settings.expCats.splice(i,1);exSaveData();exRenderExpCatList();}
+
+// ── EXCEL DOWNLOAD ────────────────────────────────────────────────────────────
+function exDownloadExcel(type){
+  const months=exGetAllMonths().filter(mk=>exGetMonthData(mk));
+  const rate=mk=>exGetRate(mk);
+  const cv=mk=>exCurrency==='PKR'?1:1/rate(mk);
+  let rows=[];
+  const mLabels=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+y;});
+
+  if(type==='pl'){
+    rows.push(['Metric',...mLabels,'Total']);
+    ['Revenue','Expenses','Net Profit','Profit %'].forEach(label=>{
+      const field={Revenue:'revenue',Expenses:'expenses','Net Profit':'profit','Profit %':'pct'}[label];
+      const vals=months.map(mk=>{
+        const d=exGetMonthData(mk);if(!d)return'';
+        if(field==='pct'){const r=d.revenue*cv(mk);const e=d.expenses*cv(mk);return r>0?((r-e)/r*100).toFixed(1)+'%':'';}
+        return Math.round(d[field]*cv(mk));
+      });
+      const total=field==='pct'?'':Math.round(vals.filter(v=>typeof v==='number').reduce((s,v)=>s+v,0));
+      rows.push([label,...vals,total]);
+    });
+  }else if(type==='revenue'){
+    rows.push(['Category',...mLabels,'Total']);
+    exData.settings.revCats.forEach(cat=>{
+      const vals=months.map(mk=>{const d=exGetMonthData(mk);return d?.revCats?.[cat]?Math.round((d.revCats[cat]||0)*cv(mk)):'';});
+      rows.push([cat,...vals,Math.round(vals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
+    });
+    const totals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round(d.revenue*cv(mk)):'';});
+    rows.push(['TOTAL',...totals,Math.round(totals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
+  }else if(type==='expenses'){
+    rows.push(['Category',...mLabels,'Total']);
+    exData.settings.expCats.forEach(cat=>{
+      const vals=months.map(mk=>{const d=exGetMonthData(mk);const v=(d?.expCats?.[cat]||0)*cv(mk);return v>0?Math.round(v):'';});
+      const total=vals.filter(v=>v!=='').reduce((s,v)=>s+v,0);
+      if(total>0)rows.push([cat,...vals,Math.round(total)]);
+    });
+    const totals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round(d.expenses*cv(mk)):'';});
+    rows.push(['TOTAL',...totals,Math.round(totals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
+  }
+
+  const cur=exCurrency;
+  const title='Tezz_'+type+'_'+cur+'_'+new Date().toISOString().slice(0,10);
+  makeExcelDownload(rows,title+'.csv');
 }
 function closeModal(id){document.getElementById(id).style.display='none';}
 
