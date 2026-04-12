@@ -1103,12 +1103,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </table>
       </div>
 
-      <!-- CHART — desktop only, fixed height -->
-      <div class="ec-card ec-chart-card" style="margin-top:12px;">
-        <div class="ec-card-hd"><div class="ec-card-title">Monthly Trend</div></div>
-        <div style="padding:12px;height:220px;position:relative;"><canvas id="ex-pl-chart"></canvas></div>
-      </div>
-
     </div>
 
     <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
@@ -3895,37 +3889,43 @@ function ecRenderUnified(){
   const totalSalesMonth={},totalOrdersMonth={},totalAvgBasket={},avgBasketB2C={},avgBasketB2B={},avgDailyB2C={},avgDailyB2B={},totalAvgDaily={},custsB2CCount={},custsB2BCount={},totalCusts={};
   months.forEach(mk=>{
     const days=new Date(parseInt(mk.split('-')[0]),parseInt(mk.split('-')[1]),0).getDate();
-    totalSalesMonth[mk]=(salesB2C[mk]||0)+(salesB2B[mk]||0);
+    const c2=cv(mk);
+    totalSalesMonth[mk]=((salesB2C[mk]||0)+(salesB2B[mk]||0))*c2;
     totalOrdersMonth[mk]=(ordersB2C[mk]||0)+(ordersB2B[mk]||0);
-    avgBasketB2C[mk]=basketsB2C[mk].length?basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length:null;
-    avgBasketB2B[mk]=basketsB2B[mk].length?basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length:null;
+    avgBasketB2C[mk]=basketsB2C[mk].length?basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length*c2:null;
+    avgBasketB2B[mk]=basketsB2B[mk].length?basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length*c2:null;
     const ab=[...basketsB2C[mk],...basketsB2B[mk]];
-    totalAvgBasket[mk]=ab.length?ab.reduce((s,v)=>s+v,0)/ab.length:null;
+    totalAvgBasket[mk]=ab.length?ab.reduce((s,v)=>s+v,0)/ab.length*c2:null;
     avgDailyB2C[mk]=ordersB2C[mk]?ordersB2C[mk]/days:null;
     avgDailyB2B[mk]=ordersB2B[mk]?ordersB2B[mk]/days:null;
     totalAvgDaily[mk]=totalOrdersMonth[mk]?totalOrdersMonth[mk]/days:null;
     custsB2CCount[mk]=custsB2C[mk].size;
     custsB2BCount[mk]=custsB2B[mk].size;
     totalCusts[mk]=custsB2C[mk].size+custsB2B[mk].size;
+    // Apply conversion to raw sales arrays for sub-rows
+    salesB2C[mk]=(salesB2C[mk]||0)*c2;
+    salesB2B[mk]=(salesB2B[mk]||0)*c2;
   });
+  const salesLabel=cur==='PKR'?'Sales (PKR)':'Sales (USD)';
+  const basketLabel=cur==='PKR'?'Avg Basket Size (PKR)':'Avg Basket Size (USD)';
   function salesHdr(label,vals,color){
     const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
-    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:${color||'var(--blu)'};font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color||'var(--blu)'};font-family:'DM Mono',monospace;">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="color:${color||'var(--blu)'};font-weight:700;">${Math.round(total).toLocaleString()}</td></tr>`;
+    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:${color||'var(--blu)'};font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color||'var(--blu)'};font-family:'DM Mono',monospace;">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="color:${color||'var(--blu)'};font-weight:700;">${ecFmt(total)}</td></tr>`;
   }
   function salesSub(label,vals){
     const nonNull=Object.values(vals).filter(v=>v!=null);
     const total=nonNull.reduce((s,v)=>s+v,0);
-    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${ecFmt(total)}</td></tr>`;
   }
   function avgSub(label,vals){
     const nonNull=Object.values(vals).filter(v=>v!=null);
     const avg=nonNull.length?nonNull.reduce((s,v)=>s+v,0)/nonNull.length:0;
-    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${Math.round(avg).toLocaleString()}</td></tr>`;
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${ecFmt(avg)}</td></tr>`;
   }
-  rows.push(salesHdr('Sales (PKR)',totalSalesMonth,'var(--blu)'));
+  rows.push(salesHdr(salesLabel,totalSalesMonth,'var(--blu)'));
   rows.push(salesSub('B2C',salesB2C));
   rows.push(salesSub('B2B',salesB2B));
-  rows.push(salesHdr('Avg Basket Size',totalAvgBasket,'var(--t2)'));
+  rows.push(salesHdr(basketLabel,totalAvgBasket,'var(--t2)'));
   rows.push(avgSub('B2C',avgBasketB2C));
   rows.push(avgSub('B2B',avgBasketB2B));
   rows.push(salesHdr('Orders',totalOrdersMonth,'var(--t2)'));
@@ -3954,7 +3954,6 @@ function ecRenderUnified(){
   });
   // ── P&L SUMMARY ──
   rows.push(`<tr><td colspan="${months.length+2}" style="height:8px;background:var(--bg);"></td></tr>`);
-  rows.push(`<tr class="ec-sales-hd"><td colspan="${months.length+2}" style="color:var(--pur);font-weight:700;font-size:12px;padding:10px 10px 6px;">📊 P&L Summary</td></tr>`);
   const profitByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);profitByMonth[mk]=d?d.profit*cv(mk):null;});
   const totalRevArrG=Object.values(revByMonth).reduce((s,v)=>s+v,0);
   const totalExpArrG=Object.values(expByMonth).reduce((s,v)=>s+v,0);
@@ -3976,27 +3975,25 @@ function ecRenderUnified(){
   if(tbody)tbody.innerHTML=rows.join('');
   if(ecRevExpanded)ecToggleSection('revenue');
   if(ecExpExpanded)ecToggleSection('expenses');
-  // Chart
-  if(exCharts.pl)exCharts.pl.destroy();
-  const ctx=document.getElementById('ex-pl-chart');
-  if(ctx&&window.innerWidth>768){
-    const revVals=months.map(mk=>revByMonth[mk]||0);
-    const expVals=months.map(mk=>expByMonth[mk]||0);
-    const profVals=months.map(mk=>profitByMonth[mk]);
-    exCharts.pl=new Chart(ctx,{type:'bar',data:{labels:MNAMES,datasets:[{label:'Revenue',data:revVals,backgroundColor:'rgba(34,197,94,.7)',borderRadius:2},{label:'Expenses',data:expVals,backgroundColor:'rgba(239,68,68,.6)',borderRadius:2},{label:'Profit',data:profVals,type:'line',borderColor:'rgba(249,115,22,.9)',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3}]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>cur==='PKR'?Math.round(v/1000)+'K':'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
-  }
 }
+let grCtype='all';
+function grSetCtype(v){
+  grCtype=v;
+  ['all','b2b','b2c'].forEach(k=>{const btn=document.getElementById('gr-ct-'+k);if(btn)btn.className='ec-cur-btn'+(k===(v==='all'?'all':v.toLowerCase())?' active':'');});
+  grRender();
+}
+
 function ecSwitchTab(tab,el){
   ecCurTab=tab;
-  // Hide all ec panels
-  document.querySelectorAll('.ec-panel,.gr-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ec-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  document.querySelectorAll('.gr-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
   document.querySelectorAll('#exec-tabs .tab').forEach(t=>t.classList.remove('active'));
   if(tab==='growth'){
-    const panel=document.getElementById('tab-ec-growth');
-    if(panel)panel.classList.add('active');
+    const p=document.getElementById('tab-ec-growth');
+    if(p){p.classList.add('active');p.style.display='flex';}
   } else {
-    const panel=document.getElementById('tab-ec-main');
-    if(panel)panel.classList.add('active');
+    const p=document.getElementById('tab-ec-main');
+    if(p){p.classList.add('active');p.style.display='';}
   }
   if(el)el.classList.add('active');
   else{const nav=document.getElementById('nav-ec-'+tab);if(nav)nav.classList.add('active');}
@@ -4033,9 +4030,12 @@ function grRender(){
   const months=ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
+  // Filter orders by type
+  const grOrders=grCtype==='all'?S.orders:S.orders.filter(o=>grCtype==='B2B'?o.Customer_Type==='B2B':o.Customer_Type!=='B2B');
+
   // Build per-customer data
   const custMap={};
-  S.orders.forEach(o=>{
+  grOrders.forEach(o=>{
     const n=resolveCustomerName(o.Customer);
     if(!custMap[n])custMap[n]={name:n,type:o.Customer_Type,orders:[],totalSpend:0,firstOrder:null,lastOrder:null};
     custMap[n].orders.push(o);
@@ -4048,7 +4048,6 @@ function grRender(){
   const allCusts=Object.values(custMap);
   const b2c=allCusts.filter(c=>c.type!=='B2B');
   const b2b=allCusts.filter(c=>c.type==='B2B');
-
   // LTV
   const ltv=v=>v.totalSpend;
   const avg=arr=>arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:0;
@@ -4083,7 +4082,7 @@ function grRender(){
   months.forEach(mk=>{
     const[y,m]=mk.split('-').map(Number);
     monthlyActive[mk]=new Set();
-    S.orders.forEach(o=>{if(o.Year===y&&o.Month===m)monthlyActive[mk].add(resolveCustomerName(o.Customer));});
+    grOrders.forEach(o=>{if(o.Year===y&&o.Month===m)monthlyActive[mk].add(resolveCustomerName(o.Customer));});
   });
   let retRates=[],churnRates=[],reactRates=[];
   for(let i=1;i<months.length;i++){
@@ -4108,7 +4107,7 @@ function grRender(){
 
   // MoM revenue growth
   const revByMonth={};
-  months.forEach(mk=>{revByMonth[mk]=0;S.orders.forEach(o=>{const omk=o.Year+'-'+(String(o.Month).padStart(2,'0'));if(omk===mk)revByMonth[mk]+=o.Total_Sales;});});
+  months.forEach(mk=>{revByMonth[mk]=0;grOrders.forEach(o=>{const omk=o.Year+'-'+(String(o.Month).padStart(2,'0'));if(omk===mk)revByMonth[mk]+=o.Total_Sales;});});
   const momRates=[];
   for(let i=1;i<months.length;i++){
     const prev=revByMonth[months[i-1]];
@@ -4121,13 +4120,13 @@ function grRender(){
   const seenBefore=new Set();
   months.forEach(mk=>{
     const[y,m]=mk.split('-').map(Number);
-    S.orders.forEach(o=>{
+    grOrders.forEach(o=>{
       if(o.Year!==y||o.Month!==m)return;
       const n=resolveCustomerName(o.Customer);
       if(seenBefore.has(n))retRev+=o.Total_Sales;
       else newRev+=o.Total_Sales;
     });
-    S.orders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>seenBefore.add(resolveCustomerName(o.Customer)));
+    grOrders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>seenBefore.add(resolveCustomerName(o.Customer)));
   });
   const newRevPct=(newRev/(newRev+retRev)*100).toFixed(0);
   const retRevPct=(retRev/(newRev+retRev)*100).toFixed(0);
@@ -4136,7 +4135,7 @@ function grRender(){
   const revPerCust=months.map(mk=>{
     const[y,m]=mk.split('-').map(Number);
     const active=new Set();let rev=0;
-    S.orders.forEach(o=>{if(o.Year===y&&o.Month===m){active.add(resolveCustomerName(o.Customer));rev+=o.Total_Sales;}});
+    grOrders.forEach(o=>{if(o.Year===y&&o.Month===m){active.add(resolveCustomerName(o.Customer));rev+=o.Total_Sales;}});
     return active.size?rev/active.size:0;
   });
   const avgRevPerCust=Math.round(avg(revPerCust));
@@ -4147,7 +4146,7 @@ function grRender(){
   months.forEach(mk=>{
     const[y,m]=mk.split('-').map(Number);
     newCustsPerMonth[mk]=0;
-    S.orders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>{
+    grOrders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>{
       const n=resolveCustomerName(o.Customer);
       if(!everSeen.has(n)){newCustsPerMonth[mk]++;everSeen.add(n);}
     });
@@ -4158,7 +4157,7 @@ function grRender(){
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
-    S.orders.forEach(o=>{if(o.Year===cy&&o.Month===cm&&o.IsFirstOrder==='New Customer')cohortCusts.add(resolveCustomerName(o.Customer));});
+    grOrders.forEach(o=>{if(o.Year===cy&&o.Month===cm&&o.IsFirstOrder==='New Customer')cohortCusts.add(resolveCustomerName(o.Customer));});
     if(!cohortCusts.size)return null;
     const retention=[100];
     for(let offset=1;offset<=6;offset++){
@@ -4167,7 +4166,7 @@ function grRender(){
       const futMk=months[futIdx];
       const[fy,fm]=futMk.split('-').map(Number);
       const active=new Set();
-      S.orders.forEach(o=>{if(o.Year===fy&&o.Month===fm)active.add(resolveCustomerName(o.Customer));});
+      grOrders.forEach(o=>{if(o.Year===fy&&o.Month===fm)active.add(resolveCustomerName(o.Customer));});
       const retained=[...cohortCusts].filter(c=>active.has(c)).length;
       retention.push(Math.round(retained/cohortCusts.size*100));
     }
@@ -4218,9 +4217,14 @@ function grRender(){
 
   el.innerHTML=`
     <div class="gr-download-bar">
+      <div class="ec-cur-toggle">
+        <button class="ec-cur-btn${grCtype==='all'?' active':''}" id="gr-ct-all" onclick="grSetCtype('all')">All</button>
+        <button class="ec-cur-btn${grCtype==='B2C'?' active':''}" id="gr-ct-b2c" onclick="grSetCtype('B2C')">B2C</button>
+        <button class="ec-cur-btn${grCtype==='B2B'?' active':''}" id="gr-ct-b2b" onclick="grSetCtype('B2B')">B2B</button>
+      </div>
       <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
       <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
-      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${yr} data · ${allCusts.length} customers · ${S.orders.length} orders</span>
+      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${yr} · ${allCusts.length} customers · ${grOrders.length} orders</span>
     </div>
 
     <div id="gr-capture">
