@@ -273,6 +273,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   /* EC panels scroll */
   .ec-panel{overflow-y:auto;}
   .ec-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* Hide day hint text on mobile — arrows are self-explanatory */
+  .timebar-day-hint{display:none;}
   /* Marketing — single column, scrollable tables */
   .mkt-grid{grid-template-columns:1fr !important;}
   .mkt-grid .tw div[style*="max-height"]{max-height:none !important;overflow-y:visible !important;}
@@ -1829,7 +1831,7 @@ function buildTimeNav(){
     const days=getDayData(navYear,navMonth);
     el.innerHTML=days.map(d=>`<button class="dbtn ${navDay===d?'on':''}" onclick="drillDay(${d})" style="min-width:28px;">${d}</button>`).join('');
   }else{
-    el.innerHTML='<span style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;">Use ← → to step through days</span>';
+    el.innerHTML='<span class="timebar-day-hint" style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;">Use ← → to step through days</span>';
   }
   updateBreadcrumb();
 }
@@ -2560,46 +2562,83 @@ function exRemoveExpCat(i){exData.settings.expCats.splice(i,1);exSaveData();exRe
 
 // ── EXCEL DOWNLOAD ────────────────────────────────────────────────────────────
 function exDownloadExcel(type){
-  const months=exGetAllMonths().filter(mk=>exGetMonthData(mk));
-  const rate=mk=>exGetRate(mk);
+  exLoadData();
+  const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
+  const months=ecMonthsForYear(yr);
   const cur=ecCurrencyMain;
-  const cv=mk=>cur==='PKR'?1:1/rate(mk);
-  let rows=[];
-  const mLabels=months.map(mk=>{const[y,m]=mk.split('-').map(Number);return MONTHS[m-1]+' '+y;});
-
-  if(type==='pl'){
-    rows.push(['Metric',...mLabels,'Total']);
-    ['Revenue','Expenses','Net Profit','Profit %'].forEach(label=>{
-      const field={Revenue:'revenue',Expenses:'expenses','Net Profit':'profit','Profit %':'pct'}[label];
-      const vals=months.map(mk=>{
-        const d=exGetMonthData(mk);if(!d)return'';
-        if(field==='pct'){const r=d.revenue*cv(mk);const e=d.expenses*cv(mk);return r>0?((r-e)/r*100).toFixed(1)+'%':'';}
-        return Math.round(d[field]*cv(mk));
-      });
-      const total=field==='pct'?'':Math.round(vals.filter(v=>typeof v==='number').reduce((s,v)=>s+v,0));
-      rows.push([label,...vals,total]);
-    });
-  }else if(type==='revenue'){
-    rows.push(['Category',...mLabels,'Total']);
-    exData.settings.revCats.forEach(cat=>{
-      const vals=months.map(mk=>{const d=exGetMonthData(mk);return d?.revCats?.[cat]?Math.round((d.revCats[cat]||0)*cv(mk)):'';});
-      rows.push([cat,...vals,Math.round(vals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
-    });
-    const totals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round(d.revenue*cv(mk)):'';});
-    rows.push(['TOTAL',...totals,Math.round(totals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
-  }else if(type==='expenses'){
-    rows.push(['Category',...mLabels,'Total']);
-    exData.settings.expCats.forEach(cat=>{
-      const vals=months.map(mk=>{const d=exGetMonthData(mk);const v=(d?.expCats?.[cat]||0)*cv(mk);return v>0?Math.round(v):'';});
-      const total=vals.filter(v=>v!=='').reduce((s,v)=>s+v,0);
-      if(total>0)rows.push([cat,...vals,Math.round(total)]);
-    });
-    const totals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round(d.expenses*cv(mk)):'';});
-    rows.push(['TOTAL',...totals,Math.round(totals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
-  }
-
-  const title='Tezz_'+type+'_'+cur+'_'+new Date().toISOString().slice(0,10);
-  makeExcelDownload(rows,title+'.csv');
+  const cv=mk=>cur==='PKR'?1:1/exGetRate(mk);
+  const mLabels=months.map(mk=>{const[,m]=mk.split('-').map(Number);return MONTHS[m-1];});
+  const rows=[];
+  // Header
+  rows.push([`TEZZ DELIVERY - EXEC COMMITTEE REPORT (${yr}) - ${cur}`]);
+  rows.push([]);
+  // Sales
+  const salesB2C={},salesB2B={},ordersB2C={},ordersB2B={},custsB2C={},custsB2B={},basketsB2C={},basketsB2B={};
+  months.forEach(mk=>{salesB2C[mk]=0;salesB2B[mk]=0;ordersB2C[mk]=0;ordersB2B[mk]=0;custsB2C[mk]=new Set();custsB2B[mk]=new Set();basketsB2C[mk]=[];basketsB2B[mk]=[];});
+  S.orders.forEach(o=>{
+    if(!o.Year||!o.Month)return;
+    const mk=o.Year+'-'+(String(o.Month).padStart(2,'0'));
+    if(!months.includes(mk))return;
+    const isB2B=o.Customer_Type==='B2B';
+    if(isB2B){salesB2B[mk]+=o.Total_Sales;ordersB2B[mk]++;custsB2B[mk].add(resolveCustomerName(o.Customer));basketsB2B[mk].push(o.Total_Sales);}
+    else{salesB2C[mk]+=o.Total_Sales;ordersB2C[mk]++;custsB2C[mk].add(resolveCustomerName(o.Customer));basketsB2C[mk].push(o.Total_Sales);}
+  });
+  const totalSales=months.map(mk=>(salesB2C[mk]||0)+(salesB2B[mk]||0));
+  const totalOrders=months.map(mk=>(ordersB2C[mk]||0)+(ordersB2B[mk]||0));
+  const avgBasketB2C=months.map(mk=>basketsB2C[mk].length?Math.round(basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length):0);
+  const avgBasketB2B=months.map(mk=>basketsB2B[mk].length?Math.round(basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length):0);
+  const allBaskets=months.map(mk=>{const ab=[...basketsB2C[mk],...basketsB2B[mk]];return ab.length?Math.round(ab.reduce((s,v)=>s+v,0)/ab.length):0;});
+  const daysInMo=months.map(mk=>new Date(parseInt(mk.split('-')[0]),parseInt(mk.split('-')[1]),0).getDate());
+  const avgDailyTotal=months.map((mk,i)=>totalOrders[i]?(totalOrders[i]/daysInMo[i]).toFixed(1):0);
+  const avgDailyB2C=months.map((mk,i)=>ordersB2C[mk]?(ordersB2C[mk]/daysInMo[i]).toFixed(1):0);
+  const avgDailyB2B=months.map((mk,i)=>ordersB2B[mk]?(ordersB2B[mk]/daysInMo[i]).toFixed(1):0);
+  rows.push(['SALES PERFORMANCE',...mLabels,'Total']);
+  rows.push(['Total Sales ('+cur+')',...totalSales.map(v=>Math.round(v)),Math.round(totalSales.reduce((s,v)=>s+v,0))]);
+  rows.push(['  B2C',...months.map(mk=>Math.round(salesB2C[mk])),Math.round(months.reduce((s,mk)=>s+salesB2C[mk],0))]);
+  rows.push(['  B2B',...months.map(mk=>Math.round(salesB2B[mk])),Math.round(months.reduce((s,mk)=>s+salesB2B[mk],0))]);
+  rows.push(['Avg Basket Size',...allBaskets,'']);
+  rows.push(['  B2C',...avgBasketB2C,'']);
+  rows.push(['  B2B',...avgBasketB2B,'']);
+  rows.push(['Total Orders',...totalOrders,totalOrders.reduce((s,v)=>s+v,0)]);
+  rows.push(['  B2C',...months.map(mk=>ordersB2C[mk]),months.reduce((s,mk)=>s+ordersB2C[mk],0)]);
+  rows.push(['  B2B',...months.map(mk=>ordersB2B[mk]),months.reduce((s,mk)=>s+ordersB2B[mk],0)]);
+  rows.push(['Avg Daily Orders',...avgDailyTotal,'']);
+  rows.push(['  B2C',...avgDailyB2C,'']);
+  rows.push(['  B2B',...avgDailyB2B,'']);
+  rows.push(['Customers',...months.map(mk=>custsB2C[mk].size+custsB2B[mk].size),'']);
+  rows.push(['  B2C',...months.map(mk=>custsB2C[mk].size),'']);
+  rows.push(['  B2B',...months.map(mk=>custsB2B[mk].size),'']);
+  rows.push([]);
+  // Revenue
+  const revTotals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round((d.revenue||0)*cv(mk)):0;});
+  rows.push(['REVENUE',...mLabels,'Total']);
+  rows.push(['Total Revenue',...revTotals,revTotals.reduce((s,v)=>s+v,0)]);
+  exData.settings.revCats.forEach(cat=>{
+    const vals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round((d.revCats?.[cat]||0)*cv(mk)):0;});
+    rows.push(['  '+cat,...vals,vals.reduce((s,v)=>s+v,0)]);
+  });
+  rows.push([]);
+  // Expenses
+  const expTotals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round((d.expenses||0)*cv(mk)):0;});
+  rows.push(['EXPENSES',...mLabels,'Total']);
+  rows.push(['Total Expenses',...expTotals,expTotals.reduce((s,v)=>s+v,0)]);
+  exData.settings.expCats.forEach(cat=>{
+    const vals=months.map(mk=>{const d=exGetMonthData(mk);const v=(d?.expCats?.[cat]||0)*cv(mk);return v>0?Math.round(v):0;});
+    if(vals.some(v=>v>0))rows.push(['  '+cat,...vals,vals.reduce((s,v)=>s+v,0)]);
+  });
+  rows.push([]);
+  // P&L
+  const profitVals=months.map(mk=>{const d=exGetMonthData(mk);return d?Math.round(d.profit*cv(mk)):0;});
+  const totRevG=revTotals.reduce((s,v)=>s+v,0);
+  const totProfG=profitVals.reduce((s,v)=>s+v,0);
+  const totSalesG=totalSales.reduce((s,v)=>s+v,0);
+  rows.push(['P&L SUMMARY',...mLabels,'Total']);
+  rows.push(['Revenue',...revTotals,totRevG]);
+  rows.push(['Expenses',...expTotals,expTotals.reduce((s,v)=>s+v,0)]);
+  rows.push(['Net Profit',...profitVals,totProfG]);
+  rows.push(['Gross Margin %',...months.map((mk,i)=>{const ts=cur==='PKR'?totalSales[i]:totalSales[i]/exGetRate(mk);return ts>0?(revTotals[i]/ts*100).toFixed(1)+'%':'—';}),totSalesG>0?(totRevG/totSalesG*100).toFixed(1)+'%':'—']);
+  rows.push(['Net Margin %',...months.map((mk,i)=>{const ts=cur==='PKR'?totalSales[i]:totalSales[i]/exGetRate(mk);return ts>0?(profitVals[i]/ts*100).toFixed(1)+'%':'—';}),totSalesG>0?(totProfG/totSalesG*100).toFixed(1)+'%':'—']);
+  makeExcelDownload(rows,`Tezz_EC_${yr}_${cur}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 function closeModal(id){document.getElementById(id).style.display='none';}
 
