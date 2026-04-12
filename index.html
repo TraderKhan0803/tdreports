@@ -449,20 +449,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 /* ── EXEC COMMITTEE ── */
 .ec-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
 .ec-panel.active{display:flex;}
-.ec-year-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+.ec-year-tabs{display:flex;gap:5px;margin-bottom:0;flex-wrap:wrap;}
 .ec-year-tab{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-family:'DM Mono',monospace;transition:all .15s;}
 .ec-year-tab.active{background:var(--pur);color:#fff;border-color:var(--pur);}
-.ec-table-wrap{overflow-x:auto;border:1px solid var(--bdr);border-radius:var(--r2);}
-.ec-table{border-collapse:collapse;font-size:12px;width:100%;}
-.ec-table th,.ec-table td{padding:8px 12px;border-bottom:1px solid var(--bdr);white-space:nowrap;}
-.ec-table th{background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:right;}
-.ec-table th:first-child,.ec-table td:first-child{text-align:left;position:sticky;left:0;background:var(--sur);z-index:2;min-width:160px;max-width:180px;border-right:1px solid var(--bdr);}
-.ec-table th:first-child{background:var(--sur2);}
-.ec-table tr:last-child td{border-bottom:none;}
-.ec-table tr:hover td{background:var(--sur2);}
-.ec-table tr:hover td:first-child{background:var(--sur3);}
-.ec-table .total-row td{background:var(--sur2);font-weight:700;border-top:2px solid var(--bdr);}
-.ec-table .total-row td:first-child{background:var(--sur3);}
+/* Unified spreadsheet table */
+.ec-unified-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--bdr);border-radius:var(--r);}
+.ec-unified{border-collapse:collapse;width:100%;min-width:600px;}
+.ec-unified th,.ec-unified td{padding:7px 10px;border-bottom:1px solid var(--bdr);white-space:nowrap;font-size:12px;}
+.ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:right;position:sticky;top:0;z-index:3;}
+.ec-unified thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:5;background:var(--sur2);}
+.ec-unified td:first-child{position:sticky;left:0;background:var(--sur);z-index:2;border-right:1px solid var(--bdr);min-width:180px;max-width:210px;}
+.ec-unified tr:hover td{background:var(--sur2);}
+.ec-unified tr:hover td:first-child{background:var(--sur3);}
+.ec-section-hd td{background:var(--sur2) !important;cursor:pointer;font-weight:700;}
+.ec-section-hd:hover td{background:var(--sur3) !important;}
+.ec-section-hd td:first-child{background:var(--sur2) !important;font-size:12px;}
+.ec-section-hd:hover td:first-child{background:var(--sur3) !important;}
+.ec-sub-row td:first-child{padding-left:26px;color:var(--t2);font-size:11px;}
+.ec-sub-row{display:none;}
+.ec-sub-row.visible{display:table-row;}
+.ec-sales-hd td{background:rgba(59,130,246,.07) !important;}
+.ec-sales-sub td:first-child{padding-left:26px;color:var(--t2);font-size:11px;}
+.ec-total-row td{font-weight:700;border-top:2px solid var(--bdr);}
+.ec-tip{cursor:help;border-bottom:1px dashed var(--t3);}
 .ec-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
 .ec-card-hd{padding:11px 14px;background:var(--sur2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .ec-card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--txt);text-transform:uppercase;}
@@ -1036,7 +1045,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="ec-panel" id="tab-ec-main" style="overflow-y:auto;padding:14px 18px;">
 
       <!-- Controls row -->
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
         <div class="ec-year-tabs" id="ec-year-tabs-main"></div>
         <div class="ec-cur-toggle" style="margin-left:auto;">
           <button class="ec-cur-btn active" id="ec-main-pkr" onclick="ecSetCurMain('PKR')">PKR</button>
@@ -1045,52 +1054,16 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button onclick="exDownloadExcel('pl')" style="padding:4px 11px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">⬇ Excel</button>
       </div>
 
-      <!-- REVENUE SECTION -->
-      <div class="ec-card">
-        <div class="ec-card-hd" onclick="ecToggleSection('revenue')" style="cursor:pointer;user-select:none;">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;">
-            <div class="ec-card-title" style="color:var(--grn);">💰 Revenue</div>
-            <div id="ec-rev-total" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--grn);font-weight:700;"></div>
-          </div>
-          <span id="ec-rev-chevron" style="color:var(--t3);font-size:13px;flex-shrink:0;">▶ expand</span>
-        </div>
-        <!-- Collapsed: totals row always visible -->
-        <div class="ec-table-wrap" id="ec-rev-totals-wrap" style="padding:0;"></div>
-        <!-- Expanded: category breakdown -->
-        <div id="ec-rev-detail" style="display:none;">
-          <div style="font-size:10px;color:var(--t3);padding:6px 12px;font-family:'DM Mono',monospace;background:var(--sur2);border-top:1px solid var(--bdr);">Revenue breakdown by category</div>
-          <div class="ec-table-wrap" id="ec-rev-wrap" style="padding:0;"></div>
-        </div>
-      </div>
-
-      <!-- EXPENSES SECTION -->
-      <div class="ec-card">
-        <div class="ec-card-hd" onclick="ecToggleSection('expenses')" style="cursor:pointer;user-select:none;">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;">
-            <div class="ec-card-title" style="color:var(--red);">📋 Expenses</div>
-            <div id="ec-exp-total" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red);font-weight:700;"></div>
-          </div>
-          <span id="ec-exp-chevron" style="color:var(--t3);font-size:13px;flex-shrink:0;">▶ expand</span>
-        </div>
-        <!-- Collapsed: totals row always visible -->
-        <div class="ec-table-wrap" id="ec-exp-totals-wrap" style="padding:0;"></div>
-        <!-- Expanded: line items -->
-        <div id="ec-exp-detail" style="display:none;">
-          <div style="font-size:10px;color:var(--t3);padding:6px 12px;font-family:'DM Mono',monospace;background:var(--sur2);border-top:1px solid var(--bdr);">Expenses by category</div>
-          <div class="ec-table-wrap" id="ec-exp-wrap" style="padding:0;"></div>
-        </div>
-      </div>
-
-      <!-- P&L SUMMARY — always visible -->
-      <div class="ec-card">
-        <div class="ec-card-hd">
-          <div class="ec-card-title">📊 P&amp;L Summary</div>
-        </div>
-        <div class="ec-table-wrap" id="ec-pl-wrap" style="padding:0;"></div>
+      <!-- UNIFIED TABLE -->
+      <div class="ec-unified-wrap">
+        <table class="ec-unified" id="ec-unified-table">
+          <thead id="ec-unified-thead"></thead>
+          <tbody id="ec-unified-tbody"></tbody>
+        </table>
       </div>
 
       <!-- CHART — desktop only -->
-      <div class="ec-card ec-chart-card">
+      <div class="ec-card ec-chart-card" style="margin-top:12px;">
         <div class="ec-card-hd"><div class="ec-card-title">Monthly Trend</div></div>
         <div style="padding:12px;"><canvas id="ex-pl-chart" height="80"></canvas></div>
       </div>
@@ -3758,150 +3731,174 @@ let ecYearMain=null;
 let ecRevExpanded=false;
 let ecExpExpanded=false;
 
-// ── EXEC COMMITTEE — UNIFIED ──────────────────────────────────────────────────
+// ── EXEC COMMITTEE — UNIFIED SINGLE TABLE ────────────────────────────────────
 
 function ecGetYears(){
   const keys=new Set([...Object.keys(EX_HISTORICAL.pkr),...Object.keys(exData.manual)]);
   return[...new Set([...keys].map(k=>k.split('-')[0]))].sort();
 }
-
 function ecMonthsForYear(year){
   const keys=new Set([...Object.keys(EX_HISTORICAL.pkr),...Object.keys(exData.manual)]);
   return[...keys].filter(mk=>mk.startsWith(year+'-')&&exGetMonthData(mk)).sort();
 }
-
 function ecFmt(v){
+  if(v===null||v===undefined)return'—';
   if(ecCurrencyMain==='PKR')return Math.round(v).toLocaleString();
-  return '$'+v.toFixed(0);
+  return'$'+v.toFixed(0);
 }
-
-function ecConvert(pkrVal, monthKey){
-  if(ecCurrencyMain==='PKR')return pkrVal;
-  return pkrVal/exGetRate(monthKey);
-}
-
 function ecSetCurMain(cur){
   ecCurrencyMain=cur;
-  const pkrBtn=document.getElementById('ec-main-pkr');
-  const usdBtn=document.getElementById('ec-main-usd');
-  if(pkrBtn){pkrBtn.className='ec-cur-btn'+(cur==='PKR'?' active':'');}
-  if(usdBtn){usdBtn.className='ec-cur-btn'+(cur==='USD'?' active':'');}
+  document.getElementById('ec-main-pkr').className='ec-cur-btn'+(cur==='PKR'?' active':'');
+  document.getElementById('ec-main-usd').className='ec-cur-btn'+(cur==='USD'?' active':'');
   ecRenderUnified();
 }
-
-function ecSetYearMain(year){
-  ecYearMain=year;
-  ecRenderUnified();
-}
-
+function ecSetYearMain(year){ecYearMain=year;ecRenderUnified();}
 function ecToggleSection(section){
-  if(section==='revenue'){
-    ecRevExpanded=!ecRevExpanded;
-    document.getElementById('ec-rev-detail').style.display=ecRevExpanded?'':'none';
-    document.getElementById('ec-rev-chevron').textContent=ecRevExpanded?'▼ collapse':'▶ expand';
-  } else {
-    ecExpExpanded=!ecExpExpanded;
-    document.getElementById('ec-exp-detail').style.display=ecExpExpanded?'':'none';
-    document.getElementById('ec-exp-chevron').textContent=ecExpExpanded?'▼ collapse':'▶ expand';
-  }
+  const tbody=document.getElementById('ec-unified-tbody');if(!tbody)return;
+  const rows=[...tbody.querySelectorAll('tr.ec-sub-row[data-section="'+section+'"]')];
+  const expanded=rows.length>0&&rows[0].classList.contains('visible');
+  rows.forEach(r=>r.classList.toggle('visible',!expanded));
+  const hdr=tbody.querySelector('tr.ec-section-hd[data-section="'+section+'"]');
+  if(hdr){const chev=hdr.querySelector('.ec-chev');if(chev)chev.textContent=expanded?'▶':'▼';}
+  if(section==='revenue')ecRevExpanded=!expanded;
+  if(section==='expenses')ecExpExpanded=!expanded;
 }
-
 function ecRenderUnified(){
   exLoadData();
   const years=ecGetYears();
   if(!ecYearMain||!years.includes(ecYearMain))ecYearMain=years[years.length-1];
-  const months=ecMonthsForYear(ecYearMain);
-  const cur=ecCurrencyMain;
-  const rate=mk=>exGetRate(mk);
-  const cv=mk=>cur==='PKR'?1:1/rate(mk);
-
-  // Year tabs
   const ytEl=document.getElementById('ec-year-tabs-main');
   if(ytEl)ytEl.innerHTML=years.map(y=>`<button class="ec-year-tab${ecYearMain===y?' active':''}" onclick="ecSetYearMain('${y}')">${y}</button>`).join('');
-
-  const mLabels=months.map(mk=>{const[,m]=mk.split('-').map(Number);return MONTHS[m-1];});
-  const hdrRow=`<tr><th style="min-width:160px;position:sticky;left:0;background:var(--sur2);z-index:2;">Category</th>${mLabels.map(m=>`<th style="text-align:right;white-space:nowrap;">${m}</th>`).join('')}<th style="text-align:right;background:var(--sur3);">Total</th></tr>`;
-
-  // ── REVENUE totals row ──
-  const revTotals=months.map(mk=>{const d=exGetMonthData(mk);return d?(d.revenue||0)*cv(mk):0;});
-  const revGrand=revTotals.reduce((s,v)=>s+v,0);
-  const revTotalsHtml=`<table class="ec-table"><thead>${hdrRow}</thead><tbody><tr class="total-row"><td style="position:sticky;left:0;background:var(--sur3);font-weight:700;color:var(--grn);">Total Revenue</td>${revTotals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--grn);font-weight:600;">${ecFmt(v)}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--grn);font-weight:700;">${ecFmt(revGrand)}</td></tr></tbody></table>`;
-  const revTotWrap=document.getElementById('ec-rev-totals-wrap');
-  if(revTotWrap)revTotWrap.innerHTML=revTotalsHtml;
-  // Update header badge
-  const revTotalEl=document.getElementById('ec-rev-total');
-  if(revTotalEl)revTotalEl.textContent=`${ecYearMain}: ${ecFmt(revGrand)}`;
-
-  // ── REVENUE breakdown ──
-  const revCats=exData.settings.revCats;
-  const revRows=revCats.map(cat=>{
-    const vals=months.map(mk=>{const d=exGetMonthData(mk);return d?(d.revCats?.[cat]||0)*cv(mk):0;});
-    const total=vals.reduce((s,v)=>s+v,0);
-    if(total===0)return'';
-    return`<tr><td style="position:sticky;left:0;background:var(--sur);font-size:12px;">${esc(cat)}</td>${vals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);">${v>0?ecFmt(v):'—'}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--acc);font-weight:700;">${ecFmt(total)}</td></tr>`;
-  }).filter(Boolean).join('');
-  const revWrap=document.getElementById('ec-rev-wrap');
-  if(revWrap)revWrap.innerHTML=`<table class="ec-table"><thead>${hdrRow}</thead><tbody>${revRows}</tbody></table>`;
-
-  // ── EXPENSES totals row ──
-  const expTotals=months.map(mk=>{const d=exGetMonthData(mk);return d?(d.expenses||0)*cv(mk):0;});
-  const expGrand=expTotals.reduce((s,v)=>s+v,0);
-  const expTotalsHtml=`<table class="ec-table"><thead>${hdrRow}</thead><tbody><tr class="total-row"><td style="position:sticky;left:0;background:var(--sur3);font-weight:700;color:var(--red);">Total Expenses</td>${expTotals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--red);font-weight:600;">${ecFmt(v)}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;background:var(--sur3);color:var(--red);font-weight:700;">${ecFmt(expGrand)}</td></tr></tbody></table>`;
-  const expTotWrap=document.getElementById('ec-exp-totals-wrap');
-  if(expTotWrap)expTotWrap.innerHTML=expTotalsHtml;
-  const expTotalEl=document.getElementById('ec-exp-total');
-  if(expTotalEl)expTotalEl.textContent=`${ecYearMain}: ${ecFmt(expGrand)}`;
-
-  // ── EXPENSES breakdown ──
-  const expCats=exData.settings.expCats;
-  const expRows=expCats.map(cat=>{
-    const vals=months.map(mk=>{const d=exGetMonthData(mk);return d?(d.expCats?.[cat]||0)*cv(mk):0;});
-    const total=vals.reduce((s,v)=>s+v,0);
-    if(total===0)return'';
-    return`<tr><td style="position:sticky;left:0;background:var(--sur);font-size:11px;">${esc(cat)}</td>${vals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--t2);">${v>0?ecFmt(v):'—'}</td>`).join('')}<td style="text-align:right;font-family:'DM Mono',monospace;font-size:10px;background:var(--sur3);color:var(--red);font-weight:700;">${ecFmt(total)}</td></tr>`;
-  }).filter(Boolean).join('');
-  const expWrap=document.getElementById('ec-exp-wrap');
-  if(expWrap)expWrap.innerHTML=`<table class="ec-table"><thead>${hdrRow}</thead><tbody>${expRows}</tbody></table>`;
-
+  const months=ecMonthsForYear(ecYearMain);
+  const cur=ecCurrencyMain;
+  const cv=mk=>cur==='PKR'?1:1/exGetRate(mk);
+  const MNAMES=months.map(mk=>{const[,m]=mk.split('-').map(Number);return MONTHS[m-1];});
+  const thead=document.getElementById('ec-unified-thead');
+  if(thead)thead.innerHTML=`<tr><th>Category</th>${MNAMES.map(m=>`<th>${m}</th>`).join('')}<th>Total / Avg</th></tr>`;
+  const rows=[];
+  function sectionHdr(label,color,section,totByMonth){
+    const grand=Object.values(totByMonth).reduce((s,v)=>s+(v||0),0);
+    return`<tr class="ec-section-hd" data-section="${section}" onclick="ecToggleSection('${section}')"><td style="color:${color};font-size:12px;"><span class="ec-chev" style="font-size:10px;margin-right:6px;color:var(--t3);">▶</span>${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color};font-family:'DM Mono',monospace;font-size:11px;font-weight:600;">${ecFmt(totByMonth[mk])}</td>`).join('')}<td class="ec-num" style="color:${color};font-weight:700;">${ecFmt(grand)}</td></tr>`;
+  }
+  function subRow(label,vals,color,section,tooltip){
+    const total=Object.values(vals).reduce((s,v)=>s+(v||0),0);
+    const lbl=tooltip?`<span class="ec-tip" title="${tooltip}">${label}</span>`:label;
+    return`<tr class="ec-sub-row" data-section="${section}"><td style="padding-left:26px;color:var(--t2);font-size:11px;">${lbl}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${color||'var(--t2)'};">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:${color||'var(--t2)'};font-weight:600;">${ecFmt(total)}</td></tr>`;
+  }
+  function summaryRow(label,vals,color,bold,tooltip){
+    const nonNull=Object.values(vals).filter(v=>v!=null&&typeof v==='number');
+    const total=nonNull.reduce((s,v)=>s+v,0);
+    const lbl=tooltip?`<span class="ec-tip" title="${tooltip}">${label}</span>`:label;
+    return`<tr class="${bold?'ec-total-row':''}"><td style="color:${color};font-weight:${bold?700:500};">${lbl}</td>${months.map(mk=>{const v=vals[mk];if(v==null)return`<td class="ec-num" style="color:var(--t3);">—</td>`;if(typeof v==='string')return`<td class="ec-num" style="font-size:11px;color:${color};">${v}</td>`;const col=v<0?'var(--red)':color;return`<td class="ec-num" style="color:${col};font-weight:${bold?700:500};font-family:'DM Mono',monospace;">${Math.round(Math.abs(v)).toLocaleString()}${v<0?' <span style="font-size:9px;">(L)</span>':''}</td>`;}).join('')}<td class="ec-num" style="color:${total<0?'var(--red)':color};font-weight:${bold?700:500};">${Math.round(Math.abs(total)).toLocaleString()}${total<0?' <span style="font-size:9px;">(L)</span>':''}</td></tr>`;
+  }
+  // ── SALES PERFORMANCE ──
+  rows.push(`<tr class="ec-sales-hd"><td colspan="${months.length+2}" style="color:var(--blu);font-weight:700;font-size:12px;padding:10px 10px 6px;">📈 Sales Performance</td></tr>`);
+  const salesB2C={},salesB2B={},ordersB2C={},ordersB2B={},custsB2C={},custsB2B={};
+  const basketsB2C={},basketsB2B={};
+  months.forEach(mk=>{salesB2C[mk]=0;salesB2B[mk]=0;ordersB2C[mk]=0;ordersB2B[mk]=0;custsB2C[mk]=new Set();custsB2B[mk]=new Set();basketsB2C[mk]=[];basketsB2B[mk]=[];});
+  S.orders.forEach(o=>{
+    if(!o.Year||!o.Month)return;
+    const mk=o.Year+'-'+(String(o.Month).padStart(2,'0'));
+    if(!months.includes(mk))return;
+    const ctype=o.Customer_Type==='B2B'?'B2B':'B2C';
+    if(ctype==='B2B'){salesB2B[mk]+=o.Total_Sales;ordersB2B[mk]++;custsB2B[mk].add(resolveCustomerName(o.Customer));basketsB2B[mk].push(o.Total_Sales);}
+    else{salesB2C[mk]+=o.Total_Sales;ordersB2C[mk]++;custsB2C[mk].add(resolveCustomerName(o.Customer));basketsB2C[mk].push(o.Total_Sales);}
+  });
+  const totalSalesMonth={},totalOrdersMonth={},totalAvgBasket={},avgBasketB2C={},avgBasketB2B={},avgDailyB2C={},avgDailyB2B={},totalAvgDaily={},custsB2CCount={},custsB2BCount={},totalCusts={};
+  months.forEach(mk=>{
+    const days=new Date(parseInt(mk.split('-')[0]),parseInt(mk.split('-')[1]),0).getDate();
+    totalSalesMonth[mk]=(salesB2C[mk]||0)+(salesB2B[mk]||0);
+    totalOrdersMonth[mk]=(ordersB2C[mk]||0)+(ordersB2B[mk]||0);
+    avgBasketB2C[mk]=basketsB2C[mk].length?basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length:null;
+    avgBasketB2B[mk]=basketsB2B[mk].length?basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length:null;
+    const ab=[...basketsB2C[mk],...basketsB2B[mk]];
+    totalAvgBasket[mk]=ab.length?ab.reduce((s,v)=>s+v,0)/ab.length:null;
+    avgDailyB2C[mk]=ordersB2C[mk]?ordersB2C[mk]/days:null;
+    avgDailyB2B[mk]=ordersB2B[mk]?ordersB2B[mk]/days:null;
+    totalAvgDaily[mk]=totalOrdersMonth[mk]?totalOrdersMonth[mk]/days:null;
+    custsB2CCount[mk]=custsB2C[mk].size;
+    custsB2BCount[mk]=custsB2B[mk].size;
+    totalCusts[mk]=custsB2C[mk].size+custsB2B[mk].size;
+  });
+  function salesHdr(label,vals,color){
+    const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
+    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:${color||'var(--blu)'};font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color||'var(--blu)'};font-family:'DM Mono',monospace;">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="color:${color||'var(--blu)'};font-weight:700;">${Math.round(total).toLocaleString()}</td></tr>`;
+  }
+  function salesSub(label,vals){
+    const nonNull=Object.values(vals).filter(v=>v!=null);
+    const total=nonNull.reduce((s,v)=>s+v,0);
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
+  }
+  function avgSub(label,vals){
+    const nonNull=Object.values(vals).filter(v=>v!=null);
+    const avg=nonNull.length?nonNull.reduce((s,v)=>s+v,0)/nonNull.length:0;
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${Math.round(avg).toLocaleString()}</td></tr>`;
+  }
+  rows.push(salesHdr('Sales (PKR)',totalSalesMonth,'var(--blu)'));
+  rows.push(salesSub('B2C',salesB2C));
+  rows.push(salesSub('B2B',salesB2B));
+  rows.push(salesHdr('Avg Basket Size',totalAvgBasket,'var(--t2)'));
+  rows.push(avgSub('B2C',avgBasketB2C));
+  rows.push(avgSub('B2B',avgBasketB2B));
+  rows.push(salesHdr('Orders',totalOrdersMonth,'var(--t2)'));
+  rows.push(salesSub('B2C',ordersB2C));
+  rows.push(salesSub('B2B',ordersB2B));
+  rows.push(salesHdr('Avg Daily Orders',totalAvgDaily,'var(--t2)'));
+  rows.push(avgSub('B2C',avgDailyB2C));
+  rows.push(avgSub('B2B',avgDailyB2B));
+  rows.push(salesHdr('Customers',totalCusts,'var(--t2)'));
+  rows.push(salesSub('B2C',custsB2CCount));
+  rows.push(salesSub('B2B',custsB2BCount));
+  rows.push(`<tr><td colspan="${months.length+2}" style="height:8px;background:var(--bg);"></td></tr>`);
+  // ── REVENUE ──
+  const revByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);revByMonth[mk]=d?(d.revenue||0)*cv(mk):0;});
+  rows.push(sectionHdr('💰 Revenue','var(--grn)','revenue',revByMonth));
+  exData.settings.revCats.forEach(cat=>{
+    const vals={};months.forEach(mk=>{const d=exGetMonthData(mk);vals[mk]=d?(d.revCats?.[cat]||0)*cv(mk):null;});
+    rows.push(subRow(cat,vals,'var(--t2)','revenue'));
+  });
+  // ── EXPENSES ──
+  const expByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);expByMonth[mk]=d?(d.expenses||0)*cv(mk):0;});
+  rows.push(sectionHdr('📋 Expenses','var(--red)','expenses',expByMonth));
+  exData.settings.expCats.forEach(cat=>{
+    const vals={};months.forEach(mk=>{const d=exGetMonthData(mk);const v=(d?.expCats?.[cat]||0)*cv(mk);vals[mk]=v>0?v:null;});
+    if(Object.values(vals).some(v=>v))rows.push(subRow(cat,vals,'var(--t2)','expenses'));
+  });
   // ── P&L SUMMARY ──
-  const profitVals=months.map(mk=>{const d=exGetMonthData(mk);return d?d.profit*cv(mk):null;});
-  const profitGrand=profitVals.reduce((s,v)=>s+(v||0),0);
-  const totRevGrand=revGrand;
-  const plRows=[
-    {label:'<span style="color:var(--grn);font-weight:600;">Revenue</span>',vals:revTotals,total:revGrand,color:'var(--grn)'},
-    {label:'<span style="color:var(--red);">Expenses</span>',vals:expTotals,total:expGrand,color:'var(--red)'},
-    {label:'<strong>Net Profit</strong>',vals:profitVals,total:profitGrand,color:profitGrand>=0?'var(--grn)':'var(--red)'},
-    {label:'Profit %',vals:months.map(mk=>{const d=exGetMonthData(mk);if(!d)return null;const r=d.revenue;return r>0?((d.profit/r)*100).toFixed(1)+'%':null;}),total:totRevGrand>0?(profitGrand/totRevGrand*100).toFixed(1)+'%':'—',isPct:true},
-  ];
-  const plBodyRows=plRows.map(r=>{
-    const cells=r.vals.map(v=>{
-      if(v===null||v===undefined)return`<td style="text-align:right;color:var(--t3)">—</td>`;
-      if(r.isPct)return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:${typeof v==='string'&&v.startsWith('-')?'var(--red)':'var(--grn)'}">${v}</td>`;
-      const col=r.color||(v>=0?'var(--grn)':'var(--red)');
-      return`<td style="text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:${col}">${Math.round(Math.abs(v)).toLocaleString()}${v<0?' <span style="font-size:9px;">(L)</span>':''}</td>`;
-    }).join('');
-    const totStyle=`text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;background:var(--sur3);${r.color?'color:'+r.color+';':''}`;
-    const totVal=typeof r.total==='string'?r.total:Math.round(Math.abs(r.total)).toLocaleString()+(r.total<0?' (L)':'');
-    return`<tr><td style="position:sticky;left:0;background:var(--sur);font-size:12px;">${r.label}</td>${cells}<td style="${totStyle}">${totVal}</td></tr>`;
-  }).join('');
-  const plWrap=document.getElementById('ec-pl-wrap');
-  if(plWrap)plWrap.innerHTML=`<table class="ec-table"><thead>${hdrRow}</thead><tbody>${plBodyRows}</tbody></table>`;
-
-  // ── CHART (desktop only) ──
+  rows.push(`<tr><td colspan="${months.length+2}" style="height:8px;background:var(--bg);"></td></tr>`);
+  rows.push(`<tr class="ec-sales-hd"><td colspan="${months.length+2}" style="color:var(--pur);font-weight:700;font-size:12px;padding:10px 10px 6px;">📊 P&L Summary</td></tr>`);
+  const profitByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);profitByMonth[mk]=d?d.profit*cv(mk):null;});
+  const totalRevArrG=Object.values(revByMonth).reduce((s,v)=>s+v,0);
+  const totalExpArrG=Object.values(expByMonth).reduce((s,v)=>s+v,0);
+  const totalProfitG=totalRevArrG-totalExpArrG;
+  rows.push(summaryRow('Revenue',revByMonth,'var(--grn)',true));
+  rows.push(summaryRow('Expenses',expByMonth,'var(--red)',false));
+  rows.push(summaryRow('Net Profit',profitByMonth,totalProfitG>=0?'var(--grn)':'var(--red)',true));
+  // Gross Margin %
+  const gmPct={};months.forEach(mk=>{const ts=cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk);gmPct[mk]=ts>0?((revByMonth[mk]||0)/ts*100).toFixed(1)+'%':null;});
+  const totSalesG=months.reduce((s,mk)=>s+(cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk)),0);
+  const gmTotal=totSalesG>0?(totalRevArrG/totSalesG*100).toFixed(1)+'%':'—';
+  rows.push(`<tr><td><span class="ec-tip" title="Revenue ÷ Total Sales × 100 — gross profit as % of sales">Gross Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${gmPct[mk]&&parseFloat(gmPct[mk])>=0?'var(--grn)':'var(--red)'};">${gmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${gmTotal}</td></tr>`);
+  // Net Margin %
+  const nmPct={};months.forEach(mk=>{const ts=cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk);nmPct[mk]=ts>0?((profitByMonth[mk]||0)/ts*100).toFixed(1)+'%':null;});
+  const nmTotal=totSalesG>0?(totalProfitG/totSalesG*100).toFixed(1)+'%':'—';
+  rows.push(`<tr><td><span class="ec-tip" title="Net Profit ÷ Total Sales × 100 — bottom-line margin after all costs">Net Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${nmPct[mk]&&parseFloat(nmPct[mk])>=0?'var(--grn)':'var(--red)'};">${nmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${nmTotal}</td></tr>`);
+  // Render
+  const tbody=document.getElementById('ec-unified-tbody');
+  if(tbody)tbody.innerHTML=rows.join('');
+  if(ecRevExpanded)ecToggleSection('revenue');
+  if(ecExpExpanded)ecToggleSection('expenses');
+  // Chart
   if(exCharts.pl)exCharts.pl.destroy();
   const ctx=document.getElementById('ex-pl-chart');
   if(ctx&&window.innerWidth>768){
-    exCharts.pl=new Chart(ctx,{type:'bar',data:{labels:mLabels,datasets:[
-      {label:'Revenue',data:revTotals,backgroundColor:'rgba(34,197,94,.7)',borderRadius:2},
-      {label:'Expenses',data:expTotals,backgroundColor:'rgba(239,68,68,.6)',borderRadius:2},
-      {label:'Profit',data:profitVals,type:'line',borderColor:'var(--acc)',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3},
-    ]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>cur==='PKR'?Math.round(v/1000)+'K':'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}}}}); 
+    const revVals=months.map(mk=>revByMonth[mk]||0);
+    const expVals=months.map(mk=>expByMonth[mk]||0);
+    const profVals=months.map(mk=>profitByMonth[mk]);
+    exCharts.pl=new Chart(ctx,{type:'bar',data:{labels:MNAMES,datasets:[{label:'Revenue',data:revVals,backgroundColor:'rgba(34,197,94,.7)',borderRadius:2},{label:'Expenses',data:expVals,backgroundColor:'rgba(239,68,68,.6)',borderRadius:2},{label:'Profit',data:profVals,type:'line',borderColor:'rgba(249,115,22,.9)',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3}]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>cur==='PKR'?Math.round(v/1000)+'K':'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
   }
 }
-
-// Unified entry point — called from setMode('exec')
-function ecSwitchTab(tab, el){
-  // Legacy support — all tabs now show the unified panel
+function ecSwitchTab(tab,el){
   ecCurTab='main';
   document.querySelectorAll('.ec-panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('tab-ec-main');
