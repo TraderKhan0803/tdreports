@@ -1916,7 +1916,7 @@ function renderDashboard(pinnedCust){
   custs.forEach(c=>{
     const tr=document.createElement('tr');
     tr.className='r'+(c.IsNew?' ncust':'')+(selCust===c.Customer?' sel':'');
-    tr.innerHTML=`<td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td style="text-align:right">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>drillCust(c.Customer);
     frag.appendChild(tr);
   });
@@ -1951,7 +1951,6 @@ function resetDrillPanels(){
 }
 
 function renderOrdersDrill(){
-  // Match all orders where the resolved (primary) name equals selCust
   const orders=filtered.filter(o=>resolveCustomerName(o.Customer)===selCust).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
   document.getElementById('title-orders').textContent=selCust;
   document.getElementById('po-count').textContent=orders.length+' orders';
@@ -1959,7 +1958,7 @@ function renderOrdersDrill(){
   orders.forEach(o=>{
     const tr=document.createElement('tr');
     tr.className='r'+(selOrder===o.Order_ID?' sel':'');
-    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}</td><td style="font-size:11px">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(o.Total_Sales)}</td>`;
+    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(o.Total_Sales)}</td>`;
     tr.onclick=()=>drillOrder(o.Order_ID,o.Total_Sales);
     frag.appendChild(tr);
   });
@@ -2024,7 +2023,7 @@ function renderCustomer(pinnedCust){
     totO+=c.Orders;totS+=c.Sales;
     const tr=document.createElement('tr');
     tr.className='r'+(selRankedCust===c.Customer?' sel':'');
-    tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>{
       selRankedCust=selRankedCust===c.Customer?null:c.Customer;
       renderCustomer(selRankedCust||undefined);
@@ -3458,12 +3457,12 @@ function getMktCustMap(){
 
 function mktRow(cells,custName){
   const tr=document.createElement('tr');tr.className='r';
-  // Inject actioned badge after customer name in first td
   const badge=rbActionedBadge(custName);
+  const bell=getBellHtml('customer',custName);
   const cellsWithBadge=badge?cells.replace(
     /(<td[^>]*>)(<span[^>]*>)(.*?)(<\/span><\/td>)/,
-    `$1$2$3$4<td style="padding:6px 8px;">${badge}</td>`
-  ):cells;
+    `$1$2$3$4<td style="padding:6px 8px;">${badge}${bell}</td>`
+  ):cells+`<td style="padding:4px 6px;">${bell}</td>`;
   tr.innerHTML=cellsWithBadge;
   tr.onclick=()=>goToDashboardCustomer(custName);
   tr.title='Click to view on Dashboard';
@@ -4001,6 +4000,7 @@ function rbRenderCusts(){
       </div>
       <div class="rb-actions">
         <button onclick="event.stopPropagation();rbQWA('${c.id}')" style="padding:4px 9px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);border-radius:4px;color:#25D366;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">💬 WA</button>
+        <span onclick="event.stopPropagation();">${getBellHtml('customer',c.name)}</span>
       </div>
     </div>`).join('');
 }
@@ -4730,7 +4730,7 @@ function renderProdOrders(p){
   lines.forEach(d=>{
     const tr=document.createElement('tr');
     tr.dataset.oid=d.oid;tr.dataset.cust=d.cust;tr.dataset.qty=d.qty;tr.dataset.rev=d.rev;
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')" title="Go to dashboard">${esc(d.oid)}</span></td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.qty}</td>`;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')" title="Go to dashboard">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.qty}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-prod-orders');tb.innerHTML='';
