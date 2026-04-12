@@ -481,6 +481,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ec-cur-btn{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;border:1px solid var(--bdr);background:transparent;color:var(--t3);}
 .ec-cur-btn.active{background:var(--pur);color:#fff;border-color:var(--pur);}
 
+/* ── GROWTH & RETENTION ── */
+.gr-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
+.gr-panel.active{display:flex;}
+.gr-section{margin-bottom:18px;}
+.gr-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}
+.gr-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.gr-kpi-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
+.gr-kpi{background:var(--sur2);border-radius:var(--r);padding:11px 13px;}
+.gr-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:5px;}
+.gr-kpi-value{font-size:20px;font-weight:700;font-family:'Syne',sans-serif;line-height:1;}
+.gr-kpi-sub{font-size:10px;color:var(--t3);margin-top:3px;}
+.gr-cac-box{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;}
+.gr-cac-title{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:10px;}
+.gr-cac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:10px;}
+.gr-cac-month{display:flex;flex-direction:column;gap:3px;}
+.gr-cac-month label{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
+.gr-cac-month input{background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:4px 7px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;width:100%;}
+.gr-cohort-wrap{overflow-x:auto;border:1px solid var(--bdr);border-radius:var(--r);}
+.gr-cohort{border-collapse:collapse;width:100%;min-width:400px;}
+.gr-cohort th{background:var(--sur2);color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap;}
+.gr-cohort th:first-child{text-align:left;}
+.gr-cohort td{padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:11px;font-family:'DM Mono',monospace;text-align:right;white-space:nowrap;}
+.gr-cohort td:first-child{text-align:left;font-family:'DM Sans',sans-serif;color:var(--t2);}
+.gr-cohort tr:last-child td{border-bottom:none;}
+.gr-ret-high{color:var(--grn);}
+.gr-ret-mid{color:var(--acc);}
+.gr-ret-low{color:var(--red);}
+.gr-download-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+@media(max-width:768px){
+  .gr-kpi-grid{grid-template-columns:1fr 1fr;}
+  .gr-kpi-grid-2{grid-template-columns:1fr 1fr;}
+  .gr-kpi-value{font-size:16px;}
+}
+
 /* ── SORTABLE HEADERS ── */
 .dt th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
 .dt th.sortable:hover{color:var(--acc);}
@@ -594,6 +628,11 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
     </div>
     <!-- Exec tabs removed — unified single screen -->
+    <!-- Exec tabs -->
+    <div id="exec-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
+      <div class="tab active" onclick="ecSwitchTab('report',this)" id="nav-ec-report">📊 Report</div>
+      <div class="tab" onclick="ecSwitchTab('growth',this)" id="nav-ec-growth" style="display:none;">📈 Growth &amp; Retention</div>
+    </div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta" style="display:none">No data</span>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
@@ -1053,7 +1092,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="ec-cur-btn active" id="ec-main-pkr" onclick="ecSetCurMain('PKR')">PKR</button>
           <button class="ec-cur-btn" id="ec-main-usd" onclick="ecSetCurMain('USD')">USD</button>
         </div>
-        <button onclick="exDownloadExcel('pl')" style="padding:4px 11px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">⬇ Excel</button>
+        <button onclick="exDownloadExcel('all')" style="padding:4px 11px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">⬇ Excel</button>
       </div>
 
       <!-- UNIFIED TABLE -->
@@ -1064,12 +1103,19 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </table>
       </div>
 
-      <!-- CHART — desktop only -->
+      <!-- CHART — desktop only, fixed height -->
       <div class="ec-card ec-chart-card" style="margin-top:12px;">
         <div class="ec-card-hd"><div class="ec-card-title">Monthly Trend</div></div>
-        <div style="padding:12px;"><canvas id="ex-pl-chart" height="80"></canvas></div>
+        <div style="padding:12px;height:220px;position:relative;"><canvas id="ex-pl-chart"></canvas></div>
       </div>
 
+    </div>
+
+    <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
+    <div class="gr-panel" id="tab-ec-growth">
+      <div id="gr-body">
+        <div style="color:var(--t3);font-size:12px;padding:40px;text-align:center;">Loading metrics…</div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -1392,6 +1438,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-analytics" checked style="accent-color:var(--acc);"> 📊 Tezz Analytics</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-raabta" checked style="accent-color:var(--acc);"> 💬 Tezz Raabta</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-exec" style="accent-color:var(--pur);"> 📈 Exec Committee</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-growth" style="accent-color:var(--grn);"> 📊 Growth &amp; Retention</label>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
         <div id="list-users"></div>
@@ -2885,6 +2932,7 @@ function renderUserList(){
       perms.analytics!==false?'<span style="background:rgba(249,115,22,.12);color:var(--acc);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Analytics</span>':'',
       perms.raabta!==false?'<span style="background:rgba(34,197,94,.12);color:var(--grn);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Raabta</span>':'',
       perms.exec?'<span style="background:rgba(168,85,247,.12);color:var(--pur);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Exec</span>':'',
+      perms.growth?'<span style="background:rgba(34,197,94,.12);color:var(--grn);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Growth</span>':'',
     ].filter(Boolean).join(' '):'';
     return`<div class="user-row"><span>${esc(u.u)}</span><span style="color:var(--t3);font-size:10px;">${esc(u.email||'')}</span><span class="role-badge role-${u.role}">${u.role}</span>${permTags?`<span>${permTags}</span>`:''}
     ${curUser?.u!==u.u?`<button class="rm-btn" onclick="rmUser('${esc(u.u)}')">✕</button>`:' <span style="color:var(--t3);font-size:10px">you</span>'}</div>`;
@@ -2905,6 +2953,7 @@ async function addUser(){
         analytics:document.getElementById('acc-analytics')?.checked!==false,
         raabta:document.getElementById('acc-raabta')?.checked!==false,
         exec:!!document.getElementById('acc-exec')?.checked,
+        growth:!!document.getElementById('acc-growth')?.checked,
       };
       saveUserPerms(u,perms);
     }
@@ -3938,11 +3987,384 @@ function ecRenderUnified(){
   }
 }
 function ecSwitchTab(tab,el){
-  ecCurTab='main';
-  document.querySelectorAll('.ec-panel').forEach(p=>p.classList.remove('active'));
-  const panel=document.getElementById('tab-ec-main');
-  if(panel)panel.classList.add('active');
-  ecRenderUnified();
+  ecCurTab=tab;
+  // Hide all ec panels
+  document.querySelectorAll('.ec-panel,.gr-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#exec-tabs .tab').forEach(t=>t.classList.remove('active'));
+  if(tab==='growth'){
+    const panel=document.getElementById('tab-ec-growth');
+    if(panel)panel.classList.add('active');
+  } else {
+    const panel=document.getElementById('tab-ec-main');
+    if(panel)panel.classList.add('active');
+  }
+  if(el)el.classList.add('active');
+  else{const nav=document.getElementById('nav-ec-'+tab);if(nav)nav.classList.add('active');}
+  if(tab==='growth')grRender();
+  else ecRenderUnified();
+}
+
+function ecShowGrowthTabIfAllowed(){
+  const access=getUserAccess(curUser);
+  const growthTab=document.getElementById('nav-ec-growth');
+  if(growthTab)growthTab.style.display=access.growth?'':'none';
+}
+
+// ── GROWTH & RETENTION ───────────────────────────────────────────────────────
+
+const GR_CAC_KEY='tezz_cac_spend';
+
+function grLoadSpend(){
+  try{return JSON.parse(localStorage.getItem(GR_CAC_KEY)||'{}');}catch(e){return{};}
+}
+function grSaveSpend(obj){localStorage.setItem(GR_CAC_KEY,JSON.stringify(obj));}
+
+function grRender(){
+  const access=getUserAccess(curUser);
+  if(!access.growth){
+    const el=document.getElementById('gr-body');
+    if(el)el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Access restricted.</div>';
+    return;
+  }
+  const el=document.getElementById('gr-body');if(!el)return;
+  if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
+
+  const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
+  const months=ecMonthsForYear(yr);
+  const spend=grLoadSpend();
+
+  // Build per-customer data
+  const custMap={};
+  S.orders.forEach(o=>{
+    const n=resolveCustomerName(o.Customer);
+    if(!custMap[n])custMap[n]={name:n,type:o.Customer_Type,orders:[],totalSpend:0,firstOrder:null,lastOrder:null};
+    custMap[n].orders.push(o);
+    custMap[n].totalSpend+=o.Total_Sales;
+    if(o.Order_Date){
+      if(!custMap[n].firstOrder||o.Order_Date<custMap[n].firstOrder)custMap[n].firstOrder=o.Order_Date;
+      if(!custMap[n].lastOrder||o.Order_Date>custMap[n].lastOrder)custMap[n].lastOrder=o.Order_Date;
+    }
+  });
+  const allCusts=Object.values(custMap);
+  const b2c=allCusts.filter(c=>c.type!=='B2B');
+  const b2b=allCusts.filter(c=>c.type==='B2B');
+
+  // LTV
+  const ltv=v=>v.totalSpend;
+  const avg=arr=>arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:0;
+  const ltvAll=Math.round(avg(allCusts.map(ltv)));
+  const ltvB2C=Math.round(avg(b2c.map(ltv)));
+  const ltvB2B=Math.round(avg(b2b.map(ltv)));
+
+  // Repeat purchase rate
+  const repeatCusts=allCusts.filter(c=>c.orders.length>1);
+  const repeatRate=(repeatCusts.length/allCusts.length*100).toFixed(1);
+
+  // Avg purchase frequency (orders per customer per year, repeat only)
+  const freq=avg(repeatCusts.map(c=>c.orders.length));
+
+  // Avg order gap (days between orders for repeat customers)
+  let gapTotal=0,gapCount=0;
+  repeatCusts.forEach(c=>{
+    const sorted=c.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime()).sort((a,b)=>a-b);
+    for(let i=1;i<sorted.length;i++){gapTotal+=(sorted[i]-sorted[i-1])/86400000;gapCount++;}
+  });
+  const avgGap=gapCount?Math.round(gapTotal/gapCount):0;
+
+  // Revenue concentration — top 10% customers
+  const sorted=[...allCusts].sort((a,b)=>b.totalSpend-a.totalSpend);
+  const top10pct=sorted.slice(0,Math.max(1,Math.round(sorted.length*0.1)));
+  const top10rev=top10pct.reduce((s,c)=>s+c.totalSpend,0);
+  const totalRevAll=allCusts.reduce((s,c)=>s+c.totalSpend,0);
+  const concPct=(top10rev/totalRevAll*100).toFixed(1);
+
+  // Monthly retention/churn for selected year
+  const monthlyActive={};
+  months.forEach(mk=>{
+    const[y,m]=mk.split('-').map(Number);
+    monthlyActive[mk]=new Set();
+    S.orders.forEach(o=>{if(o.Year===y&&o.Month===m)monthlyActive[mk].add(resolveCustomerName(o.Customer));});
+  });
+  let retRates=[],churnRates=[],reactRates=[];
+  for(let i=1;i<months.length;i++){
+    const prev=monthlyActive[months[i-1]];
+    const curr=monthlyActive[months[i]];
+    if(!prev||prev.size===0)continue;
+    const retained=[...prev].filter(c=>curr.has(c)).length;
+    const churned=prev.size-retained;
+    retRates.push(retained/prev.size*100);
+    churnRates.push(churned/prev.size*100);
+    // Reactivation: in curr but not in prev, but was in some earlier month
+    if(i>=2){
+      const earlier=new Set();
+      for(let j=0;j<i-1;j++){if(monthlyActive[months[j]])monthlyActive[months[j]].forEach(c=>earlier.add(c));}
+      const reactivated=[...curr].filter(c=>!prev.has(c)&&earlier.has(c)).length;
+      reactRates.push(reactivated/Math.max(1,curr.size)*100);
+    }
+  }
+  const avgRet=avg(retRates).toFixed(1);
+  const avgChurn=avg(churnRates).toFixed(1);
+  const avgReact=avg(reactRates).toFixed(1);
+
+  // MoM revenue growth
+  const revByMonth={};
+  months.forEach(mk=>{revByMonth[mk]=0;S.orders.forEach(o=>{const omk=o.Year+'-'+(String(o.Month).padStart(2,'0'));if(omk===mk)revByMonth[mk]+=o.Total_Sales;});});
+  const momRates=[];
+  for(let i=1;i<months.length;i++){
+    const prev=revByMonth[months[i-1]];
+    if(prev>0)momRates.push((revByMonth[months[i]]-prev)/prev*100);
+  }
+  const avgMoM=avg(momRates).toFixed(1);
+
+  // New vs returning revenue split (for year)
+  let newRev=0,retRev=0;
+  const seenBefore=new Set();
+  months.forEach(mk=>{
+    const[y,m]=mk.split('-').map(Number);
+    S.orders.forEach(o=>{
+      if(o.Year!==y||o.Month!==m)return;
+      const n=resolveCustomerName(o.Customer);
+      if(seenBefore.has(n))retRev+=o.Total_Sales;
+      else newRev+=o.Total_Sales;
+    });
+    S.orders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>seenBefore.add(resolveCustomerName(o.Customer)));
+  });
+  const newRevPct=(newRev/(newRev+retRev)*100).toFixed(0);
+  const retRevPct=(retRev/(newRev+retRev)*100).toFixed(0);
+
+  // Revenue per active customer per month
+  const revPerCust=months.map(mk=>{
+    const[y,m]=mk.split('-').map(Number);
+    const active=new Set();let rev=0;
+    S.orders.forEach(o=>{if(o.Year===y&&o.Month===m){active.add(resolveCustomerName(o.Customer));rev+=o.Total_Sales;}});
+    return active.size?rev/active.size:0;
+  });
+  const avgRevPerCust=Math.round(avg(revPerCust));
+
+  // CAC calculations per month
+  const newCustsPerMonth={};
+  const everSeen=new Set();
+  months.forEach(mk=>{
+    const[y,m]=mk.split('-').map(Number);
+    newCustsPerMonth[mk]=0;
+    S.orders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>{
+      const n=resolveCustomerName(o.Customer);
+      if(!everSeen.has(n)){newCustsPerMonth[mk]++;everSeen.add(n);}
+    });
+  });
+
+  // Cohort retention table
+  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
+  const cohortData=cohortMonths.map(cohortMk=>{
+    const[cy,cm]=cohortMk.split('-').map(Number);
+    const cohortCusts=new Set();
+    S.orders.forEach(o=>{if(o.Year===cy&&o.Month===cm&&o.IsFirstOrder==='New Customer')cohortCusts.add(resolveCustomerName(o.Customer));});
+    if(!cohortCusts.size)return null;
+    const retention=[100];
+    for(let offset=1;offset<=6;offset++){
+      const futIdx=months.indexOf(cohortMk)+offset;
+      if(futIdx>=months.length){retention.push(null);continue;}
+      const futMk=months[futIdx];
+      const[fy,fm]=futMk.split('-').map(Number);
+      const active=new Set();
+      S.orders.forEach(o=>{if(o.Year===fy&&o.Month===fm)active.add(resolveCustomerName(o.Customer));});
+      const retained=[...cohortCusts].filter(c=>active.has(c)).length;
+      retention.push(Math.round(retained/cohortCusts.size*100));
+    }
+    const[,cm2]=cohortMk.split('-').map(Number);
+    return{label:MONTHS[cm2-1]+' '+cy,size:cohortCusts.size,retention};
+  }).filter(Boolean);
+
+  // fmt helpers
+  const fmtPKR=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':Math.round(v).toLocaleString();
+  const colRet=v=>v===null?'—':v>=70?'gr-ret-high':v>=50?'gr-ret-mid':'gr-ret-low';
+
+  // Build CAC input HTML
+  const cacHtml=`
+    <div class="gr-cac-box">
+      <div class="gr-cac-title">Monthly Marketing Spend (PKR) — used to calculate CAC</div>
+      <div class="gr-cac-grid">
+        ${months.map(mk=>{
+          const[,m]=mk.split('-').map(Number);
+          return`<div class="gr-cac-month">
+            <label>${MONTHS[m-1]}</label>
+            <input type="number" id="cac-${mk}" value="${spend[mk]||''}" placeholder="0" oninput="grUpdateCAC()" min="0">
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="gr-kpi-grid" id="cac-results">
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg CAC</div><div class="gr-kpi-value" id="cac-val" style="color:var(--acc);">—</div><div class="gr-kpi-sub">spend ÷ new customers</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV : CAC</div><div class="gr-kpi-value" id="cac-ltvcac" style="color:var(--grn);">—</div><div class="gr-kpi-sub">above 3× is healthy</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Payback Period</div><div class="gr-kpi-value" id="cac-payback">—</div><div class="gr-kpi-sub">months to recover CAC</div></div>
+      </div>
+    </div>`;
+
+  // Cohort table HTML
+  const cohortHtml=cohortData.length?`
+    <div class="gr-cohort-wrap">
+      <table class="gr-cohort">
+        <thead><tr>
+          <th>Cohort</th><th>Size</th><th>M0</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th><th>M6</th>
+        </tr></thead>
+        <tbody>
+          ${cohortData.map(c=>`<tr>
+            <td>${c.label}</td>
+            <td>${c.size}</td>
+            ${c.retention.map(v=>`<td class="${v!==null?colRet(v):''}">${v!==null?v+'%':'—'}</td>`).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`:'<div style="color:var(--t3);font-size:11px;">Not enough data for cohort analysis — requires first-order flags.</div>';
+
+  el.innerHTML=`
+    <div class="gr-download-bar">
+      <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
+      <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
+      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${yr} data · ${allCusts.length} customers · ${S.orders.length} orders</span>
+    </div>
+
+    <div id="gr-capture">
+
+    <div class="gr-section">
+      <div class="gr-section-title">Customer Lifetime Value</div>
+      <div class="gr-kpi-grid">
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — All</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvAll)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2C</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2C)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2B</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2B)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
+      </div>
+    </div>
+
+    <div class="gr-section">
+      <div class="gr-section-title">Purchase Behaviour</div>
+      <div class="gr-kpi-grid">
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat purchase rate</div><div class="gr-kpi-value" style="color:var(--blu);">${repeatRate}%</div><div class="gr-kpi-sub">customers with 2+ orders</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg purchase frequency</div><div class="gr-kpi-value" style="color:var(--blu);">${freq.toFixed(1)}×</div><div class="gr-kpi-sub">orders per repeat customer</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div></div>
+      </div>
+      <div class="gr-kpi-grid-2">
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration</div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue per active customer/mo</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(avgRevPerCust)}</div><div class="gr-kpi-sub">avg monthly</div></div>
+      </div>
+    </div>
+
+    <div class="gr-section">
+      <div class="gr-section-title">Retention &amp; Churn (${yr} monthly avg)</div>
+      <div class="gr-kpi-grid">
+        <div class="gr-kpi"><div class="gr-kpi-label">Retention rate</div><div class="gr-kpi-value" style="color:var(--grn);">${avgRet}%</div><div class="gr-kpi-sub">active last month who reordered</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Churn rate</div><div class="gr-kpi-value" style="color:var(--red);">${avgChurn}%</div><div class="gr-kpi-sub">customers lost each month</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Reactivation rate</div><div class="gr-kpi-value" style="color:var(--pur);">${avgReact}%</div><div class="gr-kpi-sub">churned customers who returned</div></div>
+      </div>
+    </div>
+
+    <div class="gr-section">
+      <div class="gr-section-title">Revenue Growth (${yr})</div>
+      <div class="gr-kpi-grid">
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg MoM growth</div><div class="gr-kpi-value" style="color:${parseFloat(avgMoM)>=0?'var(--grn)':'var(--red)'};">${avgMoM>=0?'+':''}${avgMoM}%</div><div class="gr-kpi-sub">month over month revenue</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">New vs returning revenue</div><div class="gr-kpi-value">${newRevPct}% / ${retRevPct}%</div><div class="gr-kpi-sub">new customer revenue share</div></div>
+      </div>
+    </div>
+
+    <div class="gr-section">
+      <div class="gr-section-title">CAC &amp; Unit Economics</div>
+      ${cacHtml}
+    </div>
+
+    <div class="gr-section">
+      <div class="gr-section-title">Cohort Retention Table</div>
+      ${cohortHtml}
+    </div>
+
+    </div>`;
+
+  // Store data for download functions
+  window._grData={yr,ltvAll,ltvB2C,ltvB2B,repeatRate,freq,avgGap,concPct,avgRevPerCust,avgRet,avgChurn,avgReact,avgMoM,newRevPct,retRevPct,months,newCustsPerMonth,cohortData,spend};
+  grUpdateCAC();
+}
+
+function grUpdateCAC(){
+  const data=window._grData;if(!data)return;
+  const spend=grLoadSpend();
+  // Save current inputs
+  data.months.forEach(mk=>{
+    const inp=document.getElementById('cac-'+mk);
+    if(inp){const v=parseFloat(inp.value)||0;if(v>0)spend[mk]=v;else delete spend[mk];}
+  });
+  grSaveSpend(spend);
+  data.spend=spend;
+  // Calculate avg CAC across months with spend
+  const cacMonths=data.months.filter(mk=>spend[mk]&&data.newCustsPerMonth[mk]);
+  if(!cacMonths.length){
+    document.getElementById('cac-val').textContent='—';
+    document.getElementById('cac-ltvcac').textContent='—';
+    document.getElementById('cac-payback').textContent='—';
+    return;
+  }
+  const cacValues=cacMonths.map(mk=>spend[mk]/data.newCustsPerMonth[mk]);
+  const avgCAC=cacValues.reduce((s,v)=>s+v,0)/cacValues.length;
+  const ltvCac=data.ltvAll/avgCAC;
+  // Payback: months until avg revenue per cust covers CAC
+  const monthlyRevPerCust=data.avgRevPerCust||1;
+  const payback=(avgCAC/monthlyRevPerCust).toFixed(1);
+  document.getElementById('cac-val').textContent='PKR '+(avgCAC>=1000?Math.round(avgCAC/1000)+'K':Math.round(avgCAC).toLocaleString());
+  document.getElementById('cac-ltvcac').textContent=ltvCac.toFixed(1)+'×';
+  document.getElementById('cac-ltvcac').style.color=ltvCac>=5?'var(--grn)':ltvCac>=3?'var(--acc)':'var(--red)';
+  document.getElementById('cac-payback').textContent=payback+' mo';
+}
+
+function grDownloadExcel(){
+  const d=window._grData;if(!d)return;
+  const rows=[
+    [`TEZZ DELIVERY — GROWTH & RETENTION REPORT (${d.yr})`],[],
+    ['CUSTOMER LIFETIME VALUE'],
+    ['LTV All','LTV B2C','LTV B2B'],
+    [Math.round(d.ltvAll),Math.round(d.ltvB2C),Math.round(d.ltvB2B)],[],
+    ['PURCHASE BEHAVIOUR'],
+    ['Repeat Purchase Rate','Avg Purchase Frequency','Avg Order Gap (days)','Revenue Concentration','Rev per Active Cust/mo'],
+    [d.repeatRate+'%',d.freq.toFixed(1)+'x',d.avgGap,d.concPct+'%',Math.round(d.avgRevPerCust)],[],
+    ['RETENTION & CHURN'],
+    ['Avg Retention Rate','Avg Churn Rate','Avg Reactivation Rate'],
+    [d.avgRet+'%',d.avgChurn+'%',d.avgReact+'%'],[],
+    ['GROWTH'],
+    ['Avg MoM Revenue Growth','New Revenue %','Returning Revenue %'],
+    [d.avgMoM+'%',d.newRevPct+'%',d.retRevPct+'%'],[],
+    ['CAC & UNIT ECONOMICS (from spend inputs)'],
+    ['Month','Marketing Spend (PKR)','New Customers','CAC (PKR)'],
+    ...d.months.map(mk=>{
+      const sp=d.spend[mk]||0;const nc=d.newCustsPerMonth[mk]||0;
+      const[,m]=mk.split('-').map(Number);
+      return[MONTHS[m-1],sp,nc,sp&&nc?Math.round(sp/nc):'—'];
+    }),[],
+    ['COHORT RETENTION'],
+    ['Cohort','Size','M0','M1','M2','M3','M4','M5','M6'],
+    ...d.cohortData.map(c=>[c.label,c.size,...c.retention.map(v=>v!==null?v+'%':'—')]),
+  ];
+  makeExcelDownload(rows,`Tezz_GrowthRetention_${d.yr}_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+async function grDownloadImage(){
+  // Use html2canvas if available, else notify
+  const el=document.getElementById('gr-capture');if(!el){notif('Nothing to capture');return;}
+  if(typeof html2canvas==='undefined'){
+    // Load dynamically
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload=async()=>{await _grCapture(el);};
+    document.head.appendChild(script);
+  } else {
+    await _grCapture(el);
+  }
+}
+
+async function _grCapture(el){
+  try{
+    notif('Capturing image…');
+    const canvas=await html2canvas(el,{backgroundColor:'#0d0f14',scale:2,useCORS:true,logging:false});
+    const link=document.createElement('a');
+    link.download=`Tezz_GrowthRetention_${window._grData?.yr||''}_${new Date().toISOString().slice(0,10)}.png`;
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    notif('✓ Image downloaded');
+  }catch(e){notif('❌ Image capture failed: '+e.message);}
 }
 
 // ── ACCESS CONTROL ────────────────────────────────────────────────────────────
@@ -3980,7 +4402,10 @@ function bnUpdateSubTabs(mode){
       {id:'rb-templates',label:'Templates',fn:()=>rbSwitchTab('rb-templates')},
       {id:'rb-activity',label:'Activity',fn:()=>rbSwitchTab('rb-activity')},
     ],
-    exec:[],
+    exec:[
+      {id:'ec-report',label:'Report',fn:()=>ecSwitchTab('report')},
+      {id:'ec-growth',label:'Growth',fn:()=>ecSwitchTab('growth')},
+    ],
   };
   const tabs=tabDefs[mode]||[];
   sub.innerHTML=tabs.map(t=>`<div class="tab" id="bn-sub-${t.id}" onclick="bnSubClick('${mode}','${t.id}')">${t.label}</div>`).join('');
@@ -4051,7 +4476,8 @@ function setMode(mode){
     if(filterDrawer)filterDrawer.style.display='none';
     if(meta)meta.style.display='none';
     exLoadData();
-    ecSwitchTab('main');
+    ecShowGrowthTabIfAllowed();
+    ecSwitchTab('report');
   }
   // Update bottom nav on mobile
   bnUpdateActive(mode);
@@ -4066,14 +4492,18 @@ function toggleViewerAccess(){
 }
 
 function getUserAccess(user){
-  // Returns {analytics, raabta, exec} booleans
-  if(!user)return{analytics:false,raabta:false,exec:false};
-  if(user.role==='super'||user.role==='admin')return{analytics:true,raabta:true,exec:true};
-  // Viewer: check stored permissions
+  if(!user)return{analytics:false,raabta:false,exec:false,growth:false};
+  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true};
+  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false};
   try{
     const perms=JSON.parse(localStorage.getItem('user_perms_'+user.u)||'{}');
-    return{analytics:perms.analytics!==false,raabta:perms.raabta!==false,exec:!!perms.exec};
-  }catch(e){return{analytics:true,raabta:true,exec:false};}
+    return{
+      analytics:perms.analytics!==false,
+      raabta:perms.raabta!==false,
+      exec:!!perms.exec,
+      growth:!!perms.growth,
+    };
+  }catch(e){return{analytics:true,raabta:true,exec:false,growth:false};}
 }
 
 function saveUserPerms(username, perms){
