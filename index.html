@@ -4558,6 +4558,7 @@ function alertsGetActive(){
 }
 
 function alertsForRow(linkType, linkValue){
+  if(!ALERTS.length)alertsLoad();
   return ALERTS.filter(a=>!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
 }
 
@@ -4568,15 +4569,20 @@ function alertsUpdateBadge(){
   if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
 }
 
+const _bellCtxMap={};
+let _bellCtxId=0;
+
 function getBellHtml(linkType, linkValue){
   const existing=alertsForRow(linkType, linkValue);
   if(existing.length){
     const a=existing[0];
     const preview=a.note.length>40?a.note.slice(0,40)+'…':a.note;
-    return`<span class="alert-bell has-alert" title="Alert: ${esc(a.date)} — ${esc(preview)}" onclick="event.stopPropagation();goToAlert('${a.id}')">🔔</span>`;
+    return`<span class="alert-bell has-alert" title="Alert: ${esc(a.date)} — ${esc(preview)}" onclick="event.stopPropagation();goToAlert('${esc(a.id)}')">🔔</span>`;
   }
-  const ctx=JSON.stringify({linkType,linkValue,display:linkValue}).replace(/'/g,"\\'");
-  return`<span class="alert-bell no-alert" title="Create alert" onclick="event.stopPropagation();openAlertModal(${ctx})">🔔</span>`;
+  // Store context in a lookup map to avoid JSON-in-attribute quoting issues
+  const ctxId='bctx'+(++_bellCtxId);
+  _bellCtxMap[ctxId]={linkType,linkValue,display:linkValue};
+  return`<span class="alert-bell no-alert" title="Create alert" onclick="event.stopPropagation();openAlertModal(_bellCtxMap['${ctxId}'])">🔔</span>`;
 }
 
 function goToAlert(id){
