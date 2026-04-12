@@ -3443,8 +3443,12 @@ function getMktToday(){
 }
 
 function getMktCustMap(){
+  const ctype=fSt?.ctype||'all';
   const m={};
   S.orders.forEach(o=>{
+    // Apply B2B/B2C filter
+    if(ctype==='B2B'&&o.Customer_Type!=='B2B')return;
+    if(ctype==='B2C'&&o.Customer_Type!=='B2C')return;
     const name=resolveCustomerName(o.Customer);
     if(!m[name])m[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,FirstOrder:null,LastOrder:null,Phone:o.Phone||'—',Address:o.Address||'—'};
     m[name].Orders++;m[name].Sales+=o.Total_Sales;
@@ -4766,6 +4770,15 @@ function renderProdOrders(p){
 }
 
 // ── OUTREACH TAB — full rebuild with filters, counts, alerts, sorting ──────────
+// Persistent filter state — survives re-renders
+const _otFilters={welcomeDays:14,quietDays:14,reactMin:30,reactMax:60,vipMin:50000};
+
+function otSetFilter(key,val){
+  const n=parseInt(val);
+  if(!isNaN(n)&&n>0)_otFilters[key]=n;
+  rbRenderOutreach();
+}
+
 function rbRenderOutreach(){
   alertsLoad();
   const el=document.getElementById('rb-outreach-body');if(!el)return;
@@ -4773,12 +4786,8 @@ function rbRenderOutreach(){
     el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first.</div>';return;
   }
 
-  // Read filter values (with defaults)
-  const welcomeDays=parseInt(document.getElementById('ot-welcome-days')?.value||'14');
-  const quietDays=parseInt(document.getElementById('ot-quiet-days')?.value||'14');
-  const reactMin=parseInt(document.getElementById('ot-react-min')?.value||'30');
-  const reactMax=parseInt(document.getElementById('ot-react-max')?.value||'60');
-  const vipMin=parseInt(document.getElementById('ot-vip-min')?.value||'50000');
+  // Use persistent filter state
+  const{welcomeDays,quietDays,reactMin,reactMax,vipMin}=_otFilters;
 
   const today=new Date();today.setHours(0,0,0,0);
   const cm={};
@@ -4791,7 +4800,11 @@ function rbRenderOutreach(){
       if(!cm[n].lastOrder||o.Order_Date>cm[n].lastOrder)cm[n].lastOrder=o.Order_Date;
     }
   });
-  const all=Object.values(cm);
+  // Apply B2B/B2C filter from analytics
+  const ctype=fSt?.ctype||'all';
+  let all=Object.values(cm);
+  if(ctype==='B2B')all=all.filter(c=>c.type==='B2B');
+  else if(ctype==='B2C')all=all.filter(c=>c.type==='B2C');
 
   const cutoffW=new Date(today.getTime()-welcomeDays*86400000);
   const cutoffQ=new Date(today.getTime()-quietDays*86400000);
@@ -4892,25 +4905,25 @@ function rbRenderOutreach(){
     </div>`;
   }
 
-  const filterInput=(id,label,val,suffix,onChange)=>`<span style="font-size:10px;color:var(--t3);">${label}</span><input type="number" id="${id}" value="${val}" min="1" style="width:52px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;" onchange="${onChange}">${suffix?`<span style="font-size:10px;color:var(--t3);">${suffix}</span>`:''}`;
+  const filterInput=(id,key,label,suffix)=>`<span style="font-size:10px;color:var(--t3);">${label}</span><input type="number" id="${id}" value="${_otFilters[key]}" min="1" style="width:52px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;" onchange="otSetFilter('${key}',this.value)">${suffix?`<span style="font-size:10px;color:var(--t3);">${suffix}</span>`:''}`;
 
   const sections=[
     {id:'welcome',title:'🎉 Welcome Queue',color:'var(--grn)',
      rows:welcome.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.firstOrder?fmtDate(c.firstOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td><td style="font-size:11px">${esc(c.phone)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'First Order',align:'right'},{label:'Value',align:'right'},{label:'Phone'}],
-     filterHtml:filterInput('ot-welcome-days','Last','14','days','rbRenderOutreach()')},
+     filterHtml:filterInput('ot-welcome-days','welcomeDays','Last','days')},
     {id:'quiet',title:'🔇 Gone Quiet',color:'var(--acc)',
      rows:quiet.map(c=>{const d=Math.floor((today-c.lastOrder)/86400000);return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),
      cols:[{label:'Customer'},{label:'Type'},{label:'Only Order',align:'right'},{label:'Days Silent',align:'right'},{label:'Value',align:'right'}],
-     filterHtml:filterInput('ot-quiet-days','Silent for','14','days+','rbRenderOutreach()')},
+     filterHtml:filterInput('ot-quiet-days','quietDays','Silent for','days+')},
     {id:'react',title:'♻ Reactivation',color:'var(--pur)',
      rows:react.map(c=>{const d=Math.floor((today-c.lastOrder)/86400000);return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--pur);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:filterInput('ot-react-min','','30','','rbRenderOutreach()')+`<span style="font-size:10px;color:var(--t3);">–</span>`+filterInput('ot-react-max','','60','days inactive','rbRenderOutreach()')},
+     filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
     {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:filterInput('ot-vip-min','Avg ≥ PKR','50000','','rbRenderOutreach()')},
+     filterHtml:filterInput('ot-vip-min','vipMin','Avg ≥ PKR','')},
   ];
 
   el.innerHTML=alertsHtml+sections.map(s=>outreachSection(s.id,s.title,s.color,s.rows,s.cols,s.filterHtml)).join('');
