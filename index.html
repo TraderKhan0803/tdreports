@@ -43,7 +43,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .user-chip{background:var(--sur3);border:1px solid var(--bdr);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--t2);cursor:pointer;}
 
 /* ── TIME NAV BAR ── */
-.timebar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 18px;display:flex;align-items:center;gap:8px;height:42px;flex-shrink:0;overflow:hidden;}
+.timebar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 18px;display:flex;align-items:center;gap:8px;height:42px;flex-shrink:0;overflow:visible;}
 .bc{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0;}
 .bc-link{color:var(--acc);cursor:pointer;}
 .bc-link:hover{text-decoration:underline;}
@@ -211,11 +211,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* ── MOBILE & RESPONSIVE ── */
 .topbar{flex-wrap:nowrap;overflow:visible;}
-#analytics-tabs::-webkit-scrollbar,#raabta-tabs::-webkit-scrollbar{display:none;}
-#analytics-tabs,#raabta-tabs{flex:1;overflow-x:auto;scrollbar-width:none;}
+#analytics-tabs::-webkit-scrollbar,#raabta-tabs::-webkit-scrollbar,#exec-tabs::-webkit-scrollbar{display:none;}
+#analytics-tabs,#raabta-tabs,#exec-tabs{flex:1;overflow-x:auto;scrollbar-width:none;}
 .content{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .tab-panel{overflow-y:auto;}
 .rb-panel{overflow-y:auto;}
+
+@media(max-width:768px){
+  /* On mobile the app scrolls naturally, not fixed-height */
+  #app{height:auto !important;min-height:100vh;overflow:visible !important;}
+  .content{overflow-y:visible;flex:none;}
+  .tab-panel{overflow-y:visible;min-height:0;}
+  .rb-panel{overflow-y:visible;}
+}
 
 /* Already actioned badge */
 .actioned-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:2px 8px;font-size:10px;color:var(--grn);font-family:'DM Mono',monospace;white-space:nowrap;}
@@ -226,28 +234,90 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .mode-analytics{background:rgba(249,115,22,.15);color:var(--acc);}
 .mode-raabta{background:rgba(34,197,94,.15);color:var(--grn);}
 
+/* ── BOTTOM NAV (mobile only) ── */
+#bottom-nav{display:none;}
+
 @media(max-width:768px){
-  .topbar{height:auto;min-height:48px;padding:8px 12px;flex-wrap:wrap;gap:6px;}
-  #analytics-tabs,#raabta-tabs{order:3;width:100%;border-top:1px solid var(--bdr);padding-top:4px;margin-top:2px;}
+  /* App layout adjusts for bottom nav */
+  #app{padding-bottom:56px;}
+
+  /* Topbar — slimmer, no sub-tabs */
+  .topbar{height:48px;min-height:48px;padding:0 12px;flex-wrap:nowrap;overflow:visible;}
+  #analytics-tabs,#raabta-tabs,#exec-tabs{display:none !important;}
   .topbar-right{margin-left:auto;}
   .tab{padding:0 10px;height:36px;font-size:11px;}
-  .content{padding:10px 12px;}
-  .kpi-row{grid-template-columns:repeat(2,1fr);}
-  .panels-container{flex-direction:column;}
-  .panel{resize:none;min-width:unset;max-height:280px;}
+  .meta{display:none;}
+  #logo-wrap{flex-shrink:0;}
+
+  /* Timebar — compact, no overflow */
+  .timebar{padding:4px 10px;height:auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:3px;}
+  .timebar::-webkit-scrollbar{display:none;}
+  .drill-btns{flex-shrink:0;}
+  .filter-toggle{flex-shrink:0;padding:3px 8px;font-size:10px;}
+
+  /* Content */
+  .content{padding:0;}
+  .tab-panel{padding:10px 12px;overflow-y:auto;}
+  .rb-panel{padding:10px 12px;}
+
+  /* KPIs */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px;}
+
+  /* Dashboard panels — stack vertically, each scrollable, auto height */
+  .panels-container{flex-direction:column;overflow-y:visible;}
+  .panel{resize:none;min-width:unset;max-height:none;height:auto;flex:none;min-height:200px;}
+  .panel-body{max-height:260px;overflow-y:auto;}
+  .tw.st{max-height:200px;overflow-y:auto;}
+  /* Dashboard tab scrolls as a page on mobile */
+  #tab-dashboard{overflow-y:auto;padding:10px 12px;}
+  /* EC panels scroll */
+  .ec-panel{overflow-y:auto;}
+  .ec-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Grids */
   .two,.three-cust,.adm-grid{grid-template-columns:1fr;}
   .chart-box{display:none;}
-  .timebar{padding:0 10px;height:auto;flex-wrap:wrap;gap:4px;padding:6px 12px;}
   .ov-inner{padding:10px;}
   .rb-tpl-grid{grid-template-columns:1fr;}
   .rb-igrid{grid-template-columns:1fr 1fr;}
-  .meta{display:none;}
-  #logo-wrap{flex-shrink:0;}
+
+  /* Bottom nav */
+  #bottom-nav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    height:56px;
+    background:var(--sur);
+    border-top:1px solid var(--bdr);
+    z-index:150;
+    align-items:stretch;
+  }
+  .bn-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;cursor:pointer;font-size:9px;font-family:'DM Mono',monospace;
+    color:var(--t3);letter-spacing:.3px;text-transform:uppercase;
+    border:none;background:none;padding:4px 0;transition:color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bn-item.active{color:var(--acc);}
+  .bn-item .bn-icon{font-size:20px;line-height:1;}
+  .bn-sub{
+    display:flex;
+    position:fixed;
+    bottom:56px;left:0;right:0;
+    background:var(--sur2);
+    border-top:1px solid var(--bdr);
+    overflow-x:auto;
+    scrollbar-width:none;
+    z-index:149;
+    padding:0 4px;
+  }
+  .bn-sub::-webkit-scrollbar{display:none;}
+  .bn-sub .tab{height:38px;font-size:11px;padding:0 12px;white-space:nowrap;flex-shrink:0;}
 }
 @media(max-width:480px){
   .kpi-row{grid-template-columns:1fr 1fr;}
   .auth-box{padding:24px 18px;}
-  .panel{max-height:220px;}
   .rb-card-body{padding:10px;}
   .hbtn{font-size:10px;padding:4px 8px;}
 }
@@ -1023,6 +1093,21 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
   </div><!-- /content -->
 </div><!-- /app -->
+
+<!-- ═══ BOTTOM NAV (mobile) ═══ -->
+<div id="bottom-nav">
+  <button class="bn-item active" id="bn-analytics" onclick="bnSetMode('analytics')">
+    <span class="bn-icon">📊</span>Analytics
+  </button>
+  <button class="bn-item" id="bn-raabta" onclick="bnSetMode('raabta')">
+    <span class="bn-icon">💬</span>Raabta
+  </button>
+  <button class="bn-item" id="bn-exec" onclick="bnSetMode('exec')">
+    <span class="bn-icon">📈</span>Exec
+  </button>
+</div>
+<!-- Sub-tabs strip (mobile) -->
+<div id="bn-sub" class="bn-sub" style="display:none;"></div>
 
 <!-- ═══ RAABTA: CUSTOMER MODAL ═══ -->
 <div class="rb-mov" id="rb-cm">
@@ -3438,15 +3523,28 @@ function renderMarketing(){
 }
 
 function getMktToday(){
-  const allDates=S.orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
+  // Use end of selected period as reference date, not actual today
+  if(navLevel==='month'&&navYear&&navMonth){
+    // End of selected month
+    const d=new Date(navYear,navMonth,0); // day 0 of next month = last day of this month
+    return d;
+  }else if(navLevel==='year'&&navYear){
+    // End of selected year (or today if current year)
+    const endOfYear=new Date(navYear,11,31);
+    return endOfYear>new Date()?new Date():endOfYear;
+  }else if(navLevel==='day'&&navYear&&navMonth&&navDay){
+    return new Date(navYear,navMonth-1,navDay);
+  }
+  // All time — use latest order date in filtered set
+  const allDates=filtered.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime());
   return allDates.length?new Date(Math.max(...allDates)):new Date();
 }
 
 function getMktCustMap(){
   const ctype=fSt?.ctype||'all';
   const m={};
-  S.orders.forEach(o=>{
-    // Apply B2B/B2C filter
+  // Use filtered (respects date + type filters already applied)
+  filtered.forEach(o=>{
     if(ctype==='B2B'&&o.Customer_Type!=='B2B')return;
     if(ctype==='B2C'&&o.Customer_Type!=='B2C')return;
     const name=resolveCustomerName(o.Customer);
@@ -3649,6 +3747,65 @@ let ecCurTab='pl';
 let ecCurrency={pl:'PKR',revenue:'PKR',expenses:'PKR'};
 let ecYear={pl:null,revenue:null,expenses:null};
 
+// ── BOTTOM NAV (mobile) ───────────────────────────────────────────────────────
+function isMobile(){return window.innerWidth<=768;}
+
+function bnSetMode(mode){
+  setMode(mode);
+  bnUpdateActive(mode);
+}
+
+function bnUpdateActive(mode){
+  ['analytics','raabta','exec'].forEach(m=>{
+    const btn=document.getElementById('bn-'+m);
+    if(btn)btn.className='bn-item'+(m===mode?' active':'');
+  });
+  bnUpdateSubTabs(mode);
+}
+
+function bnUpdateSubTabs(mode){
+  const sub=document.getElementById('bn-sub');if(!sub||!isMobile())return;
+  const tabDefs={
+    analytics:[
+      {id:'dashboard',label:'Dashboard',fn:()=>switchTab('dashboard',null)},
+      {id:'customer',label:'Customer',fn:()=>switchTab('customer',null)},
+      {id:'product',label:'Product',fn:()=>switchTab('product',null)},
+      {id:'productsearch',label:'Search',fn:()=>switchTab('productsearch',null)},
+      {id:'reports',label:'Reports',fn:()=>switchTab('reports',null)},
+      {id:'marketing',label:'Marketing',fn:()=>switchTab('marketing',null)},
+    ],
+    raabta:[
+      {id:'rb-customers',label:'Customers',fn:()=>rbSwitchTab('rb-customers')},
+      {id:'rb-outreach',label:'Outreach',fn:()=>rbSwitchTab('rb-outreach')},
+      {id:'rb-templates',label:'Templates',fn:()=>rbSwitchTab('rb-templates')},
+      {id:'rb-activity',label:'Activity',fn:()=>rbSwitchTab('rb-activity')},
+    ],
+    exec:[
+      {id:'ec-pl',label:'P&L',fn:()=>ecSwitchTab('pl')},
+      {id:'ec-revenue',label:'Revenue',fn:()=>ecSwitchTab('revenue')},
+      {id:'ec-expenses',label:'Expenses',fn:()=>ecSwitchTab('expenses')},
+    ],
+  };
+  const tabs=tabDefs[mode]||[];
+  sub.innerHTML=tabs.map(t=>`<div class="tab" id="bn-sub-${t.id}" onclick="bnSubClick('${mode}','${t.id}')">${t.label}</div>`).join('');
+  sub.style.display=tabs.length?'flex':'none';
+  // Mark first as active
+  if(tabs.length){
+    const first=document.getElementById('bn-sub-'+tabs[0].id);
+    if(first)first.classList.add('active');
+  }
+}
+
+function bnSubClick(mode,tabId){
+  // Update active state on sub-tabs
+  document.querySelectorAll('#bn-sub .tab').forEach(t=>t.classList.remove('active'));
+  const el=document.getElementById('bn-sub-'+tabId);if(el)el.classList.add('active');
+  // Execute the tab switch
+  if(mode==='analytics')switchTab(tabId,null);
+  else if(mode==='raabta')rbSwitchTab(tabId);
+  else if(mode==='exec')ecSwitchTab(tabId.replace('ec-',''));
+}
+
 function setMode(mode){
   currentMode=mode;
   document.getElementById('logo-menu').style.display='none';
@@ -3700,6 +3857,8 @@ function setMode(mode){
     exLoadData();
     ecSwitchTab('pl');
   }
+  // Update bottom nav on mobile
+  bnUpdateActive(mode);
 }
 
 // ── EXEC COMMITTEE RENDERING ──────────────────────────────────────────────────
@@ -4789,9 +4948,13 @@ function rbRenderOutreach(){
   // Use persistent filter state
   const{welcomeDays,quietDays,reactMin,reactMax,vipMin}=_otFilters;
 
-  const today=new Date();today.setHours(0,0,0,0);
+  // Use selected period end as reference, filtered orders for data scope
+  const today=getMktToday();today.setHours(0,0,0,0);
+  const ctype=fSt?.ctype||'all';
   const cm={};
-  S.orders.forEach(o=>{
+  filtered.forEach(o=>{
+    if(ctype==='B2B'&&o.Customer_Type!=='B2B')return;
+    if(ctype==='B2C'&&o.Customer_Type!=='B2C')return;
     const n=resolveCustomerName(o.Customer);
     if(!cm[n])cm[n]={name:n,type:o.Customer_Type,phone:o.Phone||'',orders:0,sales:0,firstOrder:null,lastOrder:null};
     cm[n].orders++;cm[n].sales+=o.Total_Sales;
@@ -4800,11 +4963,7 @@ function rbRenderOutreach(){
       if(!cm[n].lastOrder||o.Order_Date>cm[n].lastOrder)cm[n].lastOrder=o.Order_Date;
     }
   });
-  // Apply B2B/B2C filter from analytics
-  const ctype=fSt?.ctype||'all';
-  let all=Object.values(cm);
-  if(ctype==='B2B')all=all.filter(c=>c.type==='B2B');
-  else if(ctype==='B2C')all=all.filter(c=>c.type==='B2C');
+  const all=Object.values(cm);
 
   const cutoffW=new Date(today.getTime()-welcomeDays*86400000);
   const cutoffQ=new Date(today.getTime()-quietDays*86400000);
