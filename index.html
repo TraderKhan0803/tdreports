@@ -2625,7 +2625,6 @@ function exDownloadExcel(type){
     rows.push(['TOTAL',...totals,Math.round(totals.filter(v=>v!=='').reduce((s,v)=>s+v,0))]);
   }
 
-  const cur=ecCurrencyMain;
   const title='Tezz_'+type+'_'+cur+'_'+new Date().toISOString().slice(0,10);
   makeExcelDownload(rows,title+'.csv');
 }
