@@ -4225,6 +4225,7 @@ function grRender(){
   const el=document.getElementById('gr-body');if(!el)return;
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
+  const now=new Date();
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
   const months=grPeriod==='t12m'
   ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
@@ -4233,7 +4234,7 @@ function grRender(){
 
   // Filter orders by type
   // Apply period filter
-  const now=new Date();
+  //const now=new Date();
   const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
   const periodSrc=grPeriod==='t12m'
     ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
