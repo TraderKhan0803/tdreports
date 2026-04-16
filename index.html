@@ -44,6 +44,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* ── TIME NAV BAR ── */
 .timebar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 18px;display:flex;align-items:center;gap:8px;height:42px;flex-shrink:0;overflow:visible;}
+.dr-pill{display:flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;border:1px solid var(--bdr);background:transparent;cursor:pointer;font-size:11px;color:var(--t2);font-family:'DM Mono',monospace;transition:all .15s;white-space:nowrap;}
+.dr-pill.active{border-color:var(--acc);color:var(--acc);background:rgba(249,115,22,.08);}
+.dr-pill:hover{border-color:var(--acc);color:var(--acc);}
+.dr-popover{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;z-index:200;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.dr-popover.open{display:block;}
+.dr-presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.dr-preset{padding:3px 10px;border-radius:12px;font-size:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);cursor:pointer;font-family:'DM Mono',monospace;}
+.dr-preset:hover{border-color:var(--acc);color:var(--acc);}
+.dr-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.dr-label{font-size:11px;color:var(--t3);width:32px;flex-shrink:0;}
+.dr-inp{flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 8px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;outline:none;}
+.dr-inp:focus{border-color:var(--acc);}
+.dr-apply{width:100%;padding:7px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;}
+.dr-clear{width:100%;padding:5px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t3);font-size:11px;cursor:pointer;margin-top:5px;}
 .bc{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0;}
 .bc-link{color:var(--acc);cursor:pointer;}
 .bc-link:hover{text-decoration:underline;}
@@ -458,7 +472,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ec-unified-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--bdr);border-radius:var(--r);}
 .ec-unified{border-collapse:collapse;width:100%;min-width:600px;}
 .ec-unified th,.ec-unified td{padding:7px 10px;border-bottom:1px solid var(--bdr);white-space:nowrap;font-size:12px;}
-.ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:right;position:sticky;top:0;z-index:3;}
+.ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:left;position:sticky;top:0;z-index:3;}
 .ec-unified thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:5;background:var(--sur2);}
 .ec-unified td:first-child{position:sticky;left:0;background:var(--sur);z-index:2;border-right:1px solid var(--bdr);min-width:180px;max-width:210px;}
 .ec-unified tr:hover td{background:var(--sur2);}
@@ -488,7 +502,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .gr-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}
 .gr-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
 .gr-kpi-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
-.gr-kpi{background:var(--sur2);border-radius:var(--r);padding:11px 13px;}
+.gr-kpi{background:var(--sur2);border-radius:var(--r);padding:11px 13px;position:relative;cursor:default;}
+.gr-kpi:hover{outline:1px solid var(--bdr);}
+.gr-kpi-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;z-index:50;min-width:200px;}
+.gr-kpi:hover .gr-kpi-tooltip{display:block;}
+.gr-kpi-formula{font-family:'DM Mono',monospace;font-size:10px;color:var(--acc);background:rgba(249,115,22,.08);padding:3px 7px;border-radius:3px;margin-bottom:5px;}
+.gr-kpi-tdesc{font-size:10px;color:var(--t2);line-height:1.4;}
+.gr-kpi-bench{font-size:10px;color:var(--grn);margin-top:4px;font-family:'DM Mono',monospace;}
 .gr-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:5px;}
 .gr-kpi-value{font-size:20px;font-weight:700;font-family:'Syne',sans-serif;line-height:1;}
 .gr-kpi-sub{font-size:10px;color:var(--t3);margin-top:3px;}
@@ -552,7 +572,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
   <div class="auth-box">
     <div class="auth-logo">TEZZ</div>
     <div class="auth-sub">ANALYTICS PLATFORM</div>
-    <input class="auth-inp" type="text" id="li-user" placeholder="Username" onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="auth-inp" type="text" id="li-user" placeholder="Username" autofocus onkeydown="if(event.key==='Enter')doLogin()">
     <input class="auth-inp" type="password" id="li-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="auth-btn" onclick="doLogin()">Sign In</button>
     <div class="auth-err" id="li-err"></div>
@@ -657,6 +677,29 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="drill-btns" id="drill-area"></div>
     <button class="tb-arrow" onclick="stepNav(1)">&#8594;</button>
     <div class="tb-sep"></div>
+    <!-- Date range pill -->
+    <div style="position:relative;flex-shrink:0;">
+      <button class="dr-pill" id="dr-pill-btn" onclick="toggleDrPopover()">📅 <span id="dr-pill-label">Range</span></button>
+      <div class="dr-popover" id="dr-popover">
+        <div class="dr-presets">
+          <button class="dr-preset" onclick="drPreset(30)">30d</button>
+          <button class="dr-preset" onclick="drPreset(90)">3mo</button>
+          <button class="dr-preset" onclick="drPreset(180)">6mo</button>
+          <button class="dr-preset" onclick="drPreset(365)">12mo</button>
+          <button class="dr-preset" onclick="drPresetYTD()">YTD</button>
+        </div>
+        <div class="dr-row">
+          <span class="dr-label">From</span>
+          <input type="month" id="dr-from" class="dr-inp">
+        </div>
+        <div class="dr-row">
+          <span class="dr-label">To</span>
+          <input type="month" id="dr-to" class="dr-inp">
+        </div>
+        <button class="dr-apply" onclick="drApply()">Apply range</button>
+        <button class="dr-clear" onclick="drClear()">Clear range</button>
+      </div>
+    </div>
     <button class="filter-toggle" id="filter-toggle-btn" onclick="toggleFilterDrawer()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
       Filters <span class="fbadge" id="fbadge" style="display:none">0</span>
@@ -773,7 +816,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="kpi-row" id="cust-kpis"></div>
       <div class="three-cust mb12">
         <div class="chart-box" style="margin-bottom:0">
-          <div class="stitle mb12" style="margin-bottom:10px;">Top 10 Customers by Sales</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+            <div class="stitle">Top Customers by Sales</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);">
+              Show top <input type="number" id="cust-chart-n" value="10" min="3" max="50" onchange="renderCustomer(selRankedCust||undefined)" style="width:46px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:2px 6px;border-radius:4px;font-size:11px;text-align:center;">
+            </div>
+          </div>
           <canvas id="chart-top10" height="220"></canvas>
         </div>
         <div>
@@ -1859,6 +1907,65 @@ function getDayData(year,month){
   return[...new Set(S.orders.filter(o=>o.Year===year&&o.Month===month&&o.Order_Date).map(o=>o.Order_Date.getDate()))].sort((a,b)=>a-b);
 }
 
+// ── DATE RANGE ────────────────────────────────────────────────────────────────
+let drActive=false,drFrom=null,drTo=null; // {year,month} objects
+
+function toggleDrPopover(){
+  const pop=document.getElementById('dr-popover');
+  const isOpen=pop.classList.contains('open');
+  // Close filter drawer if open
+  document.getElementById('filter-drawer')?.classList.remove('open');
+  pop.classList.toggle('open',!isOpen);
+}
+
+function drPreset(days){
+  const to=new Date();
+  const from=new Date(to.getTime()-days*86400000);
+  document.getElementById('dr-from').value=from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0');
+  document.getElementById('dr-to').value=to.getFullYear()+'-'+String(to.getMonth()+1).padStart(2,'0');
+}
+
+function drPresetYTD(){
+  const now=new Date();
+  document.getElementById('dr-from').value=now.getFullYear()+'-01';
+  document.getElementById('dr-to').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+}
+
+function drApply(){
+  const fromVal=document.getElementById('dr-from').value;
+  const toVal=document.getElementById('dr-to').value;
+  if(!fromVal||!toVal){notif('⚠ Please select both From and To months');return;}
+  const[fy,fm]=fromVal.split('-').map(Number);
+  const[ty,tm]=toVal.split('-').map(Number);
+  if(fy*100+fm>ty*100+tm){notif('⚠ From must be before To');return;}
+  drActive=true;drFrom={year:fy,month:fm};drTo={year:ty,month:tm};
+  document.getElementById('dr-pill-btn').classList.add('active');
+  document.getElementById('dr-pill-label').textContent=MONTHS[fm-1]+' '+fy+' → '+MONTHS[tm-1]+' '+ty;
+  document.getElementById('dr-popover').classList.remove('open');
+  // Reset drill navigation
+  navLevel='all';navYear=null;navMonth=null;navDay=null;
+  buildTimeNav();applyFilters();
+}
+
+function drClear(){
+  drActive=false;drFrom=null;drTo=null;
+  document.getElementById('dr-pill-btn').classList.remove('active');
+  document.getElementById('dr-pill-label').textContent='Range';
+  document.getElementById('dr-from').value='';
+  document.getElementById('dr-to').value='';
+  document.getElementById('dr-popover').classList.remove('open');
+  buildTimeNav();applyFilters();
+}
+
+// Close popover when clicking outside
+document.addEventListener('click',function(e){
+  const pop=document.getElementById('dr-popover');
+  const pill=document.getElementById('dr-pill-btn');
+  if(pop&&!pop.contains(e.target)&&e.target!==pill&&!pill?.contains(e.target)){
+    pop.classList.remove('open');
+  }
+});
+
 function buildTimeNav(){
   const yd=getYearData();
   const years=Object.keys(yd).map(Number).sort();
@@ -1919,25 +2026,48 @@ function stepNav(dir){
 // FILTERS
 // ═══════════════════════════════════════════════
 function buildDynamicFilters(){
-  _availCities=[...new Set(S.orders.map(o=>o.City))].sort();
-  _availStatuses=[...new Set(S.orders.map(o=>o.Status))].filter(Boolean).sort();
-  if(fSt.cities.size===0)_availCities.forEach(c=>fSt.cities.add(c));
-  if(fSt.statuses.size===0)_availStatuses.forEach(s=>fSt.statuses.add(s));
+  // Use filtered period data for city/status options (not all S.orders)
+  const periodOrders=filtered.length?filtered:S.orders;
+  _availCities=[...new Set(periodOrders.map(o=>o.City))].filter(Boolean).sort();
+  _availStatuses=[...new Set(periodOrders.map(o=>o.Status))].filter(Boolean).sort();
+
+  // On first load, select all cities; exclude Cancelled from statuses by default
+  if(fSt.cities.size===0){
+    _availCities.forEach(c=>fSt.cities.add(c));
+  } else {
+    // Remove cities no longer in current period
+    [...fSt.cities].forEach(c=>{if(!_availCities.includes(c))fSt.cities.delete(c);});
+    // Add new cities from period (auto-select them)
+    _availCities.forEach(c=>{if(!fSt._citiesManuallySet)fSt.cities.add(c);});
+  }
+  if(fSt.statuses.size===0){
+    _availStatuses.forEach(s=>{
+      if(s.toLowerCase()!=='cancelled')fSt.statuses.add(s);
+    });
+  } else {
+    // Remove statuses no longer in current period
+    [...fSt.statuses].forEach(s=>{if(!_availStatuses.includes(s))fSt.statuses.delete(s);});
+  }
 
   const cityEl=document.getElementById('f-cities');
-  cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
+  if(cityEl)cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
 
   const statEl=document.getElementById('f-statuses');
-  statEl.innerHTML=_availStatuses.map(s=>`<button class="ftag ${fSt.statuses.has(s)?'on':''}" onclick="toggleStatus('${esc(s)}')">${esc(s)}</button>`).join('');
+  if(statEl)statEl.innerHTML=_availStatuses.map(s=>`<button class="ftag ${fSt.statuses.has(s)?'on':''}" onclick="toggleStatus('${esc(s)}')">${esc(s)}</button>`).join('');
 }
 
-function toggleCity(c){if(fSt.cities.has(c))fSt.cities.delete(c);else fSt.cities.add(c);buildDynamicFilters();applyFilters();updateFilterBadge();}
+function toggleCity(c){
+  fSt._citiesManuallySet=true;
+  if(fSt.cities.has(c))fSt.cities.delete(c);else fSt.cities.add(c);
+  buildDynamicFilters();applyFilters();updateFilterBadge();
+}
 function toggleStatus(s){if(fSt.statuses.has(s))fSt.statuses.delete(s);else fSt.statuses.add(s);buildDynamicFilters();applyFilters();updateFilterBadge();}
 function setCtype(v){fSt.ctype=v;['all','B2B','B2C'].forEach(k=>document.getElementById('fc-'+k.toLowerCase()).classList.remove('on'));document.getElementById(v==='all'?'fc-all':v==='B2B'?'fc-b2b':'fc-b2c').classList.add('on');applyFilters();updateFilterBadge();}
 function setNC(v){fSt.nc=v;document.getElementById('fn-all').classList.toggle('on',v==='all');document.getElementById('fn-new').classList.toggle('on',v==='new');applyFilters();updateFilterBadge();}
 
 function clearDrawerFilters(){
-  fSt={ctype:'all',nc:'all',cities:new Set(_availCities),statuses:new Set(_availStatuses),cusr:''};
+  // Clear All means remove all active filters — reset to defaults
+  fSt={ctype:'all',nc:'all',cities:new Set(),statuses:new Set(),cusr:'',_citiesManuallySet:false};
   document.getElementById('f-cusr').value='';
   document.getElementById('fc-all').classList.add('on');['fc-b2b','fc-b2c'].forEach(id=>document.getElementById(id).classList.remove('on'));
   document.getElementById('fn-all').classList.add('on');document.getElementById('fn-new').classList.remove('on');
@@ -1965,11 +2095,56 @@ function toggleFilterDrawer(){
 
 function applyFilters(){
   fSt.cusr=(document.getElementById('f-cusr')?.value||'').toLowerCase().trim();
+  // First pass: apply time + type filters to get period data for city/status options
+  const periodFiltered=S.orders.filter(o=>{
+    if(drActive&&drFrom&&drTo){
+      const oy=o.Year,om=o.Month;
+      if(!oy||!om)return false;
+      if(oy*100+om < drFrom.year*100+drFrom.month)return false;
+      if(oy*100+om > drTo.year*100+drTo.month)return false;
+    } else {
+      if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
+      if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
+      if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
+    }
+    return true;
+  });
+  // Rebuild city/status options based on period
+  const periodCities=[...new Set(periodFiltered.map(o=>o.City))].filter(Boolean).sort();
+  const periodStatuses=[...new Set(periodFiltered.map(o=>o.Status))].filter(Boolean).sort();
+  // Update available options
+  _availCities=periodCities;
+  _availStatuses=periodStatuses;
+  // Auto-add new cities/statuses that appeared in new period (if not manually set)
+  if(!fSt._citiesManuallySet){
+    fSt.cities=new Set(periodCities);
+  }
+  // Auto-add new statuses except Cancelled
+  const prevStatuses=new Set(fSt.statuses);
+  periodStatuses.forEach(s=>{
+    if(!prevStatuses.has(s)&&s.toLowerCase()!=='cancelled')fSt.statuses.add(s);
+  });
+  // Remove statuses no longer in period
+  [...fSt.statuses].forEach(s=>{if(!periodStatuses.includes(s))fSt.statuses.delete(s);});
+  // Rebuild filter UI
+  const cityEl=document.getElementById('f-cities');
+  if(cityEl)cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
+  const statEl=document.getElementById('f-statuses');
+  if(statEl)statEl.innerHTML=_availStatuses.map(s=>`<button class="ftag ${fSt.statuses.has(s)?'on':''}" onclick="toggleStatus('${esc(s)}')">${esc(s)}</button>`).join('');
+  // Second pass: full filter
   filtered=S.orders.filter(o=>{
-    // Time nav filter
-    if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
-    if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
-    if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
+    // Date range filter (takes priority over nav drill)
+    if(drActive&&drFrom&&drTo){
+      const oy=o.Year,om=o.Month;
+      if(!oy||!om)return false;
+      if(oy*100+om < drFrom.year*100+drFrom.month)return false;
+      if(oy*100+om > drTo.year*100+drTo.month)return false;
+    } else {
+      // Time nav filter
+      if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
+      if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
+      if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
+    }
     // Drawer filters
     if(fSt.ctype!=='all'&&o.Customer_Type!==fSt.ctype)return false;
     if(fSt.nc==='new'&&o.IsFirstOrder!=='New Customer')return false;
@@ -2103,13 +2278,35 @@ function drillOrder(oid,orderTotal){
 }
 
 function showCustInfo(cust){
-  const custOrds=filtered.filter(o=>resolveCustomerName(o.Customer)===cust);
-  const addr=custOrds[0]?.Address||'—';
-  const phone=custOrds[0]?.Phone||'—';
+  // Use ALL orders (not filtered) to show full customer history
+  const allOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===cust).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
+  const filtOrds=filtered.filter(o=>resolveCustomerName(o.Customer)===cust);
+  const addr=allOrds[0]?.Address||'—';
+  const phone=allOrds[0]?.Phone||'—';
+  const totalSpend=allOrds.reduce((s,o)=>s+o.Total_Sales,0);
+  const firstOrd=allOrds.length?allOrds[allOrds.length-1]:null;
+  const lastOrd=allOrds.length?allOrds[0]:null;
+  const daysSince=lastOrd?.Order_Date?Math.floor((new Date()-lastOrd.Order_Date)/86400000):null;
+  const status=daysSince===null?'—':daysSince<30?'Active':daysSince<90?'Silent':daysSince<180?'Win-Back':'Inactive';
+  const statusColor={'Active':'var(--grn)','Silent':'var(--acc)','Win-Back':'var(--pur)','Inactive':'var(--red)','—':'var(--t3)'}[status];
+  // Recent orders (up to 5, from all time)
+  const recentRows=allOrds.slice(0,8).map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
+    <span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px;">${esc(o.Order_ID)}</span>
+    <span style="color:var(--t3);font-size:10px;">${esc(o.Order_Date_Str||'—')}</span>
+    <span style="font-family:'DM Mono',monospace;">${fmtFull(o.Total_Sales)}</span>
+  </div>`).join('');
   document.getElementById('cust-info-box').innerHTML=`
     <div class="info-name">${esc(cust)}</div>
+    <div class="info-row"><div class="info-lbl">Status</div><div class="info-val" style="color:${statusColor};font-weight:600;">${status}</div></div>
     <div class="info-row"><div class="info-lbl">Phone</div><div class="info-val">${esc(phone)}</div></div>
-    <div class="info-row"><div class="info-lbl">Address</div><div class="info-val">${esc(addr)}</div></div>`;
+    <div class="info-row"><div class="info-lbl">Address</div><div class="info-val" style="font-size:10px;">${esc(addr)}</div></div>
+    <div class="info-row"><div class="info-lbl">All Orders</div><div class="info-val" style="font-family:'DM Mono',monospace;">${allOrds.length}</div></div>
+    <div class="info-row"><div class="info-lbl">Lifetime Spend</div><div class="info-val" style="color:var(--grn);font-family:'DM Mono',monospace;">${fmtFull(totalSpend)}</div></div>
+    <div class="info-row"><div class="info-lbl">First Order</div><div class="info-val" style="font-size:11px;">${firstOrd?.Order_Date_Str||'—'}</div></div>
+    <div class="info-row"><div class="info-lbl">Last Order</div><div class="info-val" style="font-size:11px;">${lastOrd?.Order_Date_Str||'—'}${daysSince!==null?' ('+daysSince+'d ago)':''}</div></div>
+    ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:'DM Mono',monospace;">${filtOrds.length} orders in selected period · ${allOrds.length} all time</div>`:''}
+    <div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">ALL ORDER HISTORY</div>
+    <div style="max-height:180px;overflow-y:auto;">${recentRows||'<div style="color:var(--t3);font-size:11px;">No orders</div>'}</div>`;
 }
 
 // ═══════════════════════════════════════════════
@@ -2125,9 +2322,9 @@ function renderCustomer(pinnedCust){
   const returning=custs.filter(c=>c.Orders>1).length;
   const retention=custs.length?Math.round(returning/custs.length*100):0;
   document.getElementById('cust-kpis').innerHTML=kpi('Total Customers',fmtFull(custs.length))+kpi('Total Orders',fmtFull(O.length),'c-blu')+kpi('Total Sales',fmt(totalSales),'c-grn','PKR')+kpi('Avg Order Size',fmt(O.length?totalSales/O.length:0))+kpi('Avg Daily Orders',(O.length/days).toFixed(2),'c-pur')+kpi('Retention Rate',retention+'%','c-grn','>1 order');
-  const top10=custs.slice(0,10);
+  const topN=custs.slice(0,parseInt(document.getElementById('cust-chart-n')?.value||'10'));
   if(charts.top10)charts.top10.destroy();
-  charts.top10=new Chart(document.getElementById('chart-top10'),{type:'bar',data:{labels:top10.map(c=>c.Customer.length>14?c.Customer.slice(0,14)+'…':c.Customer),datasets:[{data:top10.map(c=>c.Sales),backgroundColor:'rgba(249,115,22,.8)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  charts.top10=new Chart(document.getElementById('chart-top10'),{type:'bar',data:{labels:topN.map(c=>c.Customer.length>14?c.Customer.slice(0,14)+'…':c.Customer),datasets:[{data:topN.map(c=>c.Sales),backgroundColor:'rgba(249,115,22,.8)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
   const frag=document.createDocumentFragment();
   let totO=0,totS=0;
   custs.forEach((c,i)=>{
@@ -3922,55 +4119,60 @@ function ecRenderUnified(){
     const avg=nonNull.length?nonNull.reduce((s,v)=>s+v,0)/nonNull.length:0;
     return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${ecFmt(avg)}</td></tr>`;
   }
+  function countHdr(label,vals){
+    const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
+    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:var(--t2);font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-family:'DM Mono',monospace;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
+  }
+  function countSub(label,vals){
+    const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
+  }
+  function avgCountSub(label,vals){
+    const nonNull=Object.values(vals).filter(v=>v!=null);
+    const avg=nonNull.length?nonNull.reduce((s,v)=>s+v,0)/nonNull.length:0;
+    return`<tr><td style="padding-left:26px;color:var(--t2);font-size:11px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:var(--t2);">${vals[mk]!=null?vals[mk].toFixed(1):'—'}</td>`).join('')}<td class="ec-num" style="font-size:11px;color:var(--t2);">${avg.toFixed(1)}</td></tr>`;
+  }
   rows.push(salesHdr(salesLabel,totalSalesMonth,'var(--blu)'));
   rows.push(salesSub('B2C',salesB2C));
   rows.push(salesSub('B2B',salesB2B));
   rows.push(salesHdr(basketLabel,totalAvgBasket,'var(--t2)'));
   rows.push(avgSub('B2C',avgBasketB2C));
   rows.push(avgSub('B2B',avgBasketB2B));
-  rows.push(salesHdr('Orders',totalOrdersMonth,'var(--t2)'));
-  rows.push(salesSub('B2C',ordersB2C));
-  rows.push(salesSub('B2B',ordersB2B));
-  rows.push(salesHdr('Avg Daily Orders',totalAvgDaily,'var(--t2)'));
-  rows.push(avgSub('B2C',avgDailyB2C));
-  rows.push(avgSub('B2B',avgDailyB2B));
-  rows.push(salesHdr('Customers',totalCusts,'var(--t2)'));
-  rows.push(salesSub('B2C',custsB2CCount));
-  rows.push(salesSub('B2B',custsB2BCount));
+  rows.push(countHdr('Orders',totalOrdersMonth));
+  rows.push(countSub('B2C',ordersB2C));
+  rows.push(countSub('B2B',ordersB2B));
+  rows.push(countHdr('Avg Daily Orders',totalAvgDaily));
+  rows.push(avgCountSub('B2C',avgDailyB2C));
+  rows.push(avgCountSub('B2B',avgDailyB2B));
+  rows.push(countHdr('Customers',totalCusts));
+  rows.push(countSub('B2C',custsB2CCount));
+  rows.push(countSub('B2B',custsB2BCount));
   rows.push(`<tr><td colspan="${months.length+2}" style="height:8px;background:var(--bg);"></td></tr>`);
-  // ── REVENUE ──
   const revByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);revByMonth[mk]=d?(d.revenue||0)*cv(mk):0;});
   rows.push(sectionHdr('💰 Revenue','var(--grn)','revenue',revByMonth));
   exData.settings.revCats.forEach(cat=>{
     const vals={};months.forEach(mk=>{const d=exGetMonthData(mk);vals[mk]=d?(d.revCats?.[cat]||0)*cv(mk):null;});
     rows.push(subRow(cat,vals,'var(--t2)','revenue'));
   });
-  // ── EXPENSES ──
   const expByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);expByMonth[mk]=d?(d.expenses||0)*cv(mk):0;});
   rows.push(sectionHdr('📋 Expenses','var(--red)','expenses',expByMonth));
   exData.settings.expCats.forEach(cat=>{
     const vals={};months.forEach(mk=>{const d=exGetMonthData(mk);const v=(d?.expCats?.[cat]||0)*cv(mk);vals[mk]=v>0?v:null;});
     if(Object.values(vals).some(v=>v))rows.push(subRow(cat,vals,'var(--t2)','expenses'));
   });
-  // ── P&L SUMMARY ──
   rows.push(`<tr><td colspan="${months.length+2}" style="height:8px;background:var(--bg);"></td></tr>`);
   const profitByMonth={};months.forEach(mk=>{const d=exGetMonthData(mk);profitByMonth[mk]=d?d.profit*cv(mk):null;});
   const totalRevArrG=Object.values(revByMonth).reduce((s,v)=>s+v,0);
   const totalExpArrG=Object.values(expByMonth).reduce((s,v)=>s+v,0);
   const totalProfitG=totalRevArrG-totalExpArrG;
-  rows.push(summaryRow('Revenue',revByMonth,'var(--grn)',true));
-  rows.push(summaryRow('Expenses',expByMonth,'var(--red)',false));
   rows.push(summaryRow('Net Profit',profitByMonth,totalProfitG>=0?'var(--grn)':'var(--red)',true));
-  // Gross Margin %
-  const gmPct={};months.forEach(mk=>{const ts=cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk);gmPct[mk]=ts>0?((revByMonth[mk]||0)/ts*100).toFixed(1)+'%':null;});
-  const totSalesG=months.reduce((s,mk)=>s+(cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk)),0);
-  const gmTotal=totSalesG>0?(totalRevArrG/totSalesG*100).toFixed(1)+'%':'—';
-  rows.push(`<tr><td><span class="ec-tip" title="Revenue ÷ Total Sales × 100 — gross profit as % of sales">Gross Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${gmPct[mk]&&parseFloat(gmPct[mk])>=0?'var(--grn)':'var(--red)'};">${gmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${gmTotal}</td></tr>`);
-  // Net Margin %
-  const nmPct={};months.forEach(mk=>{const ts=cur==='PKR'?totalSalesMonth[mk]:totalSalesMonth[mk]/exGetRate(mk);nmPct[mk]=ts>0?((profitByMonth[mk]||0)/ts*100).toFixed(1)+'%':null;});
+  const gmPct={};months.forEach(mk=>{const rev=revByMonth[mk]||0;const exp=expByMonth[mk]||0;gmPct[mk]=rev>0?((rev-exp)/rev*100).toFixed(1)+'%':null;});
+  const gmTotal=totalRevArrG>0?((totalRevArrG-totalExpArrG)/totalRevArrG*100).toFixed(1)+'%':'—';
+  rows.push(`<tr><td><span class="ec-tip" title="(Revenue − Expenses) ÷ Revenue × 100">Gross Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${gmPct[mk]&&parseFloat(gmPct[mk])>=0?'var(--grn)':'var(--red)'};">${gmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${gmTotal}</td></tr>`);
+  const totSalesG=months.reduce((s,mk)=>s+(totalSalesMonth[mk]||0),0);
+  const nmPct={};months.forEach(mk=>{const ts=totalSalesMonth[mk]||0;nmPct[mk]=ts>0?((profitByMonth[mk]||0)/ts*100).toFixed(1)+'%':null;});
   const nmTotal=totSalesG>0?(totalProfitG/totSalesG*100).toFixed(1)+'%':'—';
-  rows.push(`<tr><td><span class="ec-tip" title="Net Profit ÷ Total Sales × 100 — bottom-line margin after all costs">Net Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${nmPct[mk]&&parseFloat(nmPct[mk])>=0?'var(--grn)':'var(--red)'};">${nmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${nmTotal}</td></tr>`);
-  // Render
+  rows.push(`<tr><td><span class="ec-tip" title="Net Profit ÷ Total Sales × 100">Net Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${nmPct[mk]&&parseFloat(nmPct[mk])>=0?'var(--grn)':'var(--red)'};">${nmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${nmTotal}</td></tr>`);
   const tbody=document.getElementById('ec-unified-tbody');
   if(tbody)tbody.innerHTML=rows.join('');
   if(ecRevExpanded)ecToggleSection('revenue');
@@ -4054,6 +4256,11 @@ function grRender(){
   const ltvAll=Math.round(avg(allCusts.map(ltv)));
   const ltvB2C=Math.round(avg(b2c.map(ltv)));
   const ltvB2B=Math.round(avg(b2b.map(ltv)));
+  // Avg order size B2C/B2B
+  const allB2COrders=grOrders.filter(o=>o.Customer_Type!=='B2B');
+  const allB2BOrders=grOrders.filter(o=>o.Customer_Type==='B2B');
+  const avgOrdB2C=allB2COrders.length?Math.round(allB2COrders.reduce((s,o)=>s+o.Total_Sales,0)/allB2COrders.length):0;
+  const avgOrdB2B=allB2BOrders.length?Math.round(allB2BOrders.reduce((s,o)=>s+o.Total_Sales,0)/allB2BOrders.length):0;
 
   // Repeat purchase rate
   const repeatCusts=allCusts.filter(c=>c.orders.length>1);
@@ -4232,39 +4439,41 @@ function grRender(){
     <div class="gr-section">
       <div class="gr-section-title">Customer Lifetime Value</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — All</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvAll)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2C</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2C)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2B</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2B)}</div><div class="gr-kpi-sub">avg total spend per customer</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — All</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvAll)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total Revenue ÷ Unique Customers</div><div class="gr-kpi-tdesc">Sum of all orders per customer averaged across all customers. Higher = stickier customer base.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2C</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2C)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">B2C Revenue ÷ Unique B2C Customers</div><div class="gr-kpi-tdesc">Retail customer lifetime value only.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2B</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2B)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">B2B Revenue ÷ Unique B2B Customers</div><div class="gr-kpi-tdesc">Business account lifetime value. Typically 3–5× higher than B2C.</div><div class="gr-kpi-bench">Healthy: B2B LTV should be 3–5× B2C LTV</div></div></div>
       </div>
     </div>
 
     <div class="gr-section">
       <div class="gr-section-title">Purchase Behaviour</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Repeat purchase rate</div><div class="gr-kpi-value" style="color:var(--blu);">${repeatRate}%</div><div class="gr-kpi-sub">customers with 2+ orders</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg purchase frequency</div><div class="gr-kpi-value" style="color:var(--blu);">${freq.toFixed(1)}×</div><div class="gr-kpi-sub">orders per repeat customer</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat purchase rate</div><div class="gr-kpi-value" style="color:var(--blu);">${repeatRate}%</div><div class="gr-kpi-sub">customers with 2+ orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Customers with ≥2 orders ÷ Total Customers × 100</div><div class="gr-kpi-tdesc">What % of your customers came back at least once.</div><div class="gr-kpi-bench">Above 50% is healthy for grocery delivery</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg purchase frequency</div><div class="gr-kpi-value" style="color:var(--blu);">${freq.toFixed(1)}×</div><div class="gr-kpi-sub">orders per repeat customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total Orders (repeat customers) ÷ Repeat Customer Count</div><div class="gr-kpi-tdesc">How many times a loyal customer typically orders.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Sum of (days between consecutive orders) ÷ Total gaps</div><div class="gr-kpi-tdesc">How frequently customers reorder. Lower = more habitual buyers.</div></div></div>
       </div>
-      <div class="gr-kpi-grid-2">
-        <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration</div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Revenue per active customer/mo</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(avgRevPerCust)}</div><div class="gr-kpi-sub">avg monthly</div></div>
+      <div class="gr-kpi-grid">
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — B2C</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(avgOrdB2C)}</div><div class="gr-kpi-sub">avg per B2C order</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total B2C Sales ÷ Total B2C Orders</div><div class="gr-kpi-tdesc">Average basket size for retail customers.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — B2B</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(avgOrdB2B)}</div><div class="gr-kpi-sub">avg per B2B order</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total B2B Sales ÷ Total B2B Orders</div><div class="gr-kpi-tdesc">Average basket size for business accounts.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration</div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Top 10% customers' spend ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">Revenue concentration risk. High % means you depend heavily on a few customers.</div><div class="gr-kpi-bench">Below 50% is healthier for resilience</div></div></div>
       </div>
     </div>
 
     <div class="gr-section">
       <div class="gr-section-title">Retention &amp; Churn (${yr} monthly avg)</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Retention rate</div><div class="gr-kpi-value" style="color:var(--grn);">${avgRet}%</div><div class="gr-kpi-sub">active last month who reordered</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Churn rate</div><div class="gr-kpi-value" style="color:var(--red);">${avgChurn}%</div><div class="gr-kpi-sub">customers lost each month</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Reactivation rate</div><div class="gr-kpi-value" style="color:var(--pur);">${avgReact}%</div><div class="gr-kpi-sub">churned customers who returned</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Retention rate</div><div class="gr-kpi-value" style="color:var(--grn);">${avgRet}%</div><div class="gr-kpi-sub">active last month who reordered</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">(Customers in M who ordered in M+1) ÷ Customers in M × 100</div><div class="gr-kpi-tdesc">Of customers who ordered this month, what % ordered again next month.</div><div class="gr-kpi-bench">Above 60% is strong for grocery delivery</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Churn rate</div><div class="gr-kpi-value" style="color:var(--red);">${avgChurn}%</div><div class="gr-kpi-sub">customers lost each month</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">100% − Retention Rate</div><div class="gr-kpi-tdesc">% of last month's customers who did not order again.</div><div class="gr-kpi-bench">Below 30% monthly churn is acceptable early stage</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Reactivation rate</div><div class="gr-kpi-value" style="color:var(--pur);">${avgReact}%</div><div class="gr-kpi-sub">churned customers who returned</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Returning churned customers ÷ Active customers × 100</div><div class="gr-kpi-tdesc">Shows how effective your win-back outreach (Raabta) is.</div></div></div>
       </div>
     </div>
 
     <div class="gr-section">
       <div class="gr-section-title">Revenue Growth (${yr})</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg MoM growth</div><div class="gr-kpi-value" style="color:${parseFloat(avgMoM)>=0?'var(--grn)':'var(--red)'};">${avgMoM>=0?'+':''}${avgMoM}%</div><div class="gr-kpi-sub">month over month revenue</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">New vs returning revenue</div><div class="gr-kpi-value">${newRevPct}% / ${retRevPct}%</div><div class="gr-kpi-sub">new customer revenue share</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg MoM growth</div><div class="gr-kpi-value" style="color:${parseFloat(avgMoM)>=0?'var(--grn)':'var(--red)'};">${avgMoM>=0?'+':''}${avgMoM}%</div><div class="gr-kpi-sub">month over month revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">(Revenue M − Revenue M-1) ÷ Revenue M-1 × 100</div><div class="gr-kpi-tdesc">Average monthly revenue growth rate across the selected year.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">New vs returning revenue</div><div class="gr-kpi-value">${newRevPct}% / ${retRevPct}%</div><div class="gr-kpi-sub">new customer revenue share</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">First-order revenue ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">How much revenue comes from new vs existing customers. High returning % = strong retention.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue per active customer/mo</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(avgRevPerCust)}</div><div class="gr-kpi-sub">avg monthly</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Monthly Revenue ÷ Active Customers that Month (averaged)</div><div class="gr-kpi-tdesc">How much each active customer spends per month on average. Used to calculate CAC payback period.</div></div></div>
       </div>
     </div>
 
@@ -4453,7 +4662,8 @@ function setMode(mode){
   if(eTabs)eTabs.style.display='none';
   document.querySelectorAll('.rb-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.ec-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ec-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  document.querySelectorAll('.gr-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   rbCurTab=null;
 
