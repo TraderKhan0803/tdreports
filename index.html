@@ -4226,7 +4226,9 @@ function grRender(){
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
-  const months=ecMonthsForYear(yr);
+  const months=grPeriod==='t12m'
+  ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
+  :ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
   // Filter orders by type
@@ -4363,7 +4365,8 @@ function grRender(){
   });
 
   // Cohort retention table
-  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
+  //const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
+  const cohortMonths=months;
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
