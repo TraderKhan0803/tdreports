@@ -4525,7 +4525,8 @@ function grUpdateCAC(){
   const ltvCac=data.ltvAll/avgCAC;
   // Payback: months until avg revenue per cust covers CAC
   const monthlyRevPerCust=data.avgRevPerCust||1;
-  const payback=(avgCAC/monthlyRevPerCust).toFixed(1);
+  const raw=avgCAC/monthlyRevPerCust;
+  const payback=raw<0.1?'<0.1':raw<1?raw.toFixed(2):raw.toFixed(1);
   document.getElementById('cac-val').textContent='PKR '+(avgCAC>=1000?Math.round(avgCAC/1000)+'K':Math.round(avgCAC).toLocaleString());
   document.getElementById('cac-ltvcac').textContent=ltvCac.toFixed(1)+'×';
   document.getElementById('cac-ltvcac').style.color=ltvCac>=5?'var(--grn)':ltvCac>=3?'var(--acc)':'var(--red)';
