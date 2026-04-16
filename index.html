@@ -287,6 +287,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   /* EC panels scroll */
   .ec-panel{overflow-y:auto;}
   .ec-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* Product 3-panel: stack on mobile */
+  #prod-panels-grid{grid-template-columns:1fr !important;}
   /* Date range pill on mobile */
   .dr-pill{font-size:10px;padding:3px 8px;}
   .dr-popover{position:fixed !important;bottom:56px;left:8px;right:8px;top:auto !important;min-width:unset;z-index:200;}
@@ -639,8 +641,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="tab active" onclick="switchTab('dashboard',this)" id="nav-dashboard">Dashboard</div>
       <div class="tab" onclick="switchTab('customer',this)" id="nav-customer">Customer</div>
       <div class="tab" onclick="switchTab('product',this)" id="nav-product">Product</div>
-      <div class="tab" onclick="switchTab('productsearch',this)" id="nav-productsearch" class="hide-mobile">Product Search</div>
-      <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
+            <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
       <div class="tab" onclick="switchTab('marketing',this)" id="nav-marketing">Marketing</div>
     </div>
     <!-- Raabta tabs -->
@@ -733,6 +734,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="frow">
       <span class="flbl">Customer</span>
       <input type="text" class="finp" id="f-cusr" placeholder="Search customer…" oninput="applyFilters()">
+      <input type="text" class="finp" id="f-prod" placeholder="Search product…" oninput="applyFilters()" style="margin-top:4px;">
     </div>
     <div class="drawer-actions">
       <button class="btn-clear" onclick="clearDrawerFilters()">Clear all</button>
@@ -845,26 +847,26 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     </div>
 
     <!-- ═══ PRODUCT ═══ -->
-    <div class="tab-panel" id="tab-product" style="overflow-y:auto;">
+    <div class="tab-panel" id="tab-product" style="overflow-y:auto;padding:10px 14px;">
+      <!-- Chart -->
       <div class="chart-box" style="margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-          <div class="stitle">Top Products by Quantity · <span class="hint">Click bar or row to highlight</span></div>
+          <div class="stitle">Top Products by Quantity · <span class="hint">Click bar or row to select</span></div>
           <div style="display:flex;align-items:center;gap:7px;">
             <span style="font-size:11px;color:var(--t3);">Show top</span>
             <select id="prod-chart-n" onchange="renderProduct()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:3px 8px;border-radius:4px;font-size:11px;">
-              <option value="5">5</option>
-              <option value="10" selected>10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
+              <option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option>
             </select>
           </div>
         </div>
         <canvas id="chart-prods" height="90"></canvas>
       </div>
-      <div class="two">
+      <!-- 3-panel grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="prod-panels-grid">
+        <!-- Panel 1: Product List -->
         <div>
-          <div class="sh mb12"><div class="stitle">Products by Volume</div><div class="hint">Click → highlight</div></div>
-          <div class="tw st" style="max-height:300px;"><table class="dt" id="tbl-prods">
+          <div class="sh mb12"><div class="stitle">Products</div><div class="hint" id="prod-list-count"></div></div>
+          <div class="tw st" style="max-height:340px;"><table class="dt" id="tbl-prods">
             <thead><tr>
               <th onclick="sortTable('prods','name')" style="cursor:pointer;">Product ↕</th>
               <th onclick="sortTable('prods','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
@@ -873,12 +875,19 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <tbody id="body-prods"></tbody>
           </table></div>
         </div>
+        <!-- Panel 2: Aggregate -->
         <div>
-          <div class="sh mb12"><div class="stitle" id="title-prod-orders">Order Details</div></div>
-          <div class="tw st" style="max-height:300px;"><table class="dt" id="tbl-prod-orders">
+          <div class="sh mb12"><div class="stitle" id="title-prod-agg">Aggregate</div></div>
+          <div id="prod-agg-body" style="font-size:12px;color:var(--t3);">Select a product</div>
+        </div>
+        <!-- Panel 3: Individual Orders -->
+        <div>
+          <div class="sh mb12"><div class="stitle" id="title-prod-orders">Orders</div><div class="hint" id="prod-orders-count"></div></div>
+          <div class="tw st" style="max-height:340px;"><table class="dt" id="tbl-prod-orders">
             <thead><tr>
+              <th>Order ID</th>
               <th onclick="sortTable('prod-orders','cust')" style="cursor:pointer;">Customer ↕</th>
-              <th>Date</th>
+              <th onclick="sortTable('prod-orders','date')" style="text-align:right;cursor:pointer;">Date ↕</th>
               <th onclick="sortTable('prod-orders','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
             </tr></thead>
             <tbody id="body-prod-orders"></tbody>
@@ -886,38 +895,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </div>
       </div>
     </div>
-
-    <!-- ═══ PRODUCT SEARCH ═══ -->
-    <div class="tab-panel" id="tab-productsearch" style="overflow-y:auto;">
-      <input type="text" class="psbar" id="prod-q" placeholder="Type a product name to search… (respects active date filter)">
-      <div class="two">
-        <div>
-          <div class="sh mb12"><div class="stitle">Matching Products</div><div class="hint">Click → see orders</div></div>
-          <div class="tw st" style="max-height:400px;"><table class="dt" id="tbl-ps-left">
-            <thead><tr>
-              <th onclick="sortTable('ps-left','name')" style="cursor:pointer;">Product ↕</th>
-              <th onclick="sortTable('ps-left','qty')" style="text-align:right;cursor:pointer;">Total Qty ↕</th>
-              <th onclick="sortTable('ps-left','rev')" style="text-align:right;cursor:pointer;">Revenue ↕</th>
-            </tr></thead>
-            <tbody id="body-ps-left"></tbody>
-          </table></div>
-        </div>
-        <div>
-          <div class="sh mb12"><div class="stitle" id="title-ps-right">Order Details</div></div>
-          <div class="tw st" style="max-height:400px;"><table class="dt" id="tbl-ps-right">
-            <thead><tr>
-              <th onclick="sortTable('ps-right','oid')" style="cursor:pointer;">Order ID ↕</th>
-              <th onclick="sortTable('ps-right','cust')" style="cursor:pointer;">Customer ↕</th>
-              <th onclick="sortTable('ps-right','date')" style="cursor:pointer;">Date ↕</th>
-              <th onclick="sortTable('ps-right','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
-              <th onclick="sortTable('ps-right','total')" style="text-align:right;cursor:pointer;">Total ↕</th>
-            </tr></thead>
-            <tbody id="body-ps-right"></tbody>
-          </table></div>
-        </div>
-      </div>
-    </div>
-
 
     <!-- ═══ REPORTS ═══ -->
     <div class="tab-panel" id="tab-reports" style="overflow-y:auto;padding:14px 18px;">
@@ -1350,6 +1327,13 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div style="flex:1;"></div>
           <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
         </div>
+      </div>
+
+      <!-- UPLOAD HISTORY -->
+      <div class="adm-card" style="margin-top:0;">
+        <div class="adm-title">📋 Upload History</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Each file upload is tracked. Delete a specific file's data without affecting other uploads.</div>
+        <div id="upload-history"><div style="color:var(--t3);font-size:12px;">Loading…</div></div>
       </div>
 
       <div class="adm-grid">
@@ -1836,7 +1820,6 @@ function switchTab(name,el,fromNav){
   if(el)el.classList.add('active');
   if(name==='customer')renderCustomer();
   if(name==='product')renderProduct();
-  if(name==='productsearch')initProdSearch();
   if(name==='reports')renderReport();
   if(name==='marketing')renderMarketing();
   updateBackBar();
@@ -2029,25 +2012,7 @@ function stepNav(dir){
 // FILTERS
 // ═══════════════════════════════════════════════
 function buildDynamicFilters(){
-  const periodOrders=filtered.length?filtered:S.orders;
-  _availCities=[...new Set(periodOrders.map(o=>o.City))].filter(Boolean).sort();
-  _availStatuses=[...new Set(periodOrders.map(o=>o.Status))].filter(Boolean).sort();
-
-  // Auto-populate on first load only (not after Clear All)
-  if(fSt.cities.size===0&&!fSt._cleared){
-    _availCities.forEach(c=>fSt.cities.add(c));
-  } else if(!fSt._cleared){
-    [...fSt.cities].forEach(c=>{if(!_availCities.includes(c))fSt.cities.delete(c);});
-    if(!fSt._citiesManuallySet)_availCities.forEach(c=>fSt.cities.add(c));
-  }
-  if(fSt.statuses.size===0&&!fSt._cleared){
-    _availStatuses.forEach(s=>{if(s.toLowerCase()!=='cancelled')fSt.statuses.add(s);});
-  } else if(!fSt._cleared){
-    [...fSt.statuses].forEach(s=>{if(!_availStatuses.includes(s))fSt.statuses.delete(s);});
-  }
-  // Reset cleared flag after use
-  fSt._cleared=false;
-
+  // Just re-renders the filter buttons from current state — state logic is in applyFilters
   const cityEl=document.getElementById('f-cities');
   if(cityEl)cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
   const statEl=document.getElementById('f-statuses');
@@ -2064,11 +2029,15 @@ function setCtype(v){fSt.ctype=v;['all','B2B','B2C'].forEach(k=>document.getElem
 function setNC(v){fSt.nc=v;document.getElementById('fn-all').classList.toggle('on',v==='all');document.getElementById('fn-new').classList.toggle('on',v==='new');applyFilters();updateFilterBadge();}
 
 function clearDrawerFilters(){
-  fSt={ctype:'all',nc:'all',cities:new Set(),statuses:new Set(),cusr:'',_citiesManuallySet:false,_cleared:true};
+  fSt={ctype:'all',nc:'all',cities:new Set(),statuses:new Set(),cusr:'',prod:'',
+       _citiesManuallySet:true,_cleared:true,_initialised:true};
   document.getElementById('f-cusr').value='';
-  document.getElementById('fc-all').classList.add('on');['fc-b2b','fc-b2c'].forEach(id=>document.getElementById(id).classList.remove('on'));
-  document.getElementById('fn-all').classList.add('on');document.getElementById('fn-new').classList.remove('on');
-  buildDynamicFilters();applyFilters();updateFilterBadge();
+  const fp=document.getElementById('f-prod');if(fp)fp.value='';
+  document.getElementById('fc-all').classList.add('on');
+  ['fc-b2b','fc-b2c'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('fn-all').classList.add('on');
+  document.getElementById('fn-new').classList.remove('on');
+  applyFilters();updateFilterBadge();
 }
 
 function updateFilterBadge(){
@@ -2092,53 +2061,58 @@ function toggleFilterDrawer(){
 
 function applyFilters(){
   fSt.cusr=(document.getElementById('f-cusr')?.value||'').toLowerCase().trim();
-  // First pass: apply time + type filters to get period data for city/status options
-  const periodFiltered=S.orders.filter(o=>{
+  fSt.prod=(document.getElementById('f-prod')?.value||'').toLowerCase().trim();
+
+  // ── Step 1: determine period orders (time filter only) ──
+  const periodOrders=S.orders.filter(o=>{
     if(drActive&&drFromDate&&drToDate){
       if(!o.Order_Date)return false;
-      if(o.Order_Date<drFromDate||o.Order_Date>drToDate)return false;
-    } else {
-      if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
-      if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
-      if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
+      return o.Order_Date>=drFromDate&&o.Order_Date<=drToDate;
     }
+    if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
+    if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
+    if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
     return true;
   });
-  // Rebuild city/status options based on period
-  const periodCities=[...new Set(periodFiltered.map(o=>o.City))].filter(Boolean).sort();
-  const periodStatuses=[...new Set(periodFiltered.map(o=>o.Status))].filter(Boolean).sort();
-  // Update available options
-  _availCities=periodCities;
-  _availStatuses=periodStatuses;
-  // Auto-add new cities/statuses that appeared in new period (if not manually set)
-  if(!fSt._citiesManuallySet){
-    fSt.cities=new Set(periodCities);
+
+  // ── Step 2: build available city/status options from period ──
+  _availCities=[...new Set(periodOrders.map(o=>o.City))].filter(Boolean).sort();
+  _availStatuses=[...new Set(periodOrders.map(o=>o.Status))].filter(Boolean).sort();
+
+  // ── Step 3: initialise selections on first load only ──
+  if(!fSt._initialised){
+    fSt._initialised=true;
+    fSt.cities=new Set(_availCities);
+    _availStatuses.forEach(s=>{if(s.toLowerCase()!=='cancelled')fSt.statuses.add(s);});
+  } else if(!fSt._cleared){
+    // When period changes, add new cities/statuses (auto-select) unless manually set
+    if(!fSt._citiesManuallySet){
+      _availCities.forEach(c=>fSt.cities.add(c));
+    }
+    // Remove cities/statuses no longer in current period
+    [...fSt.cities].forEach(c=>{if(!_availCities.includes(c))fSt.cities.delete(c);});
+    _availStatuses.forEach(s=>{if(!fSt.statuses.has(s)&&s.toLowerCase()!=='cancelled')fSt.statuses.add(s);});
+    [...fSt.statuses].forEach(s=>{if(!_availStatuses.includes(s))fSt.statuses.delete(s);});
   }
-  // Auto-add new statuses except Cancelled
-  const prevStatuses=new Set(fSt.statuses);
-  periodStatuses.forEach(s=>{
-    if(!prevStatuses.has(s)&&s.toLowerCase()!=='cancelled')fSt.statuses.add(s);
-  });
-  // Remove statuses no longer in period
-  [...fSt.statuses].forEach(s=>{if(!periodStatuses.includes(s))fSt.statuses.delete(s);});
-  // Rebuild filter UI
+  // Reset cleared flag — don't reset it until AFTER we've skipped auto-fill above
+  fSt._cleared=false;
+
+  // ── Step 4: rebuild filter UI ──
   const cityEl=document.getElementById('f-cities');
   if(cityEl)cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
   const statEl=document.getElementById('f-statuses');
   if(statEl)statEl.innerHTML=_availStatuses.map(s=>`<button class="ftag ${fSt.statuses.has(s)?'on':''}" onclick="toggleStatus('${esc(s)}')">${esc(s)}</button>`).join('');
-  // Second pass: full filter
+
+  // ── Step 5: apply all filters ──
   filtered=S.orders.filter(o=>{
-    // Date range filter (takes priority over nav drill)
     if(drActive&&drFromDate&&drToDate){
       if(!o.Order_Date)return false;
       if(o.Order_Date<drFromDate||o.Order_Date>drToDate)return false;
     } else {
-      // Time nav filter
       if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
       if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
       if(navLevel==='day'&&navDay&&(o.Year!==navYear||o.Month!==navMonth||!o.Order_Date||o.Order_Date.getDate()!==navDay))return false;
     }
-    // Drawer filters
     if(fSt.ctype!=='all'&&o.Customer_Type!==fSt.ctype)return false;
     if(fSt.nc==='new'&&o.IsFirstOrder!=='New Customer')return false;
     if(fSt.cities.size>0&&!fSt.cities.has(o.City))return false;
@@ -2146,6 +2120,7 @@ function applyFilters(){
     if(fSt.cusr&&!o.Customer.toLowerCase().includes(fSt.cusr))return false;
     return true;
   });
+
   renderDashboard();
   const at=document.querySelector('.tab-panel.active')?.id;
   if(at==='tab-customer')renderCustomer();
@@ -2195,13 +2170,14 @@ function renderDashboard(pinnedCust){
   custs.forEach(c=>{
     const tr=document.createElement('tr');
     tr.className='r'+(c.IsNew?' ncust':'')+(selCust===c.Customer?' sel':'');
-    tr.innerHTML=`<td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right" data-sort="${c.Orders}">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${c.Sales}">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>drillCust(c.Customer);
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-custs');tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">No data — upload files or adjust filters</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+  initSortableTable('body-custs',[{key:'cust',label:'Customer',type:'text'},{key:'orders',label:'Orders',type:'num',align:'right'},{key:'sales',label:'Sales',type:'num',align:'right'}]);
   if(selCust)renderOrdersDrill();
 }
 
@@ -2237,13 +2213,14 @@ function renderOrdersDrill(){
   orders.forEach(o=>{
     const tr=document.createElement('tr');
     tr.className='r'+(selOrder===o.Order_ID?' sel':'');
-    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(o.Total_Sales)}</td>`;
+    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
     tr.onclick=()=>drillOrder(o.Order_ID,o.Total_Sales);
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-orders');tb.innerHTML='';
   if(!orders.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+  initSortableTable('body-orders',[{key:'oid',label:'Order ID',type:'text'},{key:'date',label:'Date',type:'date',align:'right'},{key:'status',label:'Status',type:'text'},{key:'sales',label:'Sales',type:'num',align:'right'}]);
 }
 
 function drillOrder(oid,orderTotal){
@@ -2257,7 +2234,7 @@ function drillOrder(oid,orderTotal){
   items.forEach(p=>{
     itemsTotal+=p.Total_Price;
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td title="${esc(p.Product_Name)}">${esc(p.Product_Name.slice(0,32)+(p.Product_Name.length>32?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${p.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.Unit_Price)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.Total_Price)}</td>`;
+    tr.innerHTML=`<td title="${esc(p.Product_Name)}">${esc(p.Product_Name.slice(0,32)+(p.Product_Name.length>32?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Qty}">${p.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Unit_Price}">${fmtFull(p.Unit_Price)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Total_Price}">${fmtFull(p.Total_Price)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-items');tb.innerHTML='';
@@ -2268,6 +2245,7 @@ function drillOrder(oid,orderTotal){
   let footHtml=`<tr><td colspan="2">Order Total</td><td></td><td style="text-align:right;color:var(--acc)">${fmtFull(orderTotal||0)}</td></tr>`;
   if(diff>1&&items.length>0)footHtml+=`<tr><td colspan="3" style="color:var(--t3);font-size:10px;">Items subtotal: ${fmtFull(itemsTotal)} · Diff: ${fmtFull(diff)}</td><td></td></tr>`;
   document.getElementById('foot-items').innerHTML=items.length?footHtml:'';
+  initSortableTable('body-items',[{key:'product',label:'Product',type:'text'},{key:'qty',label:'Qty',type:'num',align:'right'},{key:'unit',label:'Unit',type:'num',align:'right'},{key:'total',label:'Total',type:'num',align:'right'}]);
 }
 
 function showCustInfo(cust){
@@ -2342,6 +2320,13 @@ function renderCustomer(pinnedCust){
   else tb.appendChild(frag);
   document.getElementById('ranked-tot-orders').textContent=fmtFull(totO);
   document.getElementById('ranked-tot-sales').textContent=fmtFull(totS);
+  initSortableTable('body-ranked',[
+    {key:'rank',label:'#',type:'num'},
+    {key:'cust',label:'Customer',type:'text'},
+    {key:'type',label:'Type',type:'text'},
+    {key:'orders',label:'Orders',type:'num',align:'right'},
+    {key:'sales',label:'Sales',type:'num',align:'right'}
+  ]);
 }
 
 function showCustTabInfo(c){
@@ -2366,53 +2351,6 @@ let prodChartData=[];
 
 // ═══════════════════════════════════════════════
 // PRODUCT SEARCH
-// ═══════════════════════════════════════════════
-let psTimer=null,psIndex=null;
-function initProdSearch(){
-  // Uses filtered (date-aware) orders
-  const filtIds=new Set(filtered.map(o=>o.Order_ID));
-  const orderMap={};filtered.forEach(o=>orderMap[o.Order_ID]=o);
-  const pm={};
-  S.prods.filter(p=>filtIds.has(p.Order_ID)).forEach(p=>{
-    if(!pm[p.Product_Name])pm[p.Product_Name]={name:p.Product_Name,qty:0,rev:0,lines:[]};
-    pm[p.Product_Name].qty+=p.Qty;pm[p.Product_Name].rev+=p.Total_Price;
-    pm[p.Product_Name].lines.push({...p,cust:orderMap[p.Order_ID]?.Customer||'—',date:orderMap[p.Order_ID]?.Order_Date_Str||'—'});
-  });
-  psIndex=Object.values(pm).sort((a,b)=>b.qty-a.qty);
-  const inp=document.getElementById('prod-q');
-  inp.oninput=()=>{clearTimeout(psTimer);psTimer=setTimeout(doProductSearch,200);};
-  doProductSearch();
-}
-function doProductSearch(){
-  const q=(document.getElementById('prod-q')?.value||'').toLowerCase().trim();
-  const results=psIndex?psIndex.filter(p=>!q||p.name.toLowerCase().includes(q)):[];
-  const frag=document.createDocumentFragment();
-  results.slice(0,100).forEach(p=>{
-    const tr=document.createElement('tr');tr.className='r';
-    tr.dataset.name=p.name;tr.dataset.qty=p.qty;tr.dataset.rev=p.rev;
-    tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;
-    tr.onclick=()=>showPSDetail(p);frag.appendChild(tr);
-  });
-  const tb=document.getElementById('body-ps-left');tb.innerHTML='';
-  if(!results.length){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">${q?'No products found':'Type to search'}</td>`;tb.appendChild(tr);}
-  else tb.appendChild(frag);
-}
-function showPSDetail(p){
-  document.getElementById('title-ps-right').textContent=p.name.slice(0,28)+(p.name.length>28?'…':'');
-  const frag=document.createDocumentFragment();
-  p.lines.sort((a,b)=>b.Qty-a.Qty).forEach(l=>{
-    const tr=document.createElement('tr');
-    tr.dataset.oid=l.Order_ID;tr.dataset.cust=l.cust;tr.dataset.date=l.date;tr.dataset.qty=l.Qty;tr.dataset.total=l.Total_Price;
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;" onclick="gotoOrderFromPS('${esc(l.cust)}')" title="Go to dashboard for this customer">${esc(l.Order_ID)}</span></td><td>${esc(l.cust)}</td><td style="font-size:10px;font-family:'DM Mono',monospace">${esc(l.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${l.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(l.Total_Price)}</td>`;
-    frag.appendChild(tr);
-  });
-  const tb=document.getElementById('body-ps-right');tb.innerHTML='';
-  if(!p.lines.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
-  else tb.appendChild(frag);
-}
-function gotoOrderFromPS(custName){
-  goToDashboardCustomer(custName,'Product Search');
-}
 
 // ═══════════════════════════════════════════════
 // DRAGGABLE / RESIZABLE PANELS
@@ -2532,6 +2470,7 @@ function updateMeta(){
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
   renderAdminLists();buildCityAssign();updateUploadMeta();renderLinkList();
+  renderUploadHistory();
   switchAdminTab('analytics');
   document.getElementById('admin-overlay').style.display='block';
 }
@@ -2983,12 +2922,13 @@ async function runAdminUpload(){
     for(let i=0;i<admOrdersFiles.length;i++){
       const f=admOrdersFiles[i];ulog(`📂 [${i+1}/${admOrdersFiles.length}] ${f.name}`);
       try{
+        const batchId='batch_'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,4);
         const wb=await readXLSX(f);
         const rows=processOrdersWB(wb,ulog);
         if(rows.length){
-          const dbRows=rows.map(r=>({order_id:r.Order_ID,customer:r.Customer,address:r.Address,phone:r.Phone,placed_on:r.Placed_On,payment:r.Payment,source:r.Source,status:r.Status,total_sales:r.Total_Sales,other_details:r.Other_Details,scheduled:r.Scheduled,city:r.City,customer_type:r.Customer_Type,is_first_order:r.IsFirstOrder,year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str,order_date_iso:r.Order_Date_ISO}));
+          const dbRows=rows.map(r=>({order_id:r.Order_ID,customer:r.Customer,address:r.Address,phone:r.Phone,placed_on:r.Placed_On,payment:r.Payment,source:r.Source,status:r.Status,total_sales:r.Total_Sales,other_details:r.Other_Details,scheduled:r.Scheduled,city:r.City,customer_type:r.Customer_Type,is_first_order:r.IsFirstOrder,year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str,order_date_iso:r.Order_Date_ISO,batch_id:batchId}));
           const res=await sendInChunks('orders',dbRows,ulog);total+=res.added;
-          await saveUploadMeta('orders',f.name);
+          await saveBatchMeta(batchId,'orders',f.name,res.added);
         }
       }catch(e){ulog(`<span style="color:var(--red)">❌ ${e.message}</span>`);}
     }
@@ -3001,12 +2941,13 @@ async function runAdminUpload(){
     for(let i=0;i<admProductsFiles.length;i++){
       const f=admProductsFiles[i];ulog(`📂 [${i+1}/${admProductsFiles.length}] ${f.name}`);
       try{
+        const batchId='batch_'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,4);
         const wb=await readXLSX(f);
         const rows=processProductsWB(wb,ulog);
         if(rows.length){
-          const dbRows=rows.map(r=>({sr_no:r.SR_NO,product_id:r.Product_ID,mart_id:r.Mart_ID,product_name:r.Product_Name,order_id:r.Order_ID,qty:r.Qty,unit_price:r.Unit_Price,total_price:r.Total_Price}));
+          const dbRows=rows.map(r=>({sr_no:r.SR_NO,product_id:r.Product_ID,mart_id:r.Mart_ID,product_name:r.Product_Name,order_id:r.Order_ID,qty:r.Qty,unit_price:r.Unit_Price,total_price:r.Total_Price,batch_id:batchId}));
           const res=await sendInChunks('products',dbRows,ulog);total+=res.added;
-          await saveUploadMeta('products',f.name);
+          await saveBatchMeta(batchId,'products',f.name,res.added);
         }
       }catch(e){ulog(`<span style="color:var(--red)">❌ ${e.message}</span>`);}
     }
@@ -3019,7 +2960,59 @@ async function runAdminUpload(){
   document.getElementById('adm-lbl-orders').classList.remove('loaded');
   document.getElementById('adm-lbl-products').classList.remove('loaded');
   document.getElementById('adm-upload-btn').disabled=true;
-  await loadAllData();updateUploadMeta();
+  await loadAllData();updateUploadMeta();renderUploadHistory();
+}
+
+async function saveBatchMeta(batchId,type,filename,rowCount){
+  const now=new Date().toISOString();
+  await dbInsert('admin_config',[{
+    type:'batch',
+    value1:batchId,
+    value2:JSON.stringify({type,filename,rowCount,uploadedBy:curUser?.u||'',uploadedAt:now}),
+    updated_by:curUser?.u||'',
+    updated_at:now
+  }]).catch(()=>{});
+}
+
+async function deleteBatch(batchId,type){
+  if(!confirm(`Delete all ${type} data from this file? This cannot be undone.`))return;
+  showLoader('Deleting batch…');
+  try{
+    if(type==='orders'){
+      await sb('DELETE','orders?batch_id=eq.'+encodeURIComponent(batchId));
+    } else {
+      await sb('DELETE','products?batch_id=eq.'+encodeURIComponent(batchId));
+    }
+    // Remove batch meta
+    await sb('DELETE','admin_config?type=eq.batch&value1=eq.'+encodeURIComponent(batchId));
+    hideLoader();notif('✓ Batch deleted');
+    await loadAllData();renderUploadHistory();
+  }catch(e){hideLoader();notif('❌ Delete failed: '+e.message);}
+}
+
+async function renderUploadHistory(){
+  const el=document.getElementById('upload-history');if(!el)return;
+  try{
+    const cfg=await dbGet('admin_config','type=eq.batch&order=updated_at.desc&limit=50');
+    if(!cfg.length){el.innerHTML='<div style="color:var(--t3);font-size:12px;">No upload history yet.</div>';return;}
+    el.innerHTML=`<table class="dt" style="width:100%;margin-top:8px;">
+      <thead><tr>
+        <th>File</th><th>Type</th><th style="text-align:right">Rows</th><th>Uploaded</th><th>By</th><th></th>
+      </tr></thead>
+      <tbody>${cfg.map(r=>{
+        let meta={};try{meta=JSON.parse(r.value2||'{}');}catch(e){}
+        const dateStr=meta.uploadedAt?new Date(meta.uploadedAt).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'}):'—';
+        return`<tr>
+          <td title="${esc(meta.filename||'')}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">${esc((meta.filename||'unknown').slice(0,30))}</td>
+          <td><span class="bdg ${meta.type==='orders'?'b-b2b':'b-b2c'}">${meta.type||'—'}</span></td>
+          <td style="text-align:right;font-family:'DM Mono',monospace;">${(meta.rowCount||0).toLocaleString()}</td>
+          <td style="font-size:11px;color:var(--t3);">${dateStr}</td>
+          <td style="font-size:11px;">${esc(meta.uploadedBy||'—')}</td>
+          <td><button onclick="deleteBatch('${esc(r.value1)}','${esc(meta.type||'orders')}')" style="padding:2px 8px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:10px;cursor:pointer;">Delete</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }catch(e){el.innerHTML=`<div style="color:var(--t3);font-size:12px;">Could not load history.</div>`;}
 }
 
 async function saveUploadMeta(type,filename){
@@ -3640,6 +3633,7 @@ function renderCustomerSummary(){
   const tb=document.getElementById('rpt-cust-tbody');tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+  initSortableTable('rpt-cust-tbody',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'city',type:'text'},{key:'first',type:'date',align:'right'},{key:'last',type:'date',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'},{key:'phone',type:'text'}]);
   document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
 }
 
@@ -3682,6 +3676,7 @@ function renderAtRisk(){
   const tb=document.getElementById('rpt-risk-tbody');tb.innerHTML='';
   if(!atRisk.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="7" style="text-align:center;padding:30px;color:var(--grn)">✓ No customers inactive 30+ days</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+  initSortableTable('rpt-risk-tbody',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'last',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'},{key:'avg',type:'num',align:'right'}]);
 }
 
 // ═══════════════════════════════════════════════
@@ -3838,6 +3833,7 @@ function renderMktWelcome(){
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No new customers in this period</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   document.getElementById('mkt-welcome-count').textContent=custs.length+' new customers in last '+days+' days';
+  initSortableTable('mkt-welcome-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'sales',type:'num',align:'right'},{key:'phone',type:'text'}]);
 }
 
 function renderMktQuiet(){
@@ -3854,6 +3850,7 @@ function renderMktQuiet(){
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No one-time customers gone quiet</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   document.getElementById('mkt-quiet-count').textContent=custs.length+' one-time customers silent '+days+'+ days';
+  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
 }
 
 function renderMktReactivation(){
@@ -4172,9 +4169,16 @@ function ecRenderUnified(){
   if(ecExpExpanded)ecToggleSection('expenses');
 }
 let grCtype='all';
+let grPeriod='t12m';
+let grFromDate=null,grToDate=null;
 function grSetCtype(v){
   grCtype=v;
   ['all','b2b','b2c'].forEach(k=>{const btn=document.getElementById('gr-ct-'+k);if(btn)btn.className='ec-cur-btn'+(k===(v==='all'?'all':v.toLowerCase())?' active':'');});
+  grRender();
+}
+function grSetPeriod(v){
+  grPeriod=v;
+  ['t12m','all'].forEach(k=>{const btn=document.getElementById('gr-p-'+k);if(btn)btn.className='ec-cur-btn'+(k===v?' active':'');});
   grRender();
 }
 
@@ -4226,7 +4230,13 @@ function grRender(){
   const spend=grLoadSpend();
 
   // Filter orders by type
-  const grOrders=grCtype==='all'?S.orders:S.orders.filter(o=>grCtype==='B2B'?o.Customer_Type==='B2B':o.Customer_Type!=='B2B');
+  // Apply period filter
+  const now=new Date();
+  const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
+  const periodSrc=grPeriod==='t12m'
+    ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
+    :S.orders;
+  const grOrders=grCtype==='all'?periodSrc:periodSrc.filter(o=>grCtype==='B2B'?o.Customer_Type==='B2B':o.Customer_Type!=='B2B');
 
   // Build per-customer data
   const custMap={};
@@ -4418,13 +4428,18 @@ function grRender(){
   el.innerHTML=`
     <div class="gr-download-bar">
       <div class="ec-cur-toggle">
+        <button class="ec-cur-btn${grPeriod==='t12m'?' active':''}" id="gr-p-t12m" onclick="grSetPeriod('t12m')">T12M</button>
+        <button class="ec-cur-btn${grPeriod==='all'?' active':''}" id="gr-p-all" onclick="grSetPeriod('all')">All time</button>
+      </div>
+      <div style="width:1px;background:var(--bdr);flex-shrink:0;"></div>
+      <div class="ec-cur-toggle">
         <button class="ec-cur-btn${grCtype==='all'?' active':''}" id="gr-ct-all" onclick="grSetCtype('all')">All</button>
         <button class="ec-cur-btn${grCtype==='B2C'?' active':''}" id="gr-ct-b2c" onclick="grSetCtype('B2C')">B2C</button>
         <button class="ec-cur-btn${grCtype==='B2B'?' active':''}" id="gr-ct-b2b" onclick="grSetCtype('B2B')">B2B</button>
       </div>
       <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
       <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
-      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${yr} · ${allCusts.length} customers · ${grOrders.length} orders</span>
+      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${grPeriod==='t12m'?'Last 12 months':'All time'} · ${allCusts.length} customers · ${grOrders.length} orders</span>
     </div>
 
     <div id="gr-capture">
@@ -4598,7 +4613,6 @@ function bnUpdateSubTabs(mode){
       {id:'dashboard',label:'Dashboard',fn:()=>switchTab('dashboard',null)},
       {id:'customer',label:'Customer',fn:()=>switchTab('customer',null)},
       {id:'product',label:'Product',fn:()=>switchTab('product',null)},
-      {id:'productsearch',label:'Search',fn:()=>switchTab('productsearch',null)},
       {id:'reports',label:'Reports',fn:()=>switchTab('reports',null)},
       {id:'marketing',label:'Marketing',fn:()=>switchTab('marketing',null)},
     ],
@@ -4610,8 +4624,7 @@ function bnUpdateSubTabs(mode){
     ],
     exec:[
       {id:'ec-report',label:'Report',fn:()=>ecSwitchTab('report')},
-      {id:'ec-growth',label:'Growth',fn:()=>ecSwitchTab('growth')},
-    ],
+      {id:'ec-growth',label:'Growth',fn:()=>ecSwitchTab('growth')},    ],
   };
   const tabs=tabDefs[mode]||[];
   sub.innerHTML=tabs.map(t=>`<div class="tab" id="bn-sub-${t.id}" onclick="bnSubClick('${mode}','${t.id}')">${t.label}</div>`).join('');
@@ -5466,12 +5479,17 @@ function sortTableById(tbodyId, colKey, colType, colIdx, thEl, cols){
 function _applySortToBody(tbody,col,dir,idx,type){
   const rows=[...tbody.querySelectorAll('tr')];
   rows.sort((a,b)=>{
-    const av=a.cells[idx]?.dataset[col]||a.cells[idx]?.textContent||'';
-    const bv=b.cells[idx]?.dataset[col]||b.cells[idx]?.textContent||'';
+    // Prefer dataset value, fall back to textContent
+    const av=a.cells[idx]?.dataset?.sort??a.cells[idx]?.textContent?.trim()??'';
+    const bv=b.cells[idx]?.dataset?.sort??b.cells[idx]?.textContent?.trim()??'';
     let cmp=0;
-    if(type==='num'){cmp=parseFloat(av.replace(/[^0-9.-]/g,''))||0 - (parseFloat(bv.replace(/[^0-9.-]/g,''))||0);}
-    else if(type==='date'){cmp=new Date(av)-new Date(bv);}
-    else{cmp=av.localeCompare(bv);}
+    if(type==='num'){
+      // Parse raw numeric value stripping commas/currency symbols
+      const an=parseFloat(String(av).replace(/[^0-9.-]/g,''))||0;
+      const bn=parseFloat(String(bv).replace(/[^0-9.-]/g,''))||0;
+      cmp=an-bn;
+    } else if(type==='date'){cmp=new Date(av)-new Date(bv);}
+    else{cmp=String(av).localeCompare(String(bv));}
     return dir==='asc'?cmp:-cmp;
   });
   rows.forEach(r=>tbody.appendChild(r));
@@ -5491,19 +5509,27 @@ let _prodChartDataFull=[];
 
 function renderProduct(){
   const n=parseInt(document.getElementById('prod-chart-n')?.value||'10');
+  const prodQ=(fSt.prod||'').toLowerCase().trim();
   const filtIds=new Set(filtered.map(o=>o.Order_ID));
   const fp=S.prods.filter(p=>filtIds.has(p.Order_ID));
   const pm={};
   fp.forEach(p=>{if(!pm[p.Product_Name])pm[p.Product_Name]={name:p.Product_Name,qty:0,rev:0,lines:[]};pm[p.Product_Name].qty+=p.Qty;pm[p.Product_Name].rev+=p.Total_Price;pm[p.Product_Name].lines.push(p);});
-  _prodChartDataFull=Object.values(pm);
+  _prodChartDataFull=Object.values(pm).filter(p=>!prodQ||p.name.toLowerCase().includes(prodQ));
   prodChartData=_prodChartDataFull;
-  // Apply current sort
+  const listCount=document.getElementById('prod-list-count');
+  if(listCount)listCount.textContent=_prodChartDataFull.length+' products';
   _sortProds();
   const topN=prodChartData.slice(0,n);
   if(charts.prods)charts.prods.destroy();
   charts.prods=new Chart(document.getElementById('chart-prods'),{type:'bar',data:{labels:topN.map(p=>p.name.length>14?p.name.slice(0,14)+'…':p.name),datasets:[{data:topN.map(p=>p.qty),backgroundColor:topN.map((_,i)=>prodChartData.indexOf(topN[i])===selProdIdx?'rgba(249,115,22,.9)':'rgba(59,130,246,.7)'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:true,onClick:(evt,els)=>{if(els.length)selectProduct(topN[els[0].index].name);},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
   _renderProdTable();
   if(selProd&&pm[selProd])renderProdOrders(pm[selProd]);
+  else{
+    const aggEl=document.getElementById('prod-agg-body');
+    if(aggEl)aggEl.innerHTML='<div style="color:var(--t3);font-size:12px;padding:12px 0;">Select a product to see summary</div>';
+    const tb=document.getElementById('body-prod-orders');
+    if(tb)tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">Select a product</td></tr>';
+  }
 }
 
 function _sortProds(){
@@ -5557,28 +5583,63 @@ function selectProduct(name){
 }
 
 function renderProdOrders(p){
-  document.getElementById('title-prod-orders').textContent=p.name.slice(0,24)+(p.name.length>24?'…':'');
+  const shortName=p.name.slice(0,24)+(p.name.length>24?'…':'');
+  document.getElementById('title-prod-orders').textContent=shortName+' — Orders';
+  document.getElementById('title-prod-agg').textContent=shortName+' — Summary';
+
   const orderMap={};filtered.forEach(o=>orderMap[o.Order_ID]=o);
   const lines=p.lines.map(l=>({
     oid:l.Order_ID,
     cust:resolveCustomerName(orderMap[l.Order_ID]?.Customer||'—'),
+    custType:orderMap[l.Order_ID]?.Customer_Type||'—',
     date:orderMap[l.Order_ID]?.Order_Date_Str||'—',
     dateVal:orderMap[l.Order_ID]?.Order_Date||null,
-    qty:l.Qty,rev:l.Total_Price
-  })).sort((a,b)=>b.qty-a.qty);
+    qty:l.Qty,rev:l.Total_Price,
+    unit:l.Unit_Price
+  })).sort((a,b)=>(b.dateVal||0)-(a.dateVal||0));
+
+  // ── Panel 2: Aggregate ──
+  const totalQty=lines.reduce((s,l)=>s+l.qty,0);
+  const totalRev=lines.reduce((s,l)=>s+l.rev,0);
+  const uniqueBuyers=new Set(lines.map(l=>l.cust)).size;
+  const avgOrderSize=lines.length?totalRev/lines.length:0;
+  const avgUnitPrice=lines.length?lines.reduce((s,l)=>s+l.unit,0)/lines.length:0;
+  // Top buyers
+  const buyerMap={};lines.forEach(l=>{if(!buyerMap[l.cust])buyerMap[l.cust]={qty:0,rev:0,orders:0};buyerMap[l.cust].qty+=l.qty;buyerMap[l.cust].rev+=l.rev;buyerMap[l.cust].orders++;});
+  const topBuyers=Object.entries(buyerMap).sort((a,b)=>b[1].rev-a[1].rev).slice(0,5);
+  // Monthly frequency
+  const monthCount={};lines.forEach(l=>{if(l.dateVal){const mk=l.dateVal.getFullYear()+'-'+(l.dateVal.getMonth()+1);monthCount[mk]=(monthCount[mk]||0)+1;}});
+  const activeMonths=Object.keys(monthCount).length;
+  const avgPerMonth=activeMonths?Math.round(totalQty/activeMonths):0;
+
+  const aggEl=document.getElementById('prod-agg-body');
+  if(aggEl)aggEl.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+      <div class="gr-kpi"><div class="gr-kpi-label">Total Qty Sold</div><div class="gr-kpi-value" style="font-size:18px;">${totalQty.toLocaleString()}</div></div>
+      <div class="gr-kpi"><div class="gr-kpi-label">Total Revenue</div><div class="gr-kpi-value" style="font-size:16px;color:var(--grn);">${fmtFull(totalRev)}</div></div>
+      <div class="gr-kpi"><div class="gr-kpi-label">Unique Buyers</div><div class="gr-kpi-value" style="font-size:18px;color:var(--blu);">${uniqueBuyers}</div></div>
+      <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Value</div><div class="gr-kpi-value" style="font-size:16px;">${fmtFull(avgOrderSize)}</div></div>
+      <div class="gr-kpi"><div class="gr-kpi-label">Avg Unit Price</div><div class="gr-kpi-value" style="font-size:16px;">${fmtFull(avgUnitPrice)}</div></div>
+      <div class="gr-kpi"><div class="gr-kpi-label">Avg Qty/Month</div><div class="gr-kpi-value" style="font-size:18px;color:var(--pur);">${avgPerMonth}</div></div>
+    </div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:5px;">Top Buyers</div>
+    ${topBuyers.map(([name,d])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
+      <span>${esc(name)}</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--grn);">${fmtFull(d.rev)}</span>
+    </div>`).join('')}`;
+
+  // ── Panel 3: Individual Orders ──
+  const countEl=document.getElementById('prod-orders-count');
+  if(countEl)countEl.textContent=lines.length+' orders';
   const frag=document.createDocumentFragment();
   lines.forEach(d=>{
     const tr=document.createElement('tr');
-    tr.dataset.oid=d.oid;tr.dataset.cust=d.cust;tr.dataset.qty=d.qty;tr.dataset.rev=d.rev;
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')" title="Go to dashboard">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.qty}</td>`;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.qty}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-prod-orders');tb.innerHTML='';
   if(!lines.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  // Update header for 4 cols
-  const thead=document.querySelector('#tbl-prod-orders thead tr');
-  if(thead)thead.innerHTML='<th style="cursor:pointer" class="sortable">Order ID</th><th style="cursor:pointer" class="sortable">Customer</th><th style="text-align:right;cursor:pointer" class="sortable">Date</th><th style="text-align:right;cursor:pointer" class="sortable">Qty</th>';
 }
 
 // ── OUTREACH TAB — full rebuild with filters, counts, alerts, sorting ──────────
@@ -5795,3 +5856,4 @@ const RB_TEMPLATES=[
 </script>
 </body>
 </html>
+
