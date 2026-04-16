@@ -287,6 +287,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   /* EC panels scroll */
   .ec-panel{overflow-y:auto;}
   .ec-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* Date range pill on mobile */
+  .dr-pill{font-size:10px;padding:3px 8px;}
+  .dr-popover{position:fixed !important;bottom:56px;left:8px;right:8px;top:auto !important;min-width:unset;z-index:200;}
   /* Hide day hint text on mobile — arrows are self-explanatory */
   .timebar-day-hint{display:none;}
   /* Marketing — single column, scrollable tables */
@@ -690,11 +693,11 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </div>
         <div class="dr-row">
           <span class="dr-label">From</span>
-          <input type="month" id="dr-from" class="dr-inp">
+          <input type="date" id="dr-from" class="dr-inp">
         </div>
         <div class="dr-row">
           <span class="dr-label">To</span>
-          <input type="month" id="dr-to" class="dr-inp">
+          <input type="date" id="dr-to" class="dr-inp">
         </div>
         <button class="dr-apply" onclick="drApply()">Apply range</button>
         <button class="dr-clear" onclick="drClear()">Clear range</button>
@@ -1908,12 +1911,11 @@ function getDayData(year,month){
 }
 
 // ── DATE RANGE ────────────────────────────────────────────────────────────────
-let drActive=false,drFrom=null,drTo=null; // {year,month} objects
+let drActive=false,drFromDate=null,drToDate=null; // Date objects
 
 function toggleDrPopover(){
   const pop=document.getElementById('dr-popover');
   const isOpen=pop.classList.contains('open');
-  // Close filter drawer if open
   document.getElementById('filter-drawer')?.classList.remove('open');
   pop.classList.toggle('open',!isOpen);
 }
@@ -1921,34 +1923,36 @@ function toggleDrPopover(){
 function drPreset(days){
   const to=new Date();
   const from=new Date(to.getTime()-days*86400000);
-  document.getElementById('dr-from').value=from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0');
-  document.getElementById('dr-to').value=to.getFullYear()+'-'+String(to.getMonth()+1).padStart(2,'0');
+  document.getElementById('dr-from').value=from.toISOString().split('T')[0];
+  document.getElementById('dr-to').value=to.toISOString().split('T')[0];
 }
 
 function drPresetYTD(){
   const now=new Date();
-  document.getElementById('dr-from').value=now.getFullYear()+'-01';
-  document.getElementById('dr-to').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const from=new Date(now.getFullYear(),0,1);
+  document.getElementById('dr-from').value=from.toISOString().split('T')[0];
+  document.getElementById('dr-to').value=now.toISOString().split('T')[0];
 }
 
 function drApply(){
   const fromVal=document.getElementById('dr-from').value;
   const toVal=document.getElementById('dr-to').value;
-  if(!fromVal||!toVal){notif('⚠ Please select both From and To months');return;}
-  const[fy,fm]=fromVal.split('-').map(Number);
-  const[ty,tm]=toVal.split('-').map(Number);
-  if(fy*100+fm>ty*100+tm){notif('⚠ From must be before To');return;}
-  drActive=true;drFrom={year:fy,month:fm};drTo={year:ty,month:tm};
+  if(!fromVal||!toVal){notif('⚠ Please select both From and To dates');return;}
+  const from=new Date(fromVal);
+  const to=new Date(toVal);
+  to.setHours(23,59,59,999);
+  if(from>to){notif('⚠ From must be before To');return;}
+  drActive=true;drFromDate=from;drToDate=to;
+  const fmt=d=>d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
   document.getElementById('dr-pill-btn').classList.add('active');
-  document.getElementById('dr-pill-label').textContent=MONTHS[fm-1]+' '+fy+' → '+MONTHS[tm-1]+' '+ty;
+  document.getElementById('dr-pill-label').textContent=fmt(from)+' → '+fmt(to);
   document.getElementById('dr-popover').classList.remove('open');
-  // Reset drill navigation
   navLevel='all';navYear=null;navMonth=null;navDay=null;
   buildTimeNav();applyFilters();
 }
 
 function drClear(){
-  drActive=false;drFrom=null;drTo=null;
+  drActive=false;drFromDate=null;drToDate=null;
   document.getElementById('dr-pill-btn').classList.remove('active');
   document.getElementById('dr-pill-label').textContent='Range';
   document.getElementById('dr-from').value='';
@@ -1957,11 +1961,10 @@ function drClear(){
   buildTimeNav();applyFilters();
 }
 
-// Close popover when clicking outside
 document.addEventListener('click',function(e){
   const pop=document.getElementById('dr-popover');
   const pill=document.getElementById('dr-pill-btn');
-  if(pop&&!pop.contains(e.target)&&e.target!==pill&&!pill?.contains(e.target)){
+  if(pop&&pop.classList.contains('open')&&!pop.contains(e.target)&&e.target!==pill&&!pill?.contains(e.target)){
     pop.classList.remove('open');
   }
 });
@@ -2026,32 +2029,27 @@ function stepNav(dir){
 // FILTERS
 // ═══════════════════════════════════════════════
 function buildDynamicFilters(){
-  // Use filtered period data for city/status options (not all S.orders)
   const periodOrders=filtered.length?filtered:S.orders;
   _availCities=[...new Set(periodOrders.map(o=>o.City))].filter(Boolean).sort();
   _availStatuses=[...new Set(periodOrders.map(o=>o.Status))].filter(Boolean).sort();
 
-  // On first load, select all cities; exclude Cancelled from statuses by default
-  if(fSt.cities.size===0){
+  // Auto-populate on first load only (not after Clear All)
+  if(fSt.cities.size===0&&!fSt._cleared){
     _availCities.forEach(c=>fSt.cities.add(c));
-  } else {
-    // Remove cities no longer in current period
+  } else if(!fSt._cleared){
     [...fSt.cities].forEach(c=>{if(!_availCities.includes(c))fSt.cities.delete(c);});
-    // Add new cities from period (auto-select them)
-    _availCities.forEach(c=>{if(!fSt._citiesManuallySet)fSt.cities.add(c);});
+    if(!fSt._citiesManuallySet)_availCities.forEach(c=>fSt.cities.add(c));
   }
-  if(fSt.statuses.size===0){
-    _availStatuses.forEach(s=>{
-      if(s.toLowerCase()!=='cancelled')fSt.statuses.add(s);
-    });
-  } else {
-    // Remove statuses no longer in current period
+  if(fSt.statuses.size===0&&!fSt._cleared){
+    _availStatuses.forEach(s=>{if(s.toLowerCase()!=='cancelled')fSt.statuses.add(s);});
+  } else if(!fSt._cleared){
     [...fSt.statuses].forEach(s=>{if(!_availStatuses.includes(s))fSt.statuses.delete(s);});
   }
+  // Reset cleared flag after use
+  fSt._cleared=false;
 
   const cityEl=document.getElementById('f-cities');
   if(cityEl)cityEl.innerHTML=_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${esc(c)}')">${esc(c)}</button>`).join('');
-
   const statEl=document.getElementById('f-statuses');
   if(statEl)statEl.innerHTML=_availStatuses.map(s=>`<button class="ftag ${fSt.statuses.has(s)?'on':''}" onclick="toggleStatus('${esc(s)}')">${esc(s)}</button>`).join('');
 }
@@ -2066,8 +2064,7 @@ function setCtype(v){fSt.ctype=v;['all','B2B','B2C'].forEach(k=>document.getElem
 function setNC(v){fSt.nc=v;document.getElementById('fn-all').classList.toggle('on',v==='all');document.getElementById('fn-new').classList.toggle('on',v==='new');applyFilters();updateFilterBadge();}
 
 function clearDrawerFilters(){
-  // Clear All means remove all active filters — reset to defaults
-  fSt={ctype:'all',nc:'all',cities:new Set(),statuses:new Set(),cusr:'',_citiesManuallySet:false};
+  fSt={ctype:'all',nc:'all',cities:new Set(),statuses:new Set(),cusr:'',_citiesManuallySet:false,_cleared:true};
   document.getElementById('f-cusr').value='';
   document.getElementById('fc-all').classList.add('on');['fc-b2b','fc-b2c'].forEach(id=>document.getElementById(id).classList.remove('on'));
   document.getElementById('fn-all').classList.add('on');document.getElementById('fn-new').classList.remove('on');
@@ -2097,11 +2094,9 @@ function applyFilters(){
   fSt.cusr=(document.getElementById('f-cusr')?.value||'').toLowerCase().trim();
   // First pass: apply time + type filters to get period data for city/status options
   const periodFiltered=S.orders.filter(o=>{
-    if(drActive&&drFrom&&drTo){
-      const oy=o.Year,om=o.Month;
-      if(!oy||!om)return false;
-      if(oy*100+om < drFrom.year*100+drFrom.month)return false;
-      if(oy*100+om > drTo.year*100+drTo.month)return false;
+    if(drActive&&drFromDate&&drToDate){
+      if(!o.Order_Date)return false;
+      if(o.Order_Date<drFromDate||o.Order_Date>drToDate)return false;
     } else {
       if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
       if(navLevel==='month'&&navMonth&&(o.Year!==navYear||o.Month!==navMonth))return false;
@@ -2134,11 +2129,9 @@ function applyFilters(){
   // Second pass: full filter
   filtered=S.orders.filter(o=>{
     // Date range filter (takes priority over nav drill)
-    if(drActive&&drFrom&&drTo){
-      const oy=o.Year,om=o.Month;
-      if(!oy||!om)return false;
-      if(oy*100+om < drFrom.year*100+drFrom.month)return false;
-      if(oy*100+om > drTo.year*100+drTo.month)return false;
+    if(drActive&&drFromDate&&drToDate){
+      if(!o.Order_Date)return false;
+      if(o.Order_Date<drFromDate||o.Order_Date>drToDate)return false;
     } else {
       // Time nav filter
       if(navLevel==='year'&&navYear&&o.Year!==navYear)return false;
@@ -4165,7 +4158,7 @@ function ecRenderUnified(){
   const totalRevArrG=Object.values(revByMonth).reduce((s,v)=>s+v,0);
   const totalExpArrG=Object.values(expByMonth).reduce((s,v)=>s+v,0);
   const totalProfitG=totalRevArrG-totalExpArrG;
-  rows.push(summaryRow('Net Profit',profitByMonth,totalProfitG>=0?'var(--grn)':'var(--red)',true));
+  rows.push(summaryRow('Net Profit',profitByMonth,'var(--grn)',true));
   const gmPct={};months.forEach(mk=>{const rev=revByMonth[mk]||0;const exp=expByMonth[mk]||0;gmPct[mk]=rev>0?((rev-exp)/rev*100).toFixed(1)+'%':null;});
   const gmTotal=totalRevArrG>0?((totalRevArrG-totalExpArrG)/totalRevArrG*100).toFixed(1)+'%':'—';
   rows.push(`<tr><td><span class="ec-tip" title="(Revenue − Expenses) ÷ Revenue × 100">Gross Margin %</span></td>${months.map(mk=>`<td class="ec-num" style="font-size:11px;color:${gmPct[mk]&&parseFloat(gmPct[mk])>=0?'var(--grn)':'var(--red)'};">${gmPct[mk]??'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;">${gmTotal}</td></tr>`);
