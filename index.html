@@ -1329,7 +1329,8 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">⬆ Upload Selected Files</button>
           <button onclick="recalcNewCustomers()" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">↺ Recalc New Customers</button>
           <div style="flex:1;"></div>
-          <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
+<button onclick="tagLegacyBatches()" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">🏷 Tag Legacy Data</button>
+<button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
         </div>
       </div>
 
@@ -3048,7 +3049,19 @@ async function saveBatchMeta(batchId,type,filename,rowCount){
     updated_at:now
   }]).catch(()=>{});
 }
-
+async function tagLegacyBatches(){
+  if(!confirm('This will tag all untagged orders and products with a single legacy batch ID. Continue?'))return;
+  showLoader('Tagging legacy data…');
+  try{
+    const batchId='batch_legacy_pre_v17';
+    await sb('PATCH','orders?batch_id=is.null',{batch_id:batchId});
+    await sb('PATCH','products?batch_id=is.null',{batch_id:batchId});
+    await saveBatchMeta(batchId,'orders','Legacy data (pre-v17)',0);
+    await saveBatchMeta(batchId,'products','Legacy data (pre-v17)',0);
+    hideLoader();notif('✓ Legacy data tagged. Refresh upload history.');
+    renderUploadHistory();
+  }catch(e){hideLoader();notif('❌ Failed: '+e.message);}
+}
 async function deleteBatch(batchId,type){
   if(!confirm(`Delete all ${type} data from this file? This cannot be undone.`))return;
   showLoader('Deleting batch…');
@@ -4038,7 +4051,7 @@ let rbCurTab=null;
 
 function rbInit(){
   rbLoad();
-  alertsLoad();
+  await alertsLoad();
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -4300,13 +4313,16 @@ function grRender(){
   const el=document.getElementById('gr-body');if(!el)return;
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
+  const now=new Date();
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
-  const months=ecMonthsForYear(yr);
+  const months=grPeriod==='t12m'
+  ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
+  :ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
   // Filter orders by type
   // Apply period filter
-  const now=new Date();
+
   const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
   const periodSrc=grPeriod==='t12m'
     ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
@@ -4438,7 +4454,7 @@ function grRender(){
   });
 
   // Cohort retention table
-  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
+  const cohortMonths=months; // limit to 8 cohorts max
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
@@ -5384,8 +5400,15 @@ function rbOpenOutreachCust(name){
 // ALERTS SYSTEM
 // ═══════════════════════════════════════════════
 let ALERTS=[];
-function alertsLoad(){try{ALERTS=JSON.parse(localStorage.getItem('tezz_alerts'))||[];}catch(e){ALERTS=[];}}
-function alertsSave(){localStorage.setItem('tezz_alerts',JSON.stringify(ALERTS));}
+async function alertsLoad(){
+  try{
+    const rows=await dbGet('alerts','order=created_at.desc&limit=200');
+    ALERTS=rows.map(r=>({id:r.id,linkType:r.link_type,linkValue:r.link_value,note:r.note,date:r.date,createdBy:r.created_by,createdAt:r.created_at,dismissed:r.dismissed,dismissedBy:r.dismissed_by,dismissedAt:r.dismissed_at}));
+  }catch(e){ALERTS=[];}
+}
+async function alertsSave(alert){
+  await dbInsert('alerts',[{id:alert.id,link_type:alert.linkType,link_value:alert.linkValue,note:alert.note,date:alert.date,created_by:alert.createdBy,created_at:alert.createdAt,dismissed:false}]);
+}
 function alertsUid(){return'al'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);}
 
 let _alertCtx={linkType:'customer',linkValue:'',ctx:''};
@@ -5393,7 +5416,7 @@ let _alertCtx={linkType:'customer',linkValue:'',ctx:''};
 function openAlertModal(ctx){
   // ctx: {linkType, linkValue, display}
   _alertCtx=ctx||{linkType:'none',linkValue:'',display:''};
-  alertsLoad();
+  await alertsLoad();
   const modal=document.getElementById('alert-modal');
   const lt=document.getElementById('alert-link-type');
   const lv=document.getElementById('alert-link-value');
@@ -5442,7 +5465,7 @@ function saveAlert(){
     dismissedBy:null,dismissedAt:null
   };
   ALERTS.unshift(alert);
-  alertsSave();
+  await alertsSave(alert);
   closeAlertModal();
   notif('🔔 Alert saved');
   alertsUpdateBadge();
@@ -5453,15 +5476,16 @@ function saveAlert(){
 function dismissAlert(id){
   const a=ALERTS.find(x=>x.id===id);
   if(!a)return;
-  a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();
-  alertsSave();alertsUpdateBadge();
+  a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();  
+  await sb('PATCH','alerts?id=eq.'+encodeURIComponent(a.id),{dismissed:true,dismissed_by:curUser?.u||'',dismissed_at:new Date().toISOString()});
+  await alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
 function hardDeleteAlert(id){
   if(curUser?.role!=='super'){notif('⚠ Only Super Admin can delete alerts');return;}
-  ALERTS=ALERTS.filter(x=>x.id!==id);
-  alertsSave();alertsUpdateBadge();
+  await sb('DELETE','alerts?id=eq.'+encodeURIComponent(id));
+  await alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
   notif('Alert deleted');
 }
@@ -5476,17 +5500,17 @@ function rbFilterCompleted(){
 }
 
 function alertsGetActive(){
-  alertsLoad();
+  await alertsLoad();
   return ALERTS.filter(a=>!a.dismissed);
 }
 
 function alertsForRow(linkType, linkValue){
-  if(!ALERTS.length)alertsLoad();
+  if(!ALERTS.length)await alertsLoad();
   return ALERTS.filter(a=>!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
 }
 
 function alertsUpdateBadge(){
-  alertsLoad();
+  await alertsLoad();
   const count=ALERTS.filter(a=>!a.dismissed).length;
   const badge=document.getElementById('rb-alert-badge');
   if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
@@ -5729,7 +5753,7 @@ function otSetFilter(key,val){
 }
 
 function rbRenderOutreach(){
-  alertsLoad();
+  await alertsLoad();
   const el=document.getElementById('rb-outreach-body');if(!el)return;
   if(!S.orders||!S.orders.length){
     el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first.</div>';return;
