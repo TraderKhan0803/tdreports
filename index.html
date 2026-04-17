@@ -5482,10 +5482,10 @@ async function dismissAlert(id){
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
-function hardDeleteAlert(id){
+async function hardDeleteAlert(id){
   if(curUser?.role!=='super'){notif('⚠ Only Super Admin can delete alerts');return;}
   await sb('DELETE','alerts?id=eq.'+encodeURIComponent(id));
-  alertsLoad();;alertsUpdateBadge();
+  alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
   notif('Alert deleted');
 }
