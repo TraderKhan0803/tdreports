@@ -1721,7 +1721,18 @@ function onLoginSuccess(){
   document.getElementById('hdr-user').textContent=curUser.u;
   if(curUser.role==='admin'||curUser.role==='super')document.getElementById('btn-admin').style.display='';
   if(curUser.role==='super')document.getElementById('btn-super').style.display='';
-  loadAllData();
+  loadAllData().then(()=>{
+  const access=getUserAccess(curUser);
+  const lmA=document.getElementById('lm-analytics');
+  const lmR=document.getElementById('lm-raabta');
+  const lmE=document.getElementById('lm-exec');
+  if(lmA)lmA.style.display=access.analytics?'':'none';
+  if(lmR)lmR.style.display=access.raabta?'':'none';
+  if(lmE)lmE.style.display=access.exec?'':'none';
+  if(access.analytics)setMode('analytics');
+  else if(access.raabta)setMode('raabta');
+  else if(access.exec)setMode('exec');
+});
 }
 
 // ═══════════════════════════════════════════════
