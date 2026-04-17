@@ -4289,7 +4289,7 @@ function ecSwitchTab(tab,el){
 }
 
 function ecShowGrowthTabIfAllowed(){
-  const access=getUserAccess(curUser);
+  const access=(curUser);
   const growthTab=document.getElementById('nav-ec-growth');
   if(growthTab)growthTab.style.display=access.growth?'':'none';
 }
@@ -4808,7 +4808,9 @@ function getUserAccess(user){
   if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true};
   if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false};
   try{
-    const perms=JSON.parse(localStorage.getItem('user_perms_'+user.u)||'{}');
+    const cfg=S._rawConfig||[];
+    const row=cfg.find(c=>c.type==='user_perms_'+user.u);
+    const perms=row?JSON.parse(row.value1||'{}'):{};
     return{
       analytics:perms.analytics!==false,
       raabta:perms.raabta!==false,
@@ -4818,8 +4820,10 @@ function getUserAccess(user){
   }catch(e){return{analytics:true,raabta:true,exec:false,growth:false};}
 }
 
-function saveUserPerms(username, perms){
-  localStorage.setItem('user_perms_'+username, JSON.stringify(perms));
+async function saveUserPerms(username, perms){
+  const now=new Date().toISOString();
+  await sb('DELETE','admin_config?type=eq.user_perms_'+encodeURIComponent(username)).catch(()=>{});
+  await dbInsert('admin_config',[{type:'user_perms_'+username,value1:JSON.stringify(perms),value2:'',updated_by:curUser?.u||'',updated_at:now}]).catch(()=>{});
 }
 
 function toggleLogoMenu(){
