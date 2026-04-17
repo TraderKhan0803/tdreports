@@ -4051,7 +4051,7 @@ let rbCurTab=null;
 
 async function rbInit(){
   rbLoad();
-  await alertsLoad();
+  alertsLoad();;
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -5416,7 +5416,7 @@ let _alertCtx={linkType:'customer',linkValue:'',ctx:''};
 async function openAlertModal(ctx){
   // ctx: {linkType, linkValue, display}
   _alertCtx=ctx||{linkType:'none',linkValue:'',display:''};
-  await alertsLoad();
+  alertsLoad();;
   const modal=document.getElementById('alert-modal');
   const lt=document.getElementById('alert-link-type');
   const lv=document.getElementById('alert-link-value');
@@ -5448,7 +5448,7 @@ function alertLinkTypeChanged(){
   }
 }
 
-function saveAlert(){
+async function saveAlert(){
   const linkType=document.getElementById('alert-link-type')?.value||'none';
   const linkValue=linkType==='none'?'':(document.getElementById('alert-link-value')?.value||'').trim();
   const date=document.getElementById('alert-date')?.value||'';
@@ -5478,14 +5478,14 @@ function dismissAlert(id){
   if(!a)return;
   a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();  
   await sb('PATCH','alerts?id=eq.'+encodeURIComponent(a.id),{dismissed:true,dismissed_by:curUser?.u||'',dismissed_at:new Date().toISOString()});
-  await alertsLoad();alertsUpdateBadge();
+  alertsLoad();;alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
 function hardDeleteAlert(id){
   if(curUser?.role!=='super'){notif('⚠ Only Super Admin can delete alerts');return;}
   await sb('DELETE','alerts?id=eq.'+encodeURIComponent(id));
-  await alertsLoad();alertsUpdateBadge();
+  alertsLoad();;alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
   notif('Alert deleted');
 }
@@ -5500,17 +5500,17 @@ function rbFilterCompleted(){
 }
 
 function alertsGetActive(){
-  await alertsLoad();
+  alertsLoad();;
   return ALERTS.filter(a=>!a.dismissed);
 }
 
 function alertsForRow(linkType, linkValue){
-  if(!ALERTS.length)await alertsLoad();
+  if(!ALERTS.length)alertsLoad();;
   return ALERTS.filter(a=>!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
 }
 
 function alertsUpdateBadge(){
-  await alertsLoad();
+  alertsLoad();;
   const count=ALERTS.filter(a=>!a.dismissed).length;
   const badge=document.getElementById('rb-alert-badge');
   if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
@@ -5753,7 +5753,7 @@ function otSetFilter(key,val){
 }
 
 function rbRenderOutreach(){
-  await alertsLoad();
+  alertsLoad();;
   const el=document.getElementById('rb-outreach-body');if(!el)return;
   if(!S.orders||!S.orders.length){
     el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first.</div>';return;
