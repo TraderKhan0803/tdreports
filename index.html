@@ -5473,7 +5473,7 @@ async function saveAlert(){
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
-function dismissAlert(id){
+async function dismissAlert(id){
   const a=ALERTS.find(x=>x.id===id);
   if(!a)return;
   a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();  
