@@ -132,6 +132,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .dt tr.sel td{background:var(--sur3);color:var(--txt);}
 .dt tr.sel td:first-child{border-left:2px solid var(--acc);}
 .dt tr.ncust td{color:var(--grn);}
+.dt tr.r-child td{background:var(--bg);font-size:11px;color:var(--t2);}
+.dt tr.r-child:hover td{background:var(--sur2);color:var(--txt);cursor:pointer;}
+.tree-toggle{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;font-size:9px;margin-right:4px;color:var(--t3);cursor:pointer;user-select:none;transition:transform .15s;}
+.tree-toggle.open{transform:rotate(90deg);color:var(--acc);}
 .dt tfoot td{background:var(--sur2);color:var(--txt);font-weight:600;font-family:'DM Mono',monospace;font-size:11px;padding:7px 11px;border-top:2px solid var(--bdr);}
 
 /* ── BADGES ── */
@@ -2166,19 +2170,90 @@ function renderDashboard(pinnedCust){
   let custs=buildCustMap(O);
   custs.sort((a,b)=>{let va=a[custSortKey],vb=b[custSortKey];if(typeof va==='string')return custSortAsc?va.localeCompare(vb):vb.localeCompare(va);return custSortAsc?va-vb:vb-va;});
   document.getElementById('pc-count').textContent=custs.length+' customers';
+
+  // Build alias lookup: primary → [alias names]
+  const aliasMap={};
+  S_links.forEach(link=>{
+    if(link.aliases&&link.aliases.length)aliasMap[link.primary]=link.aliases;
+  });
+  // Build per-alias stats from filtered orders (raw, unresolved names)
+  const rawMap={};
+  O.forEach(o=>{
+    const raw=o.Customer;
+    if(!rawMap[raw])rawMap[raw]={name:raw,Orders:0,Sales:0};
+    rawMap[raw].Orders++;rawMap[raw].Sales+=o.Total_Sales;
+  });
+
   const frag=document.createDocumentFragment();
+  const _openTrees=window._custTreeOpen||new Set();
+  window._custTreeOpen=_openTrees;
+
   custs.forEach(c=>{
+    const aliases=aliasMap[c.Customer];
+    const hasAliases=aliases&&aliases.length>0;
+    const isOpen=_openTrees.has(c.Customer);
+
     const tr=document.createElement('tr');
     tr.className='r'+(c.IsNew?' ncust':'')+(selCust===c.Customer?' sel':'');
-    tr.innerHTML=`<td>${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right" data-sort="${c.Orders}">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${c.Sales}">${fmtFull(c.Sales)}</td>`;
+    const toggleHtml=hasAliases
+      ?`<span class="tree-toggle${isOpen?' open':''}" onclick="event.stopPropagation();toggleCustTree('${esc(c.Customer)}')">▶</span>`
+      :'<span style="display:inline-block;width:18px;"></span>';
+    tr.innerHTML=`<td>${toggleHtml}${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right" data-sort="${c.Orders}">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${c.Sales}">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>drillCust(c.Customer);
     frag.appendChild(tr);
+
+    // Child alias rows — only shown when tree is open
+    if(hasAliases&&isOpen){
+      // Also show the primary name itself as a child if it has its own raw orders
+      const allNames=[c.Customer,...aliases];
+      allNames.forEach(alias=>{
+        const stats=rawMap[alias];
+        if(!stats||stats.Orders===0)return;
+        const childTr=document.createElement('tr');
+        childTr.className='r-child'+(selCust===c.Customer?' sel':'');
+        childTr.innerHTML=`<td style="padding-left:28px;color:var(--t3);font-size:11px;">↳ ${esc(alias)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${stats.Orders}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:var(--t2)">${fmtFull(stats.Sales)}</td>`;
+        childTr.onclick=()=>drillAlias(alias,c.Customer);
+        frag.appendChild(childTr);
+      });
+    }
   });
+
   const tb=document.getElementById('body-custs');tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">No data — upload files or adjust filters</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   initSortableTable('body-custs',[{key:'cust',label:'Customer',type:'text'},{key:'orders',label:'Orders',type:'num',align:'right'},{key:'sales',label:'Sales',type:'num',align:'right'}]);
   if(selCust)renderOrdersDrill();
+}
+
+function toggleCustTree(primary){
+  if(!window._custTreeOpen)window._custTreeOpen=new Set();
+  if(window._custTreeOpen.has(primary))window._custTreeOpen.delete(primary);
+  else window._custTreeOpen.add(primary);
+  renderDashboard(selCust||undefined);
+}
+
+function drillAlias(aliasName,primaryName){
+  // Drill into a specific alias — show only that alias's orders
+  // but keep the primary selected for context
+  selCust=primaryName;
+  selOrder=null;
+  // Override orders drill to show only this alias's orders
+  const orders=filtered.filter(o=>o.Customer===aliasName).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0));
+  document.getElementById('title-orders').textContent=aliasName+' (alias of '+primaryName+')';
+  document.getElementById('po-count').textContent=orders.length+' orders';
+  const frag=document.createDocumentFragment();
+  orders.forEach(o=>{
+    const tr=document.createElement('tr');
+    tr.className='r'+(selOrder===o.Order_ID?' sel':'');
+    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
+    tr.onclick=()=>drillOrder(o.Order_ID,o.Total_Sales);
+    frag.appendChild(tr);
+  });
+  const tb=document.getElementById('body-orders');tb.innerHTML='';
+  if(!orders.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  showCustInfo(primaryName);
+  renderDashboard(primaryName);
 }
 
 function drillCust(cust){
@@ -2275,7 +2350,7 @@ function showCustInfo(cust){
     <div class="info-row"><div class="info-lbl">Lifetime Spend</div><div class="info-val" style="color:var(--grn);font-family:'DM Mono',monospace;">${fmtFull(totalSpend)}</div></div>
     <div class="info-row"><div class="info-lbl">First Order</div><div class="info-val" style="font-size:11px;">${firstOrd?.Order_Date_Str||'—'}</div></div>
     <div class="info-row"><div class="info-lbl">Last Order</div><div class="info-val" style="font-size:11px;">${lastOrd?.Order_Date_Str||'—'}${daysSince!==null?' ('+daysSince+'d ago)':''}</div></div>
-    ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:'DM Mono',monospace;">${filtOrds.length} orders in selected period · ${allOrds.length} all time</div>`:''}
+    ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:'DM Mono',monospace;">${filtOrds.length} of ${allOrds.length} orders shown · ${allOrds.length-filtOrds.length} not displayed (outside date range or filtered status)</div>`:''}
     <div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">ALL ORDER HISTORY</div>
     <div style="max-height:180px;overflow-y:auto;">${recentRows||'<div style="color:var(--t3);font-size:11px;">No orders</div>'}</div>`;
 }
@@ -4225,16 +4300,13 @@ function grRender(){
   const el=document.getElementById('gr-body');if(!el)return;
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
-  const now=new Date();
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
-  const months=grPeriod==='t12m'
-  ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
-  :ecMonthsForYear(yr);
+  const months=ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
   // Filter orders by type
   // Apply period filter
-  //const now=new Date();
+  const now=new Date();
   const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
   const periodSrc=grPeriod==='t12m'
     ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
@@ -4366,8 +4438,7 @@ function grRender(){
   });
 
   // Cohort retention table
-  //const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
-  const cohortMonths=months;
+  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
@@ -5861,4 +5932,3 @@ const RB_TEMPLATES=[
 </script>
 </body>
 </html>
-
