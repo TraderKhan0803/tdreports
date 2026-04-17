@@ -5413,7 +5413,7 @@ function alertsUid(){return'al'+Date.now().toString(36)+Math.random().toString(3
 
 let _alertCtx={linkType:'customer',linkValue:'',ctx:''};
 
-function openAlertModal(ctx){
+async function openAlertModal(ctx){
   // ctx: {linkType, linkValue, display}
   _alertCtx=ctx||{linkType:'none',linkValue:'',display:''};
   await alertsLoad();
