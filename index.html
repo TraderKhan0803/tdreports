@@ -4049,7 +4049,7 @@ function rbUid(){return Math.random().toString(36).substr(2,9);}
 // ── ROLE-BASED UI SETUP ───────────────────────────────────────────────────────
 let rbCurTab=null;
 
-function rbInit(){
+async function rbInit(){
   rbLoad();
   await alertsLoad();
   rbSyncFromOrders();
