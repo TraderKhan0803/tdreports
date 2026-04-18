@@ -11,7 +11,8 @@
 :root{--bg:#0d0f14;--sur:#151820;--sur2:#1c2030;--sur3:#242840;--bdr:#2a2f45;--acc:#f97316;--grn:#22c55e;--blu:#3b82f6;--pur:#a855f7;--red:#ef4444;--txt:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:10px;--r2:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px;}
-
+/*  v20   */
+  
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
 #change-pw-screen{display:none;align-items:center;justify-content:center;min-height:100vh;}
@@ -911,7 +912,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="dbtn" id="rpt-type-b2b" onclick="setRptType('B2B')">B2B</button>
           <button class="dbtn" id="rpt-type-b2c" onclick="setRptType('B2C')">B2C</button>
           <div style="width:1px;height:16px;background:var(--bdr);"></div>
-          <button onclick="downloadReport()" style="padding:4px 14px;background:var(--grn);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
+          <button onclick="downloadReport()" id="rpt-download-btn" style="padding:4px 14px;background:var(--grn);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
         </div>
       </div>
       <!-- Monthly Sales -->
@@ -994,7 +995,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
             <div>
               <div class="stitle" style="color:var(--acc);">🔇 Gone Quiet</div>
-              <div class="hint">Ordered once, not seen since</div>
+              <div class="hint">Last ordered more than X days ago</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:11px;color:var(--t3);">Silent for</span>
@@ -1004,13 +1005,36 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             </div>
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Only Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Value</th></tr></thead>
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Orders</th><th style="text-align:right">Value</th></tr></thead>
             <tbody id="mkt-quiet-body"></tbody></table>
           </div>
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-quiet-count"></div>
         </div>
 
-        <!-- Panel 3: Reactivation Targets -->
+        <!-- Panel 3: About to Churn -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--red);">⚠ About to Churn</div>
+              <div class="hint">Active customers showing early churn signals</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:11px;color:var(--t3);">3+ orders, silent</span>
+              <input type="number" id="mkt-churn-min" value="21" min="1" max="90" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">–</span>
+              <input type="number" id="mkt-churn-max" value="30" min="1" max="90" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <span style="font-size:11px;color:var(--t3);">days</span>
+              <button onclick="downloadMktList('churn')" style="padding:3px 10px;background:var(--red);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
+            <tbody id="mkt-churn-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-churn-count"></div>
+        </div>
+
+        <!-- Panel 4: Reactivation Targets -->
         <div class="tw" style="display:flex;flex-direction:column;">
           <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
             <div>
@@ -1329,8 +1353,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="adm-add" id="adm-upload-btn" disabled onclick="runAdminUpload()" style="padding:8px 20px;">⬆ Upload Selected Files</button>
           <button onclick="recalcNewCustomers()" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">↺ Recalc New Customers</button>
           <div style="flex:1;"></div>
-<button onclick="tagLegacyBatches()" style="padding:7px 14px;background:transparent;border:1px solid var(--blu);border-radius:var(--r2);color:var(--blu);font-size:12px;cursor:pointer;">🏷 Tag Legacy Data</button>
-<button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
+          <button onclick="confirmClearData()" style="padding:7px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Remove All Data</button>
         </div>
       </div>
 
@@ -1473,6 +1496,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-raabta" checked style="accent-color:var(--acc);"> 💬 Tezz Raabta</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-exec" style="accent-color:var(--pur);"> 📈 Exec Committee</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-growth" style="accent-color:var(--grn);"> 📊 Growth &amp; Retention</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-downloads" style="accent-color:var(--blu);"> ⬇ Download Reports</label>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
         <div id="list-users"></div>
@@ -1555,19 +1579,46 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
     <!-- LOGS TAB -->
     <div id="sup-content-logs" style="display:none;">
-      <div class="adm-grid mb12">
-        <div class="adm-card">
-          <div class="adm-title" style="color:var(--pur)">Session Activity</div>
-          <div id="log-sessions" style="max-height:260px;overflow-y:auto;"></div>
-        </div>
-        <div class="adm-card">
-          <div class="adm-title" style="color:var(--pur)">Admin Changes &amp; Uploads</div>
-          <div id="log-admin-changes" style="max-height:260px;overflow-y:auto;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <button class="dbtn on" id="log-tab-overview" onclick="switchLogTab('overview')">Overview</button>
+        <button class="dbtn" id="log-tab-all" onclick="switchLogTab('all')">Full Activity Log</button>
+        <div style="margin-left:auto;">
+          <input type="text" id="log-search" placeholder="Search logs…" oninput="filterLogs()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:5px 10px;border-radius:var(--r2);font-size:11px;width:200px;">
         </div>
       </div>
-      <div class="adm-card mb12">
-        <div class="adm-title" style="color:var(--pur)">Page Time Tracking</div>
-        <div id="log-page-time" style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;"></div>
+      <div id="log-content-overview">
+        <div class="adm-grid mb12">
+          <div class="adm-card">
+            <div class="adm-title" style="color:var(--pur)">Session Activity</div>
+            <div id="log-sessions" style="max-height:260px;overflow-y:auto;"></div>
+          </div>
+          <div class="adm-card">
+            <div class="adm-title" style="color:var(--pur)">Admin Changes &amp; Uploads</div>
+            <div id="log-admin-changes" style="max-height:260px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="adm-card mb12">
+          <div class="adm-title" style="color:var(--pur)">Page Time Tracking</div>
+          <div id="log-page-time" style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;"></div>
+        </div>
+      </div>
+      <div id="log-content-all" style="display:none;">
+        <div class="adm-card">
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+            <div class="adm-title" style="color:var(--pur);margin-bottom:0;">All Activity</div>
+            <select id="log-user-filter" onchange="filterLogs()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:4px 8px;border-radius:var(--r2);font-size:11px;">
+              <option value="">All Users</option>
+            </select>
+            <select id="log-type-filter" onchange="filterLogs()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:4px 8px;border-radius:var(--r2);font-size:11px;">
+              <option value="">All Types</option>
+              <option value="session">Sessions</option>
+              <option value="admin">Admin</option>
+              <option value="upload">Uploads</option>
+              <option value="pageview">Page Views</option>
+            </select>
+          </div>
+          <div id="log-all-entries" style="max-height:500px;overflow-y:auto;font-size:11px;"></div>
+        </div>
       </div>
     </div>
 
@@ -1721,18 +1772,7 @@ function onLoginSuccess(){
   document.getElementById('hdr-user').textContent=curUser.u;
   if(curUser.role==='admin'||curUser.role==='super')document.getElementById('btn-admin').style.display='';
   if(curUser.role==='super')document.getElementById('btn-super').style.display='';
-  loadAllData().then(()=>{
-  const access=getUserAccess(curUser);
-  const lmA=document.getElementById('lm-analytics');
-  const lmR=document.getElementById('lm-raabta');
-  const lmE=document.getElementById('lm-exec');
-  if(lmA)lmA.style.display=access.analytics?'':'none';
-  if(lmR)lmR.style.display=access.raabta?'':'none';
-  if(lmE)lmE.style.display=access.exec?'':'none';
-  if(access.analytics)setMode('analytics');
-  else if(access.raabta)setMode('raabta');
-  else if(access.exec)setMode('exec');
-});
+  loadAllData();
 }
 
 // ═══════════════════════════════════════════════
@@ -3060,19 +3100,7 @@ async function saveBatchMeta(batchId,type,filename,rowCount){
     updated_at:now
   }]).catch(()=>{});
 }
-async function tagLegacyBatches(){
-  if(!confirm('This will tag all untagged orders and products with a single legacy batch ID. Continue?'))return;
-  showLoader('Tagging legacy data…');
-  try{
-    const batchId='batch_legacy_pre_v17';
-    await sb('PATCH','orders?batch_id=is.null',{batch_id:batchId});
-    await sb('PATCH','products?batch_id=is.null',{batch_id:batchId});
-    await saveBatchMeta(batchId,'orders','Legacy data (pre-v17)',0);
-    await saveBatchMeta(batchId,'products','Legacy data (pre-v17)',0);
-    hideLoader();notif('✓ Legacy data tagged. Refresh upload history.');
-    renderUploadHistory();
-  }catch(e){hideLoader();notif('❌ Failed: '+e.message);}
-}
+
 async function deleteBatch(batchId,type){
   if(!confirm(`Delete all ${type} data from this file? This cannot be undone.`))return;
   showLoader('Deleting batch…');
@@ -3203,16 +3231,62 @@ function processProductsWB(wb,log){
 // ═══════════════════════════════════════════════
 function renderUserList(){
   document.getElementById('list-users').innerHTML=S.users.map(u=>{
-    const perms=u.role==='viewer'?(()=>{try{return JSON.parse(localStorage.getItem('user_perms_'+u.u)||'{}');}catch(e){return{};}})():{};
+    const cfg=S._rawConfig||[];
+    const row=cfg.find(c=>c.type==='user_perms_'+u.u);
+    const perms=u.role==='viewer'?(row?JSON.parse(row.value1||'{}'):{}):{}; 
     const permTags=u.role==='viewer'?[
       perms.analytics!==false?'<span style="background:rgba(249,115,22,.12);color:var(--acc);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Analytics</span>':'',
       perms.raabta!==false?'<span style="background:rgba(34,197,94,.12);color:var(--grn);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Raabta</span>':'',
       perms.exec?'<span style="background:rgba(168,85,247,.12);color:var(--pur);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Exec</span>':'',
       perms.growth?'<span style="background:rgba(34,197,94,.12);color:var(--grn);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Growth</span>':'',
+      perms.downloads?'<span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Downloads</span>':'',
     ].filter(Boolean).join(' '):'';
+    const editBtn=u.role==='viewer'&&curUser?.u!==u.u?`<button onclick="editUserPerms('${esc(u.u)}')" style="padding:2px 9px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;margin-right:4px;">Edit</button>`:'';
     return`<div class="user-row"><span>${esc(u.u)}</span><span style="color:var(--t3);font-size:10px;">${esc(u.email||'')}</span><span class="role-badge role-${u.role}">${u.role}</span>${permTags?`<span>${permTags}</span>`:''}
-    ${curUser?.u!==u.u?`<button class="rm-btn" onclick="rmUser('${esc(u.u)}')">✕</button>`:' <span style="color:var(--t3);font-size:10px">you</span>'}</div>`;
+    ${curUser?.u!==u.u?`${editBtn}<button class="rm-btn" onclick="rmUser('${esc(u.u)}')">✕</button>`:' <span style="color:var(--t3);font-size:10px">you</span>'}</div>`;
   }).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No users</div>';
+}
+
+function editUserPerms(username){
+  const cfg=S._rawConfig||[];
+  const row=cfg.find(c=>c.type==='user_perms_'+username);
+  const perms=row?JSON.parse(row.value1||'{}'):{analytics:true,raabta:true,exec:false,growth:false,downloads:false};
+  // Show edit modal
+  const html=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;align-items:center;justify-content:center;" id="edit-perms-overlay" onclick="if(event.target===this)this.remove()">
+    <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;width:340px;max-width:95vw;">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--pur);margin-bottom:16px;">Edit Permissions — ${esc(username)}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-analytics" ${perms.analytics!==false?'checked':''} style="accent-color:var(--acc);width:15px;height:15px;"> 📊 Tezz Analytics</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-raabta" ${perms.raabta!==false?'checked':''} style="accent-color:var(--acc);width:15px;height:15px;"> 💬 Tezz Raabta</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-exec" ${perms.exec?'checked':''} style="accent-color:var(--pur);width:15px;height:15px;"> 📈 Exec Committee</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-growth" ${perms.growth?'checked':''} style="accent-color:var(--grn);width:15px;height:15px;"> 📊 Growth & Retention</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-downloads" ${perms.downloads?'checked':''} style="accent-color:var(--blu);width:15px;height:15px;"> ⬇ Download Reports</label>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="document.getElementById('edit-perms-overlay').remove()" style="padding:7px 16px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="saveEditedPerms('${esc(username)}')" style="padding:7px 16px;background:var(--pur);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+async function saveEditedPerms(username){
+  const perms={
+    analytics:!!document.getElementById('ep-analytics')?.checked,
+    raabta:!!document.getElementById('ep-raabta')?.checked,
+    exec:!!document.getElementById('ep-exec')?.checked,
+    growth:!!document.getElementById('ep-growth')?.checked,
+    downloads:!!document.getElementById('ep-downloads')?.checked,
+  };
+  await saveUserPerms(username,perms);
+  // Reload config so renderUserList shows updated perms
+  const config=await dbGet('admin_config','select=*');
+  S._rawConfig=config;
+  document.getElementById('edit-perms-overlay')?.remove();
+  renderUserList();
+  notif(`✓ Permissions updated for "${username}"`);
+  logActivity('admin',`Updated permissions for ${username}`);
 }
 async function addUser(){
   const u=document.getElementById('inp-uname').value.trim();
@@ -3226,12 +3300,13 @@ async function addUser(){
     // Save permissions for viewers
     if(r==='viewer'){
       const perms={
-        analytics:document.getElementById('acc-analytics')?.checked!==false,
-        raabta:document.getElementById('acc-raabta')?.checked!==false,
+        analytics:!!document.getElementById('acc-analytics')?.checked,
+        raabta:!!document.getElementById('acc-raabta')?.checked,
         exec:!!document.getElementById('acc-exec')?.checked,
         growth:!!document.getElementById('acc-growth')?.checked,
+        downloads:!!document.getElementById('acc-downloads')?.checked,
       };
-      saveUserPerms(u,perms);
+      await saveUserPerms(u,perms);
     }
     renderUserList();
     document.getElementById('inp-uname').value='';document.getElementById('inp-uemail').value='';document.getElementById('inp-upass').value='';
@@ -3258,9 +3333,38 @@ async function loadResetRequests(){
 // ═══════════════════════════════════════════════
 // SUPER ADMIN LOG
 // ═══════════════════════════════════════════════
+let _allLogs=[];
+
+function switchLogTab(tab){
+  ['overview','all'].forEach(t=>{
+    const btn=document.getElementById('log-tab-'+t);
+    const cont=document.getElementById('log-content-'+t);
+    const isActive=t===tab;
+    if(btn)btn.className='dbtn'+(isActive?' on':'');
+    if(cont)cont.style.display=isActive?'':'none';
+  });
+}
+
+function filterLogs(){
+  const q=(document.getElementById('log-search')?.value||'').toLowerCase();
+  const user=document.getElementById('log-user-filter')?.value||'';
+  const type=document.getElementById('log-type-filter')?.value||'';
+  const filtered=_allLogs.filter(l=>{
+    if(user&&l.username!==user)return false;
+    if(type&&l.type!==type)return false;
+    if(q&&!l.message?.toLowerCase().includes(q)&&!l.username?.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const el=document.getElementById('log-all-entries');
+  if(!el)return;
+  const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:'DM Mono',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+  el.innerHTML=filtered.map(fmtE).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No matching logs</div>';
+}
+
 async function renderSuperLog(){
   try{
-    const logs=await dbGet('activity_log','select=*&order=timestamp.desc&limit=300');
+    const logs=await dbGet('activity_log','select=*&order=timestamp.desc&limit=1000');
+    _allLogs=logs;
     const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span>${esc(e.message)}</span></div>`;
     const sessions=logs.filter(l=>l.type==='session');
     const changes=logs.filter(l=>l.type==='admin'||l.type==='upload');
@@ -3269,6 +3373,18 @@ async function renderSuperLog(){
     const pageviews=logs.filter(l=>l.type==='pageview');
     const pt={};pageviews.forEach(l=>{const m=l.message.match(/Spent (\d+)s on (\w+)/);if(m){pt[m[2]]=(pt[m[2]]||0)+parseInt(m[1]);}});
     document.getElementById('log-page-time').innerHTML=Object.entries(pt).map(([tab,secs])=>`<div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 14px;text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t3);text-transform:uppercase">${tab}</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--acc)">${Math.floor(secs/60)}m ${secs%60}s</div></div>`).join('')||'<div style="color:var(--t3);font-size:12px">No page time yet</div>';
+    // Populate full log
+    const allEl=document.getElementById('log-all-entries');
+    if(allEl){
+      const fmtFull=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:'DM Mono',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+      allEl.innerHTML=logs.slice(0,200).map(fmtFull).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No logs</div>';
+    }
+    // Populate user filter
+    const uf=document.getElementById('log-user-filter');
+    if(uf){
+      const users=[...new Set(logs.map(l=>l.username))].sort();
+      uf.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+    }
   }catch(e){console.error(e);}
 }
 
@@ -3575,6 +3691,13 @@ let rptReport='monthly',rptType='all',rptMetric='sales',rptRisk=30;
 let rptCustSort={key:'Sales',asc:false};
 let rptChart=null;
 
+function checkDownloadAccess(){
+  const btn=document.getElementById('rpt-download-btn');
+  if(!btn)return;
+  const access=getUserAccess(curUser);
+  btn.style.display=access.downloads?'':'none';
+}
+
 function setReport(r){
   rptReport=r;
   ['monthly','customers','atrisk'].forEach(x=>{
@@ -3605,6 +3728,7 @@ function getRptOrders(){
 }
 
 function renderReport(){
+  checkDownloadAccess();
   if(rptReport==='monthly')renderMonthlyReport();
   else if(rptReport==='customers')renderCustomerSummary();
   else if(rptReport==='atrisk')renderAtRisk();
@@ -3866,6 +3990,7 @@ function downloadAtRiskExcel(){
 function renderMarketing(){
   renderMktWelcome();
   renderMktQuiet();
+  renderMktChurn();
   renderMktReactivation();
   renderMktVIP();
 }
@@ -3939,17 +4064,37 @@ function renderMktQuiet(){
   const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
   const today=getMktToday();
   const cutoff=new Date(today.getTime()-days*86400000);
-  // Ordered exactly once AND last order was more than X days ago
-  const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
+  // ANY customer (not just one-timers) whose last order was more than X days ago
+  const custs=getMktCustMap().filter(c=>c.LastOrder&&c.LastOrder<cutoff)
     .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)}))
-    .sort((a,b)=>a.DaysSilent-b.DaysSilent);
+    .sort((a,b)=>b.DaysSilent-a.DaysSilent);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t2)">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
   const tb=document.getElementById('mkt-quiet-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No one-time customers gone quiet</td>';tb.appendChild(tr);}
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers silent this long</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  document.getElementById('mkt-quiet-count').textContent=custs.length+' one-time customers silent '+days+'+ days';
-  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
+  document.getElementById('mkt-quiet-count').textContent=custs.length+' customers silent '+days+'+ days';
+  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
+}
+
+function renderMktChurn(){
+  const minD=parseInt(document.getElementById('mkt-churn-min')?.value)||21;
+  const maxD=parseInt(document.getElementById('mkt-churn-max')?.value)||30;
+  const today=getMktToday();
+  // Customers with 3+ orders inactive between minD and maxD days — early churn signal
+  const custs=getMktCustMap().filter(c=>{
+    if(c.Orders<3||!c.LastOrder)return false;
+    const d=Math.floor((today-c.LastOrder)/86400000);
+    return d>=minD&&d<=maxD;
+  }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
+  .sort((a,b)=>a.DaysInactive-b.DaysInactive);
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--red);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  const tb=document.getElementById('mkt-churn-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--grn)">✓ No early churn signals in this range</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-churn-count').textContent=custs.length+' loyal customers showing early churn signals ('+minD+'–'+maxD+' days)';
+  initSortableTable('mkt-churn-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
 }
 
 function renderMktReactivation(){
@@ -4014,6 +4159,14 @@ function downloadMktList(type){
     rows=[['Customer','Type','Phone','Last Order','Days Inactive','Total Orders','Total Sales'],
       ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.Orders,Math.round(c.Sales)])];
     filename=`tezz_reactivation_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='churn'){
+    const minD=parseInt(document.getElementById('mkt-churn-min')?.value)||21;
+    const maxD=parseInt(document.getElementById('mkt-churn-max')?.value)||30;
+    const custs=getMktCustMap().filter(c=>{if(c.Orders<3||!c.LastOrder)return false;const d=Math.floor((today-c.LastOrder)/86400000);return d>=minD&&d<=maxD;})
+      .map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>a.DaysInactive-b.DaysInactive);
+    rows=[['Customer','Type','Phone','Last Order','Days Inactive','Total Orders','Total Sales'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.Orders,Math.round(c.Sales)])];
+    filename=`tezz_about_to_churn_${new Date().toISOString().slice(0,10)}.csv`;
   }else if(type==='vip'){
     const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
     const custs=getMktCustMap().filter(c=>c.AvgOrder>=threshold&&c.Orders>=2).sort((a,b)=>b.AvgOrder-a.AvgOrder);
@@ -4062,7 +4215,7 @@ let rbCurTab=null;
 
 async function rbInit(){
   rbLoad();
-  alertsLoad();;
+  await alertsLoad();
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -4290,7 +4443,7 @@ function ecSwitchTab(tab,el){
 }
 
 function ecShowGrowthTabIfAllowed(){
-  const access=(curUser);
+  const access=getUserAccess(curUser);
   const growthTab=document.getElementById('nav-ec-growth');
   if(growthTab)growthTab.style.display=access.growth?'':'none';
 }
@@ -4314,16 +4467,13 @@ function grRender(){
   const el=document.getElementById('gr-body');if(!el)return;
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
-  const now=new Date();
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
-  const months=grPeriod==='t12m'
-  ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
-  :ecMonthsForYear(yr);
+  const months=ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
   // Filter orders by type
   // Apply period filter
-
+  const now=new Date();
   const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
   const periodSrc=grPeriod==='t12m'
     ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
@@ -4455,7 +4605,7 @@ function grRender(){
   });
 
   // Cohort retention table
-  const cohortMonths=months; // limit to 8 cohorts max
+  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
@@ -4805,20 +4955,21 @@ function toggleViewerAccess(){
 }
 
 function getUserAccess(user){
-  if(!user)return{analytics:false,raabta:false,exec:false,growth:false};
-  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true};
-  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false};
+  if(!user)return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};
+  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true};
+  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true};
   try{
     const cfg=S._rawConfig||[];
     const row=cfg.find(c=>c.type==='user_perms_'+user.u);
     const perms=row?JSON.parse(row.value1||'{}'):{};
     return{
-      analytics:perms.analytics!==false,
-      raabta:perms.raabta!==false,
+      analytics:!!perms.analytics,
+      raabta:!!perms.raabta,
       exec:!!perms.exec,
       growth:!!perms.growth,
+      downloads:!!perms.downloads,
     };
-  }catch(e){return{analytics:true,raabta:true,exec:false,growth:false};}
+  }catch(e){return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};}
 }
 
 async function saveUserPerms(username, perms){
@@ -4828,7 +4979,6 @@ async function saveUserPerms(username, perms){
 }
 
 function toggleLogoMenu(){
-
   const m=document.getElementById('logo-menu');
   m.style.display=m.style.display==='none'?'block':'none';
 }
@@ -4884,19 +5034,47 @@ function rbSyncFromOrders(){
 function rbRenderAll(){rbRenderStats();rbRenderCusts();rbRenderQueue();rbRenderTpls();rbRenderAct();}
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
+let _rbStatFilter='';
+
+function rbFilterByStat(status){
+  _rbStatFilter=_rbStatFilter===status?'':status;
+  // Update visual active state
+  document.querySelectorAll('.rb-stat').forEach(el=>{
+    el.style.outline=el.dataset.status===_rbStatFilter?'2px solid var(--acc)':'';
+    el.style.opacity=_rbStatFilter&&el.dataset.status!==_rbStatFilter&&el.dataset.status!=='total'?'0.5':'1';
+  });
+  // Update status filter dropdown to match
+  const fs=document.getElementById('rb-cfs');
+  if(fs)fs.value=_rbStatFilter;
+  rbRenderCusts();
+}
+
 function rbRenderStats(){
-  const c={new:0,active:0,vip:0,silent:0,winback:0};
-  RB.custs.forEach(x=>c[x.status]=(c[x.status]||0)+1);
+  const c={new:0,active:0,vip:0,silent:0,winback:0,inactive:0};
+  RB.custs.forEach(x=>{
+    const s=x.status||'new';
+    c[s]=(c[s]||0)+1;
+  });
+  const total=RB.custs.length;
   const el=document.getElementById('rb-stats-row');
   if(!el)return;
-  el.innerHTML=`
-    <div class="rb-stat"><div class="rb-stat-num">${RB.custs.length}</div><div class="rb-stat-lbl">Total</div></div>
-    <div class="rb-stat sb"><div class="rb-stat-num">${c.new||0}</div><div class="rb-stat-lbl">New</div></div>
-    <div class="rb-stat sg"><div class="rb-stat-num">${c.active||0}</div><div class="rb-stat-lbl">Active</div></div>
-    <div class="rb-stat sp"><div class="rb-stat-num">${c.vip||0}</div><div class="rb-stat-lbl">VIP</div></div>
-    <div class="rb-stat"><div class="rb-stat-num">${c.silent||0}</div><div class="rb-stat-lbl">Silent</div></div>
-    <div class="rb-stat sr"><div class="rb-stat-num">${c.winback||0}</div><div class="rb-stat-lbl">Win-Back</div></div>
-    <div class="rb-stat sg"><div class="rb-stat-num">${RB.alog.length}</div><div class="rb-stat-lbl">Interactions</div></div>`;
+  const statBtn=(status,label,cls,count)=>`<div class="rb-stat ${cls}" data-status="${status}" onclick="rbFilterByStat('${status}')" style="cursor:pointer;transition:all .15s;" title="Click to filter by ${label}"><div class="rb-stat-num">${count}</div><div class="rb-stat-lbl">${label}</div></div>`;
+  el.innerHTML=
+    `<div class="rb-stat" data-status="total" onclick="rbFilterByStat('')" style="cursor:pointer;" title="Show all"><div class="rb-stat-num">${total}</div><div class="rb-stat-lbl">Total</div></div>`+
+    statBtn('new','New','sb',c.new||0)+
+    statBtn('active','Active','sg',c.active||0)+
+    statBtn('vip','VIP','sp',c.vip||0)+
+    statBtn('silent','Silent','',c.silent||0)+
+    statBtn('winback','Win-Back','sr',c.winback||0)+
+    statBtn('inactive','Inactive','',c.inactive||0)+
+    `<div class="rb-stat sg" data-status="interactions" style="cursor:default;"><div class="rb-stat-num">${RB.alog.length}</div><div class="rb-stat-lbl">Interactions</div></div>`;
+  // Restore active state
+  if(_rbStatFilter){
+    document.querySelectorAll('.rb-stat').forEach(el=>{
+      el.style.outline=el.dataset.status===_rbStatFilter?'2px solid var(--acc)':'';
+      el.style.opacity=_rbStatFilter&&el.dataset.status!==_rbStatFilter&&el.dataset.status!=='total'?'0.5':'1';
+    });
+  }
   // Update queue badge
   const qb=document.getElementById('rb-qc');
   if(qb)qb.textContent=rbBuildQueue().length;
@@ -4905,7 +5083,7 @@ function rbRenderStats(){
 // ── CUSTOMERS ─────────────────────────────────────────────────────────────────
 function rbRenderCusts(){
   const s=(document.getElementById('rb-cs')?.value||'').toLowerCase();
-  const fs=document.getElementById('rb-cfs')?.value||'';
+  const fs=_rbStatFilter||(document.getElementById('rb-cfs')?.value||'');
   const fl=document.getElementById('rb-cfl')?.value||'';
   const f=RB.custs.filter(c=>{
     const ms=!s||c.name.toLowerCase().includes(s)||(c.phone||'').includes(s)||(c.city||'').toLowerCase().includes(s);
@@ -5421,7 +5599,7 @@ let _alertCtx={linkType:'customer',linkValue:'',ctx:''};
 async function openAlertModal(ctx){
   // ctx: {linkType, linkValue, display}
   _alertCtx=ctx||{linkType:'none',linkValue:'',display:''};
-  alertsLoad();;
+  alertsLoad();
   const modal=document.getElementById('alert-modal');
   const lt=document.getElementById('alert-link-type');
   const lv=document.getElementById('alert-link-value');
@@ -5479,18 +5657,24 @@ async function saveAlert(){
 }
 
 async function dismissAlert(id){
+  if(!curUser)return;
   const a=ALERTS.find(x=>x.id===id);
   if(!a)return;
-  a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();  
+  // Viewers can only dismiss alerts they created
+  if(curUser.role==='viewer'&&a.createdBy!==curUser.u){
+    notif('⚠ You can only dismiss alerts you created');
+    return;
+  }
+  a.dismissed=true;a.dismissedBy=curUser?.u||'system';a.dismissedAt=new Date().toISOString();
   await sb('PATCH','alerts?id=eq.'+encodeURIComponent(a.id),{dismissed:true,dismissed_by:curUser?.u||'',dismissed_at:new Date().toISOString()});
-  alertsLoad();;alertsUpdateBadge();
+  await alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
 async function hardDeleteAlert(id){
   if(curUser?.role!=='super'){notif('⚠ Only Super Admin can delete alerts');return;}
   await sb('DELETE','alerts?id=eq.'+encodeURIComponent(id));
-  alertsLoad();alertsUpdateBadge();
+  await alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
   notif('Alert deleted');
 }
@@ -5505,17 +5689,16 @@ function rbFilterCompleted(){
 }
 
 function alertsGetActive(){
-  alertsLoad();;
+  alertsLoad();
   return ALERTS.filter(a=>!a.dismissed);
 }
 
 function alertsForRow(linkType, linkValue){
-  if(!ALERTS.length)alertsLoad();;
+  if(!ALERTS.length)alertsLoad();
   return ALERTS.filter(a=>!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
 }
 
 function alertsUpdateBadge(){
-  alertsLoad();;
   const count=ALERTS.filter(a=>!a.dismissed).length;
   const badge=document.getElementById('rb-alert-badge');
   if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
@@ -5758,7 +5941,7 @@ function otSetFilter(key,val){
 }
 
 function rbRenderOutreach(){
-  alertsLoad();;
+  alertsLoad();
   const el=document.getElementById('rb-outreach-body');if(!el)return;
   if(!S.orders||!S.orders.length){
     el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first.</div>';return;
@@ -5830,7 +6013,7 @@ function rbRenderOutreach(){
               <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;">Created by ${esc(a.createdBy)} · ${rbFt(a.createdAt)}</div>
             </div>
             <div style="display:flex;gap:5px;flex-shrink:0;">
-              <button onclick="dismissAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t3);font-size:11px;cursor:pointer;white-space:nowrap;" title="Mark done">✓ Done</button>
+              ${(curUser?.role!=='viewer'||a.createdBy===curUser?.u)?`<button onclick="dismissAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t3);font-size:11px;cursor:pointer;white-space:nowrap;" title="Mark done">✓ Done</button>`:''}
               ${isSuper?`<button onclick="hardDeleteAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:11px;cursor:pointer;white-space:nowrap;" title="Delete permanently">🗑</button>`:''}
             </div>
           </div>`;
@@ -5961,3 +6144,4 @@ const RB_TEMPLATES=[
 </script>
 </body>
 </html>
+
