@@ -11,8 +11,7 @@
 :root{--bg:#0d0f14;--sur:#151820;--sur2:#1c2030;--sur3:#242840;--bdr:#2a2f45;--acc:#f97316;--grn:#22c55e;--blu:#3b82f6;--pur:#a855f7;--red:#ef4444;--txt:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:10px;--r2:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px;}
-/*  v20   */
-  
+/* ── VERSION 21 ── */
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
 #change-pw-screen{display:none;align-items:center;justify-content:center;min-height:100vh;}
@@ -653,7 +652,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div id="raabta-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
       <div class="tab active" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers">Customers</div>
       <div class="tab" onclick="rbSwitchTab('rb-outreach',this)" id="nav-rb-outreach">Outreach <span id="rb-alert-badge" style="display:none;background:rgba(239,68,68,.2);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
-      <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates">Templates</div>
+      <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates" style="display:none;">Templates</div>
       <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
     </div>
     <!-- Exec tabs removed — unified single screen -->
@@ -1422,7 +1421,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div class="adm-title">🗺 Unrecognised Addresses — Assign City</div>
         <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">These addresses couldn't be auto-matched. Enter city name and save.</div>
         <div id="list-cities"><div style="color:var(--t3);font-size:12px;padding:8px;">✓ All addresses recognised</div></div>
-        <button class="save-btn" onclick="saveCities()">Save City Assignments</button>
+        <button class="save-btn" onclick="saveCities()" style="background:var(--blu);">Save All Remaining</button>
       </div>
     </div>
 
@@ -2388,7 +2387,7 @@ function showCustInfo(cust){
   const status=daysSince===null?'—':daysSince<30?'Active':daysSince<90?'Silent':daysSince<180?'Win-Back':'Inactive';
   const statusColor={'Active':'var(--grn)','Silent':'var(--acc)','Win-Back':'var(--pur)','Inactive':'var(--red)','—':'var(--t3)'}[status];
   // Recent orders (up to 5, from all time)
-  const recentRows=allOrds.slice(0,8).map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
+  const recentRows=allOrds.map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
     <span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px;">${esc(o.Order_ID)}</span>
     <span style="color:var(--t3);font-size:10px;">${esc(o.Order_Date_Str||'—')}</span>
     <span style="font-family:'DM Mono',monospace;">${fmtFull(o.Total_Sales)}</span>
@@ -2941,7 +2940,17 @@ function closeModal(id){document.getElementById(id).style.display='none';}
 
 function renderAdminLists(){
   document.getElementById('list-b2b').innerHTML=S.adminB2B.length?S.adminB2B.map((n,i)=>`<div class="adm-item"><span>${esc(n)}</span><button class="rm-btn" onclick="rmB2B(${i})">✕</button></div>`).join(''):'<div style="color:var(--t3);font-size:11px;padding:6px">None added yet</div>';
-  document.getElementById('list-tests').innerHTML=S.adminTests.length?S.adminTests.map((t,i)=>`<div class="adm-item"><span>${esc(t.c)}${t.s?' ('+t.s+')':''}</span><button class="rm-btn" onclick="rmTest(${i})">✕</button></div>`).join(''):'<div style="color:var(--t3);font-size:11px;padding:6px">None added</div>';
+  document.getElementById('list-tests').innerHTML=S.adminTests.length?S.adminTests.map((t,i)=>{
+    // Show count of matching orders still in DB
+    const matchCount=S.orders.filter(o=>o.Customer.toLowerCase()===t.c&&(!t.s||o.Status===t.s)).length;
+    return`<div class="adm-item" style="flex-direction:column;align-items:flex-start;gap:3px;padding:7px 9px;">
+      <div style="display:flex;width:100%;align-items:center;gap:6px;">
+        <span style="flex:1;color:var(--txt);font-weight:600;">${esc(t.c)}${t.s?'<span style="color:var(--t3);font-weight:400;"> ('+esc(t.s)+')</span>':''}</span>
+        ${matchCount>0?'<span style="font-size:10px;color:var(--red);">'+matchCount+' still in DB — <button onclick="deleteTestOrders('+i+')" style="padding:2px 8px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:10px;cursor:pointer;">Delete now</button></span>':'<span style="font-size:10px;color:var(--grn);">\u2713 clean</span>'}
+        <button class="rm-btn" onclick="rmTest(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join(''):'<div style="color:var(--t3);font-size:11px;padding:6px">None added</div>';
 }
 
 async function saveConfig(){
@@ -3002,13 +3011,68 @@ async function rmB2B(i){
 
 function buildCityAssign(){
   const el=document.getElementById('list-cities');
-  const unrecog=[...new Set(S.orders.filter(o=>o.City==='(Unknown)').map(o=>o.Address))].slice(0,40);
+  // Build map of address → customer names
+  const addrCustMap={};
+  S.orders.filter(o=>o.City==='(Unknown)').forEach(o=>{
+    if(!addrCustMap[o.Address])addrCustMap[o.Address]=new Set();
+    addrCustMap[o.Address].add(o.Customer);
+  });
+  const unrecog=Object.keys(addrCustMap).slice(0,60);
   if(!unrecog.length){el.innerHTML='<div style="color:var(--t3);font-size:12px;padding:8px;">✓ All addresses recognised</div>';return;}
-  el.innerHTML=unrecog.map(a=>`<div class="city-row"><div class="city-addr" title="${esc(a)}">${esc(a.slice(0,60))}</div><input class="city-inp" placeholder="City…" data-addr="${esc(a)}" value="${esc(S.manualCities[a]||'')}"></div>`).join('');
+  el.innerHTML=unrecog.map(a=>{
+    const custs=[...addrCustMap[a]].slice(0,3).join(', ')+(addrCustMap[a].size>3?' +more':'');
+    return`<div class="city-row" id="city-row-${btoa(a).slice(0,12).replace(/[^a-z0-9]/gi,'')}" style="align-items:flex-start;flex-direction:column;gap:4px;padding:8px 0;">
+      <div style="display:flex;align-items:center;gap:8px;width:100%;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;margin-bottom:2px;">${esc(custs)}</div>
+          <div class="city-addr" title="${esc(a)}" style="font-size:11px;color:var(--t2);">${esc(a.slice(0,80))}</div>
+        </div>
+        <input class="city-inp" placeholder="City…" data-addr="${esc(a)}" value="${esc(S.manualCities[a]||'')}" style="width:130px;flex-shrink:0;" onkeydown="if(event.key==='Enter')saveSingleCity(this)">
+        <button onclick="saveSingleCity(this.previousElementSibling)" style="padding:3px 10px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;flex-shrink:0;">Save</button>
+      </div>
+    </div>`;
+  }).join('');
 }
+
+async function saveSingleCity(inp){
+  const addr=inp.dataset.addr;
+  const city=inp.value.trim();
+  if(!city){notif('⚠ Enter a city name');return;}
+  S.manualCities[addr]=city;
+  try{
+    // Delete old entry if exists
+    await sb('DELETE','admin_config?type=eq.manualCity&value1=eq.'+encodeURIComponent(addr)).catch(()=>{});
+    // Insert new
+    await dbInsert('admin_config',[{type:'manualCity',value1:addr,value2:city,updated_by:curUser?.u||'',updated_at:new Date().toISOString()}]);
+    // Update orders in Supabase
+    await fetch(SUPABASE_URL+'/rest/v1/orders?address=eq.'+encodeURIComponent(addr),{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({city:city})
+    });
+    // Update in memory
+    S.orders.forEach(o=>{if(o.Address===addr){o.City=city;}});
+    // Remove this row from the UI
+    inp.closest('.city-row').remove();
+    notif(`✓ "${city}" saved — orders updated`);
+    applyFilters();
+    logActivity('admin',`City assigned: "${addr}" → "${city}"`);
+  }catch(e){notif('❌ '+e.message);}
+}
+
 async function saveCities(){
-  document.querySelectorAll('.city-inp').forEach(inp=>{const a=inp.dataset.addr;const c=inp.value.trim();if(c)S.manualCities[a]=c;});
-  try{await saveConfig();notif('✓ City assignments saved');closeModal('admin-overlay');await loadAllData();}catch(e){notif('❌ '+e.message);}
+  // Bulk save all at once (for the Save button at bottom)
+  const inputs=document.querySelectorAll('.city-inp');
+  let saved=0;
+  for(const inp of inputs){
+    const addr=inp.dataset.addr;
+    const city=inp.value.trim();
+    if(city&&city!==S.manualCities[addr]){
+      await saveSingleCity(inp);
+      saved++;
+    }
+  }
+  if(!saved)notif('No changes to save');
 }
 
 // ═══════════════════════════════════════════════
@@ -3639,6 +3703,27 @@ async function addTestFilter(){
   }catch(e){hideLoader();notif('❌ '+e.message);}
 }
 
+async function deleteTestOrders(i){
+  const t=S.adminTests[i];
+  if(!confirm(`Delete all orders for "${t.c}"${t.s?' with status '+t.s:''}?`))return;
+  showLoader('Deleting test orders…');
+  try{
+    let deleteQuery='orders?customer=ilike.'+encodeURIComponent(t.c);
+    if(t.s)deleteQuery+='&status=eq.'+encodeURIComponent(t.s);
+    const res=await fetch(SUPABASE_URL+'/rest/v1/'+deleteQuery,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=representation','Content-Type':'application/json'}
+    });
+    const deleted=await res.json();
+    const count=Array.isArray(deleted)?deleted.length:0;
+    hideLoader();
+    notif(`✓ Deleted ${count} test order(s)`);
+    logActivity('admin',`Deleted test orders: ${t.c}${t.s?' ('+t.s+')':''} — ${count} records`);
+    await loadAllData();
+    renderAdminLists();
+  }catch(e){hideLoader();notif('❌ '+e.message);}
+}
+
 async function rmTest(i){
   S.adminTests.splice(i,1);
   renderAdminLists();
@@ -4233,6 +4318,9 @@ async function rbInit(){
     const users=[...new Set(RB.alog.map(l=>l.user))].sort();
     af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
   }
+  // Show templates tab only for non-viewers
+  const tplNav=document.getElementById('nav-rb-templates');
+  if(tplNav)tplNav.style.display=curUser?.role!=='viewer'?'':'none';
 }
 
 let currentMode='analytics';
@@ -4413,6 +4501,7 @@ function ecRenderUnified(){
 let grCtype='all';
 let grPeriod='t12m';
 let grFromDate=null,grToDate=null;
+let grCustomFrom=null,grCustomTo=null;
 function grSetCtype(v){
   grCtype=v;
   ['all','b2b','b2c'].forEach(k=>{const btn=document.getElementById('gr-ct-'+k);if(btn)btn.className='ec-cur-btn'+(k===(v==='all'?'all':v.toLowerCase())?' active':'');});
@@ -4420,7 +4509,21 @@ function grSetCtype(v){
 }
 function grSetPeriod(v){
   grPeriod=v;
-  ['t12m','all'].forEach(k=>{const btn=document.getElementById('gr-p-'+k);if(btn)btn.className='ec-cur-btn'+(k===v?' active':'');});
+  ['t12m','all','custom'].forEach(k=>{const btn=document.getElementById('gr-p-'+k);if(btn)btn.className='ec-cur-btn'+(k===v?' active':'');});
+  const customRange=document.getElementById('gr-custom-range');
+  if(customRange)customRange.style.display=v==='custom'?'flex':'none';
+  grRender();
+}
+
+function grApplyCustomRange(){
+  const f=document.getElementById('gr-custom-from')?.value;
+  const t=document.getElementById('gr-custom-to')?.value;
+  if(!f||!t){notif('⚠ Select both dates');return;}
+  grCustomFrom=new Date(f);
+  grCustomTo=new Date(t);
+  grCustomTo.setHours(23,59,59,999);
+  grFromDate=grCustomFrom;
+  grToDate=grCustomTo;
   grRender();
 }
 
@@ -4467,17 +4570,22 @@ function grRender(){
   const el=document.getElementById('gr-body');if(!el)return;
   if(!S.orders||!S.orders.length){el.innerHTML='<div style="color:var(--t3);padding:40px;text-align:center;">Upload analytics data first.</div>';return;}
 
+  const now=new Date();
   const yr=ecYearMain||(ecGetYears().slice(-1)[0]);
-  const months=ecMonthsForYear(yr);
+  const months=grPeriod==='t12m'
+    ?[...Array(12)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})
+    :grPeriod==='custom'&&grFromDate&&grToDate
+      ?(()=>{const ms=[];let d=new Date(grFromDate.getFullYear(),grFromDate.getMonth(),1);while(d<=grToDate){ms.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));d=new Date(d.getFullYear(),d.getMonth()+1,1);}return ms;})()
+      :ecMonthsForYear(yr);
   const spend=grLoadSpend();
 
-  // Filter orders by type
-  // Apply period filter
-  const now=new Date();
+  // Filter orders by period
   const t12mCutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
   const periodSrc=grPeriod==='t12m'
     ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=t12mCutoff)
-    :S.orders;
+    :grPeriod==='custom'&&grFromDate&&grToDate
+      ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=grFromDate&&o.Order_Date<=grToDate)
+      :S.orders;
   const grOrders=grCtype==='all'?periodSrc:periodSrc.filter(o=>grCtype==='B2B'?o.Customer_Type==='B2B':o.Customer_Type!=='B2B');
 
   // Build per-customer data
@@ -4605,7 +4713,7 @@ function grRender(){
   });
 
   // Cohort retention table
-  const cohortMonths=months.slice(0,8); // limit to 8 cohorts max
+  const cohortMonths=months;
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
@@ -4672,6 +4780,13 @@ function grRender(){
       <div class="ec-cur-toggle">
         <button class="ec-cur-btn${grPeriod==='t12m'?' active':''}" id="gr-p-t12m" onclick="grSetPeriod('t12m')">T12M</button>
         <button class="ec-cur-btn${grPeriod==='all'?' active':''}" id="gr-p-all" onclick="grSetPeriod('all')">All time</button>
+        <button class="ec-cur-btn${grPeriod==='custom'?' active':''}" id="gr-p-custom" onclick="grSetPeriod('custom')">Custom</button>
+      </div>
+      <div id="gr-custom-range" style="display:${grPeriod==='custom'?'flex':'none'};align-items:center;gap:6px;flex-wrap:wrap;">
+        <input type="date" id="gr-custom-from" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 7px;border-radius:4px;font-size:11px;" value="${grCustomFrom?grCustomFrom.toISOString().split('T')[0]:''}">
+        <span style="color:var(--t3);font-size:11px;">→</span>
+        <input type="date" id="gr-custom-to" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 7px;border-radius:4px;font-size:11px;" value="${grCustomTo?grCustomTo.toISOString().split('T')[0]:''}">
+        <button onclick="grApplyCustomRange()" style="padding:3px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">Apply</button>
       </div>
       <div style="width:1px;background:var(--bdr);flex-shrink:0;"></div>
       <div class="ec-cur-toggle">
@@ -4862,7 +4977,7 @@ function bnUpdateSubTabs(mode){
     raabta:[
       {id:'rb-customers',label:'Customers',fn:()=>rbSwitchTab('rb-customers')},
       {id:'rb-outreach',label:'Outreach',fn:()=>rbSwitchTab('rb-outreach')},
-      {id:'rb-templates',label:'Templates',fn:()=>rbSwitchTab('rb-templates')},
+      ...(curUser?.role!=='viewer'?[{id:'rb-templates',label:'Templates',fn:()=>rbSwitchTab('rb-templates')}]:[]),
       {id:'rb-activity',label:'Activity',fn:()=>rbSwitchTab('rb-activity')},
     ],
     exec:[
@@ -6081,7 +6196,25 @@ function rbRenderOutreach(){
      rows:react.map(c=>{const d=Math.floor((today-c.lastOrder)/86400000);return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--pur);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
-    {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
+    {id:'churn',title:'⚠ About to Churn',color:'var(--red)',
+     rows:(()=>{
+       const churnList=all.filter(c=>{if(c.orders<3||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=21&&d<=30;});
+       return churnList.map(c=>{
+         const d=Math.floor((today-c.lastOrder)/86400000);
+         const typeBdg=c.type==='B2B'?'b-b2b':'b-b2c';
+         const cells='<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'+esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
+           +'<td><span class="bdg '+typeBdg+'">'+c.type+'</span></td>'
+           +'<td style="text-align:right;font-size:11px;">'+fmtDate(c.lastOrder)+'</td>'
+           +'<td style="text-align:right;color:var(--red);font-family:\'DM Mono\',monospace;">'+d+'d</td>'
+           +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+c.orders+'</td>'
+           +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+fmtFull(c.sales)+'</td>';
+         return{name:c.name,cells};
+       });
+     })(),
+     cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
+     filterHtml:'<span style="font-size:10px;color:var(--t3);">3+ orders, 21-30 days silent</span>'},
+
+        {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:filterInput('ot-vip-min','vipMin','Avg ≥ PKR','')},
@@ -6119,7 +6252,7 @@ function rbSwitchTab(name, el){
   rbCurTab=name;
   if(name==='rb-customers'){rbRenderCusts();rbRenderStats();}
   if(name==='rb-outreach'){rbRenderOutreach();alertsUpdateBadge();}
-  if(name==='rb-templates'){rbRenderTpls();}
+  if(name==='rb-templates'){if(curUser?.role==='viewer'){notif('⚠ Access restricted');return;}rbRenderTpls();}
   if(name==='rb-activity'){rbRenderAct();}
 }
 
@@ -6144,4 +6277,3 @@ const RB_TEMPLATES=[
 </script>
 </body>
 </html>
-
