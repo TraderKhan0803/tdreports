@@ -4080,16 +4080,6 @@ async function rbInit(){
     const users=[...new Set(RB.alog.map(l=>l.user))].sort();
     af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
   }
-  const access=getUserAccess(curUser);
-  const lmA=document.getElementById('lm-analytics');
-  const lmR=document.getElementById('lm-raabta');
-  const lmE=document.getElementById('lm-exec');
-  if(lmA&&!access.analytics)lmA.style.display='none';
-  if(lmR&&!access.raabta)lmR.style.display='none';
-  if(lmE&&!access.exec)lmE.style.display='none';
-  if(access.analytics)setMode('analytics');
-  else if(access.raabta)setMode('raabta');
-  else if(access.exec)setMode('exec');
 }
 
 let currentMode='analytics';
@@ -4838,7 +4828,7 @@ async function saveUserPerms(username, perms){
 }
 
 function toggleLogoMenu(){
-  if(curUser&&curUser.role==='viewer')return;
+
   const m=document.getElementById('logo-menu');
   m.style.display=m.style.display==='none'?'block':'none';
 }
