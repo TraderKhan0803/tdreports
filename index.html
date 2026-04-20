@@ -1681,7 +1681,20 @@ const dbDelete=(t,p)=>sb('DELETE',t+'?'+p);
 async function fetchAllRows(table,extra=''){
   const BATCH=5000;let all=[],from=0;
   while(true){
-    const rows=await dbGet(table,'select=*&limit='+BATCH+'&offset='+from+(extra?'&'+extra:''));
+    const to=from+BATCH-1;
+    const opts={method:'GET',headers:{
+      'apikey':SUPABASE_KEY,
+      'Authorization':'Bearer '+SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Range':from+'-'+to,
+      'Range-Unit':'items',
+      'Prefer':'count=none'
+    }};
+    const url=SUPABASE_URL+'/rest/v1/'+table+'?select=*'+(extra?'&'+extra:'');
+    const res=await fetch(url,opts);
+    if(!res.ok){const e=await res.text();throw new Error(e);}
+    const t=await res.text();
+    const rows=t?JSON.parse(t):[];
     all=all.concat(rows);
     if(rows.length<BATCH)break;
     from+=BATCH;
