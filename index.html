@@ -1680,6 +1680,7 @@ const dbInsert=(t,d)=>sb('POST',t,d);
 const dbDelete=(t,p)=>sb('DELETE',t+'?'+p);
 async function fetchAllRows(table,extra=''){
   const BATCH=5000;let all=[],from=0;
+  console.log('[Tezz] fetchAllRows start:',table);
   while(true){
     const to=from+BATCH-1;
     const opts={method:'GET',headers:{
@@ -1695,6 +1696,7 @@ async function fetchAllRows(table,extra=''){
     if(!res.ok){const e=await res.text();throw new Error(e);}
     const t=await res.text();
     const rows=t?JSON.parse(t):[];
+    console.log('[Tezz]',table,'batch from='+from,'got='+rows.length);
     all=all.concat(rows);
     if(rows.length<BATCH)break;
     from+=BATCH;
@@ -1809,8 +1811,10 @@ async function loadAllData(){
   try{
     showLoader('Loading orders…');
     const orders=await fetchAllRows('orders');
-    showLoader('Loading products…');
+    console.log('[Tezz] Orders loaded:',orders.length);
+    showLoader('Loading products… ('+orders.length+' orders loaded)');
     const products=await fetchAllRows('products');
+    console.log('[Tezz] Products loaded:',products.length);
     showLoader('Loading config & users…');
     const [config,users]=await Promise.all([
       dbGet('admin_config','select=*'),
