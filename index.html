@@ -258,6 +258,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 @media(max-width:768px){
   /* App layout adjusts for bottom nav */
   #app{padding-bottom:56px;}
+  .bn-sub{transition:transform .25s ease,opacity .25s ease;}
+  .bn-sub.hidden{transform:translateY(100%);opacity:0;pointer-events:none;}
 
   /* Topbar — slimmer, no sub-tabs */
   .topbar{height:48px;min-height:48px;padding:0 12px;flex-wrap:nowrap;overflow:visible;}
@@ -544,6 +546,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   .gr-kpi-value{font-size:16px;}
 }
 
+/* ── B2B ROW TINTING ── */
+.b2b-row td{background:rgba(168,85,247,.04)!important;border-left:2px solid rgba(168,85,247,.25);}
+.b2b-row:hover td{background:rgba(168,85,247,.09)!important;}
+.b2b-row td:first-child{border-left:2px solid rgba(168,85,247,.5);}
+
 /* ── SORTABLE HEADERS ── */
 .dt th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
 .dt th.sortable:hover{color:var(--acc);}
@@ -663,6 +670,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     </div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta" style="display:none">No data</span>
+      <button id="kpi-cur-toggle" onclick="toggleKpiCurrency()" class="hbtn" style="font-family:'DM Mono',monospace;font-size:10px;">Show USD</button>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--pur);color:var(--pur)" onclick="showSuper()">★ Super</button>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
@@ -1027,7 +1035,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             </div>
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Avg Gap</th><th>Signal</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
             <tbody id="mkt-churn-body"></tbody></table>
           </div>
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-churn-count"></div>
@@ -1049,7 +1057,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             </div>
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Avg Gap</th><th>Signal</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
             <tbody id="mkt-react-body"></tbody></table>
           </div>
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-react-count"></div>
@@ -1680,7 +1688,6 @@ const dbInsert=(t,d)=>sb('POST',t,d);
 const dbDelete=(t,p)=>sb('DELETE',t+'?'+p);
 async function fetchAllRows(table,extra=''){
   const BATCH=5000;let all=[],from=0;
-  console.log('[Tezz] fetchAllRows start:',table);
   while(true){
     const to=from+BATCH-1;
     const opts={method:'GET',headers:{
@@ -1696,7 +1703,6 @@ async function fetchAllRows(table,extra=''){
     if(!res.ok){const e=await res.text();throw new Error(e);}
     const t=await res.text();
     const rows=t?JSON.parse(t):[];
-    console.log('[Tezz]',table,'batch from='+from,'got='+rows.length);
     all=all.concat(rows);
     if(rows.length<BATCH)break;
     from+=BATCH;
@@ -1811,10 +1817,8 @@ async function loadAllData(){
   try{
     showLoader('Loading orders…');
     const orders=await fetchAllRows('orders');
-    console.log('[Tezz] Orders loaded:',orders.length);
     showLoader('Loading products… ('+orders.length+' orders loaded)');
     const products=await fetchAllRows('products');
-    console.log('[Tezz] Products loaded:',products.length);
     showLoader('Loading config & users…');
     const [config,users]=await Promise.all([
       dbGet('admin_config','select=*'),
@@ -2227,14 +2231,37 @@ function applyFilters(){
 let custSortKey='Sales',custSortAsc=false;
 function sortCusts(key){if(custSortKey===key)custSortAsc=!custSortAsc;else{custSortKey=key;custSortAsc=false;}renderDashboard();}
 
+let kpiCurrency='PKR';
+const USD_RATE=280.46; // fallback rate
+
+function getKpiRate(){
+  // Try to get current rate from EC data
+  const months=Object.keys(EX_HISTORICAL.rates);
+  const lastMk=months[months.length-1];
+  return EX_HISTORICAL.rates[lastMk]||USD_RATE;
+}
+
+function toggleKpiCurrency(){
+  kpiCurrency=kpiCurrency==='PKR'?'USD':'PKR';
+  const btn=document.getElementById('kpi-cur-toggle');
+  if(btn)btn.textContent=kpiCurrency==='PKR'?'Show USD':'Show PKR';
+  renderDashboard(selCust||undefined);
+}
+
 function renderKPIs(elId,orders){
   const uniq=new Set(orders.map(o=>o.Customer.toLowerCase())).size;
-  const totalSales=orders.reduce((s,o)=>s+o.Total_Sales,0);
+  const totalSalesPKR=orders.reduce((s,o)=>s+o.Total_Sales,0);
   const days=getUniqueDays(orders);
   const newC=orders.filter(o=>o.IsFirstOrder==='New Customer').length;
+  const rate=getKpiRate();
+  const inUSD=kpiCurrency==='USD';
+  const totalSales=inUSD?totalSalesPKR/rate:totalSalesPKR;
+  const avgOrd=orders.length?totalSales/orders.length:0;
+  const cur=inUSD?'USD':'PKR';
+  const fmtV=v=>inUSD?'$'+parseFloat(v.toFixed(0)).toLocaleString():fmt(v);
   document.getElementById(elId).innerHTML=
     kpi('Total Customers',fmtFull(uniq))+kpi('Total Orders',fmtFull(orders.length),'c-blu')+
-    kpi('Total Sales',fmt(totalSales),'c-grn','PKR')+kpi('Avg Order Size',fmt(orders.length?totalSales/orders.length:0),'','PKR')+
+    kpi('Total Sales',fmtV(totalSales),'c-grn',cur)+kpi('Avg Order Size',fmtV(avgOrd),'',cur)+
     kpi('Avg Daily Orders',(orders.length/days).toFixed(2),'c-pur')+kpi('New Customers',fmtFull(newC),'c-grn');
 }
 function kpi(l,v,c='',s=''){return`<div class="kpi ${c}"><div class="kpi-lbl">${l}</div><div class="kpi-val">${v}</div>${s?`<div class="kpi-sub">${s}</div>`:''}</div>`;}
@@ -2280,7 +2307,7 @@ function renderDashboard(pinnedCust){
     const isOpen=_openTrees.has(c.Customer);
 
     const tr=document.createElement('tr');
-    tr.className='r'+(c.IsNew?' ncust':'')+(selCust===c.Customer?' sel':'');
+    tr.className='r'+(c.IsNew?' ncust':'')+(selCust===c.Customer?' sel':'')+(c.Type==='B2B'?' b2b-row':'');
     const toggleHtml=hasAliases
       ?`<span class="tree-toggle${isOpen?' open':''}" onclick="event.stopPropagation();toggleCustTree('${esc(c.Customer)}')">▶</span>`
       :'<span style="display:inline-block;width:18px;"></span>';
@@ -2421,6 +2448,9 @@ function showCustInfo(cust){
   const daysSince=lastOrd?.Order_Date?Math.floor((new Date()-lastOrd.Order_Date)/86400000):null;
   const status=daysSince===null?'—':daysSince<30?'Active':daysSince<90?'Silent':daysSince<180?'Win-Back':'Inactive';
   const statusColor={'Active':'var(--grn)','Silent':'var(--acc)','Win-Back':'var(--pur)','Inactive':'var(--red)','—':'var(--t3)'}[status];
+  const avgGap=calcAvgGap(allOrds);
+  const gc=daysSince!==null&&avgGap?gapColor(daysSince,avgGap):'var(--t2)';
+  const gl=daysSince!==null&&avgGap?gapLabel(daysSince,avgGap):'';
   // Recent orders (up to 5, from all time)
   const recentRows=allOrds.map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
     <span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px;">${esc(o.Order_ID)}</span>
@@ -2436,9 +2466,38 @@ function showCustInfo(cust){
     <div class="info-row"><div class="info-lbl">Lifetime Spend</div><div class="info-val" style="color:var(--grn);font-family:'DM Mono',monospace;">${fmtFull(totalSpend)}</div></div>
     <div class="info-row"><div class="info-lbl">First Order</div><div class="info-val" style="font-size:11px;">${firstOrd?.Order_Date_Str||'—'}</div></div>
     <div class="info-row"><div class="info-lbl">Last Order</div><div class="info-val" style="font-size:11px;">${lastOrd?.Order_Date_Str||'—'}${daysSince!==null?' ('+daysSince+'d ago)':''}</div></div>
+    ${avgGap?`<div class="info-row"><div class="info-lbl">Avg Gap</div><div class="info-val" style="font-family:'DM Mono',monospace;"><span style="color:${gc};font-weight:600;">${avgGap}d</span>${gl?' <span style="font-size:10px;color:'+gc+';">('+gl+')</span>':''}</div></div>`:''}
     ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:'DM Mono',monospace;">${filtOrds.length} of ${allOrds.length} orders shown · ${allOrds.length-filtOrds.length} not displayed (outside date range or filtered status)</div>`:''}
     <div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">ALL ORDER HISTORY</div>
     <div style="max-height:180px;overflow-y:auto;">${recentRows||'<div style="color:var(--t3);font-size:11px;">No orders</div>'}</div>`;
+}
+
+// ═══════════════════════════════════════════════
+// AVG GAP HELPER
+// ═══════════════════════════════════════════════
+function calcAvgGap(orders){
+  // Calculate average days between consecutive orders for a customer
+  const dated=orders.filter(o=>o.Order_Date).map(o=>o.Order_Date.getTime()).sort((a,b)=>a-b);
+  if(dated.length<2)return null;
+  let totalGap=0;
+  for(let i=1;i<dated.length;i++)totalGap+=(dated[i]-dated[i-1])/86400000;
+  return Math.round(totalGap/(dated.length-1));
+}
+
+function gapColor(daysSince,avgGap){
+  if(!avgGap||!daysSince)return'var(--t2)';
+  const ratio=daysSince/avgGap;
+  if(ratio<=1)return'var(--grn)';
+  if(ratio<=1.5)return'var(--acc)';
+  return'var(--red)';
+}
+
+function gapLabel(daysSince,avgGap){
+  if(!avgGap)return'—';
+  const ratio=daysSince/avgGap;
+  if(ratio<=1)return'on schedule';
+  if(ratio<=1.5)return'slightly overdue';
+  return'overdue';
 }
 
 // ═══════════════════════════════════════════════
@@ -2462,7 +2521,7 @@ function renderCustomer(pinnedCust){
   custs.forEach((c,i)=>{
     totO+=c.Orders;totS+=c.Sales;
     const tr=document.createElement('tr');
-    tr.className='r'+(selRankedCust===c.Customer?' sel':'');
+    tr.className='r'+(selRankedCust===c.Customer?' sel':'')+(c.Type==='B2B'?' b2b-row':'');
     tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>{
       selRankedCust=selRankedCust===c.Customer?null:c.Customer;
@@ -2772,7 +2831,7 @@ function exGetValue(monthKey,field){
 
 function exFmt(v){
   if(exCurrency==='PKR')return Math.round(v).toLocaleString();
-  return v.toFixed(0);
+  return parseFloat(v.toFixed(0)).toLocaleString();
 }
 
 function exFmtSign(v){
@@ -4246,12 +4305,17 @@ function renderMktChurn(){
   }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
   .sort((a,b)=>a.DaysInactive-b.DaysInactive);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--red);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  custs.forEach(c=>{
+    const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.Customer);
+    const ag=calcAvgGap(custOrds);
+    const gc2=ag?gapColor(c.DaysInactive,ag):'var(--t2)';
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--red);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t3);">${ag?ag+'d':'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:${gc2};font-weight:600;">${ag?gapLabel(c.DaysInactive,ag):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));
+  });
   const tb=document.getElementById('mkt-churn-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--grn)">✓ No early churn signals in this range</td>';tb.appendChild(tr);}
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:20px;color:var(--grn)">✓ No early churn signals in this range</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   document.getElementById('mkt-churn-count').textContent=custs.length+' loyal customers showing early churn signals ('+minD+'–'+maxD+' days)';
-  initSortableTable('mkt-churn-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
+  initSortableTable('mkt-churn-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'avggap',type:'num',align:'right'},{key:'signal',type:'text'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
 }
 
 function renderMktReactivation(){
@@ -4266,9 +4330,14 @@ function renderMktReactivation(){
   }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
   .sort((a,b)=>b.Sales-a.Sales);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  custs.forEach(c=>{
+    const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.Customer);
+    const ag=calcAvgGap(custOrds);
+    const gc2=ag?gapColor(c.DaysInactive,ag):'var(--t2)';
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t3);">${ag?ag+'d':'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:${gc2};font-weight:600;">${ag?gapLabel(c.DaysInactive,ag):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));
+  });
   const tb=document.getElementById('mkt-react-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No reactivation targets in this range</td>';tb.appendChild(tr);}
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:20px;color:var(--t3)">No reactivation targets in this range</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   document.getElementById('mkt-react-count').textContent=custs.length+' loyal customers inactive '+minD+'–'+maxD+' days';
 }
@@ -4350,6 +4419,26 @@ function startAlertPolling(){
   },300000);
 }
 function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_pollInterval=null;}}
+
+// ── MOBILE SUB-NAV AUTO-HIDE ON SCROLL ───────────────────────────────────────
+(function(){
+  let lastY=0,ticking=false;
+  function onScroll(){
+    if(!ticking){
+      requestAnimationFrame(()=>{
+        const sub=document.getElementById('bn-sub');
+        if(!sub||window.innerWidth>768){ticking=false;return;}
+        const y=window.scrollY||document.documentElement.scrollTop;
+        if(y>lastY+10)sub.classList.add('hidden');
+        else if(y<lastY-10)sub.classList.remove('hidden');
+        lastY=y;ticking=false;
+      });
+      ticking=true;
+    }
+  }
+  document.addEventListener('scroll',onScroll,{passive:true});
+  document.querySelector('.content')?.addEventListener('scroll',onScroll,{passive:true});
+})();
 
 // ═══════════════════════════════════════════════
 // INIT
@@ -4433,7 +4522,7 @@ function ecMonthsForYear(year){
 function ecFmt(v){
   if(v===null||v===undefined)return'—';
   if(ecCurrencyMain==='PKR')return Math.round(v).toLocaleString();
-  return'$'+v.toFixed(0);
+  return'$'+parseFloat(v.toFixed(0)).toLocaleString();
 }
 function ecSetCurMain(cur){
   ecCurrencyMain=cur;
@@ -5355,14 +5444,23 @@ function rbOpenC(id){
   const mss=document.getElementById('rb-mss');if(mss)mss.value=c.status;
   const mls=document.getElementById('rb-mls');if(mls)mls.value=c.lang||'?';
   const lang=c.lang==='ur'?'ur':'en';
-  const waNum=rbDefaultWA();
   const tpls=rbGetTemplates();
   const mt=document.getElementById('rb-mt');
-  if(mt)mt.innerHTML=tpls.map(function(t){
-    const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[\u0646\u0627\u0645]',c.name);
-    const lnk=waNum?'https://wa.me/'+waNum+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
-    return '<button class="rb-tpl-btn" onclick="rbSTpl(\''+c.id+'\',\''+t.id+'\',\''+lnk+'\')"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
-  }).join('');
+  // Use customer's phone for outbound messaging
+  const custPhone=(c.phone||'').replace(/\D/g,'');
+  const phoneValid=custPhone.length>=7;
+  if(mt){
+    if(!phoneValid){
+      mt.innerHTML='<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:var(--r2);padding:10px 12px;font-size:11px;color:var(--acc);margin-bottom:8px;">⚠ No valid phone number on file. <span style="color:var(--t2);">Add a phone number to enable WhatsApp templates.</span></div>'
+        +tpls.map(function(t){return '<button class="rb-tpl-btn" style="opacity:.4;cursor:not-allowed;"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';}).join('');
+    } else {
+      mt.innerHTML=tpls.map(function(t){
+        const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[\u0646\u0627\u0645]',c.name);
+        const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
+        return '<button class="rb-tpl-btn" onclick="rbSTpl(\''+c.id+'\',\''+t.id+'\',\''+lnk+'\')"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
+      }).join('');
+    }
+  }
   const hist=document.getElementById('rb-hist-panel');
   if(hist){hist.style.maxHeight='0';hist.style.overflow='hidden';}
   rbRenderMH(c);
@@ -6326,29 +6424,27 @@ function rbRenderOutreach(){
      cols:[{label:'Customer'},{label:'Type'},{label:'Only Order',align:'right'},{label:'Days Silent',align:'right'},{label:'Value',align:'right'}],
      filterHtml:filterInput('ot-quiet-days','quietDays','Silent for','days+')},
     {id:'react',title:'♻ Reactivation',color:'var(--pur)',
-     rows:react.map(c=>{const d=Math.floor((today-c.lastOrder)/86400000);return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--pur);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),
-     cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
-    {id:'churn',title:'⚠ About to Churn',color:'var(--red)',
      rows:(()=>{
-       const _cMin=parseInt(document.getElementById('ot-churn-min')?.value)||21;
-       const _cMax=parseInt(document.getElementById('ot-churn-max')?.value)||30;
-       const churnList=all.filter(c=>{if(c.orders<3||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=_cMin&&d<=_cMax;});
-       return churnList.map(c=>{
+       return react.map(c=>{
          const d=Math.floor((today-c.lastOrder)/86400000);
+         const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name);
+         const ag=calcAvgGap(custOrds);
+         const gc2=ag?gapColor(d,ag):'var(--t2)';
          const typeBdg=c.type==='B2B'?'b-b2b':'b-b2c';
-         const cells='<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'+esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
+         const cells='<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'
+           +esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
            +'<td><span class="bdg '+typeBdg+'">'+c.type+'</span></td>'
            +'<td style="text-align:right;font-size:11px;">'+fmtDate(c.lastOrder)+'</td>'
-           +'<td style="text-align:right;color:var(--red);font-family:\'DM Mono\',monospace;">'+d+'d</td>'
+           +'<td style="text-align:right;color:var(--pur);font-family:\'DM Mono\',monospace;">'+d+'d</td>'
+           +'<td style="text-align:right;color:var(--t3);font-family:\'DM Mono\',monospace;">'+(ag?ag+'d':'—')+'</td>'
+           +'<td style="color:'+gc2+';font-weight:600;font-size:10px;">'+(ag?gapLabel(d,ag):'—')+'</td>'
            +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+c.orders+'</td>'
            +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+fmtFull(c.sales)+'</td>';
          return{name:c.name,cells};
        });
      })(),
-     cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:'<span style="font-size:10px;color:var(--t3);">3+ orders</span><input type="number" id="ot-churn-min" value="21" min="1" style="width:40px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:2px 5px;border-radius:4px;font-size:11px;text-align:center;margin:0 3px;" onchange="rbRenderOutreach()"><span style="font-size:10px;color:var(--t3);">–</span><input type="number" id="ot-churn-max" value="30" min="1" style="width:40px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:2px 5px;border-radius:4px;font-size:11px;text-align:center;margin:0 3px;" onchange="rbRenderOutreach()"><span style="font-size:10px;color:var(--t3);">days</span>'},
-
+     cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Avg Gap',align:'right'},{label:'Signal'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
+     filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
@@ -6370,9 +6466,16 @@ function rbRenderOutreach(){
 }
 
 function alertNavToLink(type, value){
-  closeAlertModal();
-  if(type==='customer'){goToDashboardCustomer(value,'Outreach');}
-  else if(type==='order'){setMode('analytics');switchTab('dashboard',null);}
+  if(type==='customer'){
+    // If in Raabta, open the customer modal directly
+    if(currentMode==='raabta'){
+      rbOpenOutreachCust(value);
+    } else {
+      goToDashboardCustomer(value,'Alert');
+    }
+  } else if(type==='order'){
+    setMode('analytics');switchTab('dashboard',null);
+  }
 }
 
 // ── rbSwitchTab update ────────────────────────────────────────────────────────
