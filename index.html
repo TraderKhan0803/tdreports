@@ -11,7 +11,7 @@
 :root{--bg:#0d0f14;--sur:#151820;--sur2:#1c2030;--sur3:#242840;--bdr:#2a2f45;--acc:#f97316;--grn:#22c55e;--blu:#3b82f6;--pur:#a855f7;--red:#ef4444;--txt:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:10px;--r2:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px;}
-/* ── VERSION 21 ── */
+
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
 #change-pw-screen{display:none;align-items:center;justify-content:center;min-height:100vh;}
@@ -994,7 +994,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
             <div>
               <div class="stitle" style="color:var(--acc);">🔇 Gone Quiet</div>
-              <div class="hint">Last ordered more than X days ago</div>
+              <div class="hint">Ordered once — not seen since</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:11px;color:var(--t3);">Silent for</span>
@@ -1004,7 +1004,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             </div>
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Orders</th><th style="text-align:right">Value</th></tr></thead>
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Only Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Value</th></tr></thead>
             <tbody id="mkt-quiet-body"></tbody></table>
           </div>
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-quiet-count"></div>
@@ -1496,6 +1496,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-exec" style="accent-color:var(--pur);"> 📈 Exec Committee</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-growth" style="accent-color:var(--grn);"> 📊 Growth &amp; Retention</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-downloads" style="accent-color:var(--blu);"> ⬇ Download Reports</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-templates" style="accent-color:var(--acc);"> ✏ Edit Message Templates</label>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
         <div id="list-users"></div>
@@ -1678,7 +1679,7 @@ const dbGet=(t,p='')=>sb('GET',t+'?'+p);
 const dbInsert=(t,d)=>sb('POST',t,d);
 const dbDelete=(t,p)=>sb('DELETE',t+'?'+p);
 async function fetchAllRows(table,extra=''){
-  const BATCH=1000;let all=[],from=0;
+  const BATCH=5000;let all=[],from=0;
   while(true){
     const rows=await dbGet(table,'select=*&limit='+BATCH+'&offset='+from+(extra?'&'+extra:''));
     all=all.concat(rows);
@@ -1755,6 +1756,7 @@ async function doForgot(){
 }
 
 function doLogout(){
+  stopAlertPolling();
   if(authToken)sb('DELETE','sessions?token=eq.'+encodeURIComponent(authToken)).catch(()=>{});
   logActivity('session','Logged out');
   authToken=null;curUser=null;
@@ -1771,17 +1773,33 @@ function onLoginSuccess(){
   document.getElementById('hdr-user').textContent=curUser.u;
   if(curUser.role==='admin'||curUser.role==='super')document.getElementById('btn-admin').style.display='';
   if(curUser.role==='super')document.getElementById('btn-super').style.display='';
-  loadAllData();
+  loadAllData().then(()=>{
+    startAlertPolling();
+    const access=getUserAccess(curUser);
+    const lmA=document.getElementById('lm-analytics');
+    const lmR=document.getElementById('lm-raabta');
+    const lmE=document.getElementById('lm-exec');
+    if(lmA)lmA.style.display=access.analytics?'':'none';
+    if(lmR)lmR.style.display=access.raabta?'':'none';
+    if(lmE)lmE.style.display=access.exec?'':'none';
+    if(access.analytics)setMode('analytics');
+    else if(access.raabta)setMode('raabta');
+    else if(access.exec)setMode('exec');
+  });
 }
 
 // ═══════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════
 async function loadAllData(){
-  showLoader('Loading data…');
+  showLoader('Connecting to database…');
   try{
-    const [orders,products,config,users]=await Promise.all([
-      fetchAllRows('orders'),fetchAllRows('products'),
+    showLoader('Loading orders…');
+    const orders=await fetchAllRows('orders');
+    showLoader('Loading products…');
+    const products=await fetchAllRows('products');
+    showLoader('Loading config & users…');
+    const [config,users]=await Promise.all([
       dbGet('admin_config','select=*'),
       dbGet('users','select=username,role,email')
     ]);
@@ -3305,9 +3323,11 @@ function renderUserList(){
       perms.growth?'<span style="background:rgba(34,197,94,.12);color:var(--grn);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Growth</span>':'',
       perms.downloads?'<span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">Downloads</span>':'',
     ].filter(Boolean).join(' '):'';
-    const editBtn=u.role==='viewer'&&curUser?.u!==u.u?`<button onclick="editUserPerms('${esc(u.u)}')" style="padding:2px 9px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;margin-right:4px;">Edit</button>`:'';
+    const isViewer=u.role==='viewer'&&curUser?.u!==u.u;
+    const editBtn=isViewer?'<button onclick="editUserPerms(&quot;'+esc(u.u)+'&quot;)" style="padding:2px 9px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;margin-right:4px;">Edit</button>':'';
+    const resetBtn=curUser?.u!==u.u?'<button onclick="resetUserPassword(&quot;'+esc(u.u)+'&quot;)" style="padding:2px 9px;background:var(--sur3);border:1px solid rgba(249,115,22,.4);border-radius:4px;color:var(--acc);font-size:11px;cursor:pointer;margin-right:4px;">Reset PW</button>':'';
     return`<div class="user-row"><span>${esc(u.u)}</span><span style="color:var(--t3);font-size:10px;">${esc(u.email||'')}</span><span class="role-badge role-${u.role}">${u.role}</span>${permTags?`<span>${permTags}</span>`:''}
-    ${curUser?.u!==u.u?`${editBtn}<button class="rm-btn" onclick="rmUser('${esc(u.u)}')">✕</button>`:' <span style="color:var(--t3);font-size:10px">you</span>'}</div>`;
+    ${curUser?.u!==u.u?`${editBtn}${resetBtn}<button class="rm-btn" onclick="rmUser('${esc(u.u)}')">✕</button>`:' <span style="color:var(--t3);font-size:10px">you</span>'}</div>`;
   }).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No users</div>';
 }
 
@@ -3325,6 +3345,7 @@ function editUserPerms(username){
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-exec" ${perms.exec?'checked':''} style="accent-color:var(--pur);width:15px;height:15px;"> 📈 Exec Committee</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-growth" ${perms.growth?'checked':''} style="accent-color:var(--grn);width:15px;height:15px;"> 📊 Growth & Retention</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-downloads" ${perms.downloads?'checked':''} style="accent-color:var(--blu);width:15px;height:15px;"> ⬇ Download Reports</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-templates" ${perms.templates?'checked':''} style="accent-color:var(--acc);width:15px;height:15px;"> ✏ Edit Message Templates</label>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button onclick="document.getElementById('edit-perms-overlay').remove()" style="padding:7px 16px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
@@ -3342,6 +3363,7 @@ async function saveEditedPerms(username){
     exec:!!document.getElementById('ep-exec')?.checked,
     growth:!!document.getElementById('ep-growth')?.checked,
     downloads:!!document.getElementById('ep-downloads')?.checked,
+    templates:!!document.getElementById('ep-templates')?.checked,
   };
   await saveUserPerms(username,perms);
   // Reload config so renderUserList shows updated perms
@@ -3352,6 +3374,39 @@ async function saveEditedPerms(username){
   notif(`✓ Permissions updated for "${username}"`);
   logActivity('admin',`Updated permissions for ${username}`);
 }
+function resetUserPassword(username){
+  const overlay=document.createElement('div');
+  overlay.id='reset-pw-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML='<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;width:320px;max-width:95vw;">'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:700;color:var(--acc);margin-bottom:6px;">Reset Password</div>'
+    +'<div style="font-size:12px;color:var(--t3);margin-bottom:16px;">Set a temporary password for <strong style=\"color:var(--txt);\">'
+    +esc(username)+'</strong>. They must change it on next login.</div>'
+    +'<input type="password" id="reset-pw-inp" class="adm-inp" placeholder="New temporary password" style="width:100%;margin-bottom:12px;">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button onclick="document.getElementById(\'reset-pw-overlay\').remove()" style="padding:7px 16px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>'
+    +'<button onclick="doResetPassword(\''+esc(username)+'\')" style="padding:7px 16px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Set Password</button>'
+    +'</div></div>';
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('reset-pw-inp')?.focus(),100);
+}
+
+async function doResetPassword(username){
+  const pw=document.getElementById('reset-pw-inp')?.value;
+  if(!pw||pw.length<4){notif('⚠ Password must be at least 4 characters');return;}
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/users?username=eq.'+encodeURIComponent(username),{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw,must_change_password:true})
+    });
+    document.getElementById('reset-pw-overlay')?.remove();
+    notif('✓ Password reset for "'+username+'" — they must change it on next login');
+    logActivity('admin','Reset password for user: '+username);
+  }catch(e){notif('❌ '+e.message);}
+}
+
 async function addUser(){
   const u=document.getElementById('inp-uname').value.trim();
   const email=document.getElementById('inp-uemail').value.trim();
@@ -4149,17 +4204,17 @@ function renderMktQuiet(){
   const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
   const today=getMktToday();
   const cutoff=new Date(today.getTime()-days*86400000);
-  // ANY customer (not just one-timers) whose last order was more than X days ago
-  const custs=getMktCustMap().filter(c=>c.LastOrder&&c.LastOrder<cutoff)
+  // First-timers only (1 order) silent X+ days
+  const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
     .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)}))
     .sort((a,b)=>b.DaysSilent-a.DaysSilent);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t2)">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
   const tb=document.getElementById('mkt-quiet-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers silent this long</td>';tb.appendChild(tr);}
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No first-time customers gone quiet</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  document.getElementById('mkt-quiet-count').textContent=custs.length+' customers silent '+days+'+ days';
-  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
+  document.getElementById('mkt-quiet-count').textContent=custs.length+' first-time customers silent '+days+'+ days';
+  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
 }
 
 function renderMktChurn(){
@@ -4263,6 +4318,23 @@ function downloadMktList(type){
 }
 
 // ═══════════════════════════════════════════════
+// BACKGROUND POLLING — alerts every 5 minutes
+// ═══════════════════════════════════════════════
+let _pollInterval=null;
+function startAlertPolling(){
+  if(_pollInterval)clearInterval(_pollInterval);
+  _pollInterval=setInterval(async()=>{
+    if(!curUser)return;
+    try{
+      await alertsLoad();
+      alertsUpdateBadge();
+      if(currentMode==='raabta'&&rbCurTab==='rb-outreach')rbRenderOutreach();
+    }catch(e){}
+  },300000);
+}
+function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_pollInterval=null;}}
+
+// ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
 (async function init(){
@@ -4291,7 +4363,7 @@ function rbSave(){
 function rbLoad(){
   try{RB.custs=JSON.parse(localStorage.getItem('rb_custs'))||[];}catch(e){RB.custs=[];}
   try{RB.alog=JSON.parse(localStorage.getItem('rb_alog'))||[];}catch(e){RB.alog=[];}
-  try{RB.waNumbers=JSON.parse(localStorage.getItem('rb_wa'))||[];}catch(e){RB.waNumbers=[];}
+  RB.waNumbers=[];
 }
 function rbUid(){return Math.random().toString(36).substr(2,9);}
 
@@ -4301,6 +4373,7 @@ let rbCurTab=null;
 async function rbInit(){
   rbLoad();
   await alertsLoad();
+  await rbLoadWANumbers();
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -4320,7 +4393,7 @@ async function rbInit(){
   }
   // Show templates tab only for non-viewers
   const tplNav=document.getElementById('nav-rb-templates');
-  if(tplNav)tplNav.style.display=curUser?.role!=='viewer'?'':'none';
+  if(tplNav){const _ta=getUserAccess(curUser);tplNav.style.display=_ta.templates?'':'none';}
 }
 
 let currentMode='analytics';
@@ -5071,8 +5144,8 @@ function toggleViewerAccess(){
 
 function getUserAccess(user){
   if(!user)return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};
-  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true};
-  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true};
+  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true,templates:true};
+  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true,templates:true};
   try{
     const cfg=S._rawConfig||[];
     const row=cfg.find(c=>c.type==='user_perms_'+user.u);
@@ -5083,6 +5156,7 @@ function getUserAccess(user){
       exec:!!perms.exec,
       growth:!!perms.growth,
       downloads:!!perms.downloads,
+      templates:!!perms.templates,
     };
   }catch(e){return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};}
 }
@@ -5182,7 +5256,8 @@ function rbRenderStats(){
     statBtn('silent','Silent','',c.silent||0)+
     statBtn('winback','Win-Back','sr',c.winback||0)+
     statBtn('inactive','Inactive','',c.inactive||0)+
-    `<div class="rb-stat sg" data-status="interactions" style="cursor:default;"><div class="rb-stat-num">${RB.alog.length}</div><div class="rb-stat-lbl">Interactions</div></div>`;
+    `<div class="rb-stat sg" data-status="interactions" style="cursor:default;"><div class="rb-stat-num" id="rb-interaction-count">${RB.alog.length}</div><div class="rb-stat-lbl">Interactions</div></div>`;
+  dbGet('raabta_log','select=id&limit=1000').then(rows=>{const el=document.getElementById('rb-interaction-count');if(el)el.textContent=Math.max(rows.length,RB.alog.length);}).catch(()=>{});
   // Restore active state
   if(_rbStatFilter){
     document.querySelectorAll('.rb-stat').forEach(el=>{
@@ -5292,14 +5367,20 @@ function rbGoToDash(name){
 }
 
 
-function rbRenderMH(c){
-  const logs=RB.alog.filter(l=>l.customerId===c.id).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-  document.getElementById('rb-mh').innerHTML=logs.length?logs.map(l=>`
-    <div class="rb-log">
+async function rbRenderMH(c){
+  const el=document.getElementById('rb-mh');if(!el)return;
+  el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:7px 0;">Loading…</div>';
+  try{
+    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(c.id)+'&order=timestamp.desc&limit=100');
+    const remoteIds=new Set(rows.map(l=>l.id));
+    const localOnly=RB.alog.filter(l=>l.customerId===c.id&&!remoteIds.has(l.id));
+    const allLogs=[...rows.map(l=>({ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    el.innerHTML=allLogs.length?allLogs.map(l=>`<div class="rb-log">
       <div class="rb-lt"><span class="rb-la">${esc(l.action)}</span><span class="rb-lm">${esc(l.user)} · ${rbFt(l.ts)}</span></div>
       ${l.outcome?`<div class="rb-lo">${esc(l.outcome)}</div>`:''}
       ${l.note?`<div class="rb-ln">${esc(l.note)}</div>`:''}
     </div>`).join(''):'<div style="color:var(--t3);font-size:11px;padding:7px 0;font-family:\'DM Mono\',monospace;">No interactions logged yet.</div>';
+  }catch(e){el.innerHTML='<div style="color:var(--red);font-size:11px;padding:7px 0;">Failed to load</div>';}
 }
 
 function rbCloseCM(){document.getElementById('rb-cm').classList.remove('open');RB.acid=null;rbRenderAll();}
@@ -5332,9 +5413,10 @@ function rbSaveLog(){
   rbRenderMH(c);rbRenderAct();notif('Interaction saved');
 }
 
-function rbLogA(cid,cn,action,outcome,note){
-  RB.alog.unshift({id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note});
-  rbSave();
+async function rbLogA(cid,cn,action,outcome,note){
+  const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note};
+  RB.alog.unshift(entry);
+  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts}]).catch(()=>{});
 }
 
 // ── ADD CUSTOMER ──────────────────────────────────────────────────────────────
@@ -5440,43 +5522,77 @@ function rbCpTpl(id){
 }
 
 // ── ACTIVITY LOG ──────────────────────────────────────────────────────────────
-function rbRenderAct(){
+async function rbRenderAct(){
   const fu=document.getElementById('rb-af')?.value||'';
-  const logs=[...RB.alog].filter(l=>!fu||l.user===fu).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
   const tb=document.getElementById('rb-act-body');if(!tb)return;
-  if(!logs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
-  tb.innerHTML=logs.map(l=>`
-    <tr>
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
+  try{
+    let qp='order=timestamp.desc&limit=300';
+    if(fu)qp+='&username=eq.'+encodeURIComponent(fu);
+    const rows=await dbGet('raabta_log',qp);
+    const remoteIds=new Set(rows.map(l=>l.id));
+    const localOnly=RB.alog.filter(l=>!remoteIds.has(l.id));
+    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    const af=document.getElementById('rb-af');
+    if(af){
+      const users=[...new Set(allLogs.map(l=>l.user))].sort();
+      const cur=af.value;
+      af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}"${u===cur?' selected':''}>${esc(u)}</option>`).join('');
+    }
+    if(!allLogs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
+    tb.innerHTML=allLogs.map(l=>`<tr>
       <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px">${rbFt(l.ts)}</td>
       <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
       <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
       <td style="color:var(--txt)">${esc(l.action)}</td>
       <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
     </tr>`).join('');
+  }catch(e){tb.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';}
 }
 
 // ── WHATSAPP NUMBERS ──────────────────────────────────────────────────────────
-function rbAddWANumber(){
+async function rbLoadWANumbers(){
+  try{
+    const cfg=S._rawConfig||[];
+    const cfgRows=cfg.filter(r=>r.type&&r.type.startsWith('waNumber'));
+    if(cfgRows.length){RB.waNumbers=cfgRows.map(r=>{try{return JSON.parse(r.value1);}catch(e){return null;}}).filter(Boolean);return;}
+    const rows=await dbGet('admin_config','type=like.waNumber%25&order=updated_at.asc');
+    RB.waNumbers=rows.map(r=>{try{return JSON.parse(r.value1);}catch(e){return null;}}).filter(Boolean);
+  }catch(e){RB.waNumbers=[];}
+}
+
+async function rbAddWANumber(){
   const label=document.getElementById('rb-wa-label').value.trim();
   const num=document.getElementById('rb-wa-num').value.trim().replace(/\D/g,'');
   if(!label||!num){notif('⚠ Enter both label and number');return;}
+  const id=rbUid();
   const isFirst=!RB.waNumbers.length;
-  RB.waNumbers.push({id:rbUid(),label,number:num,isDefault:isFirst});
-  rbSave();rbRenderWAList();
-  document.getElementById('rb-wa-label').value='';
-  document.getElementById('rb-wa-num').value='';
+  const waObj={id,label,number:num,isDefault:isFirst};
+  RB.waNumbers.push(waObj);
+  const now=new Date().toISOString();
+  await dbInsert('admin_config',[{type:'waNumber_'+id,value1:JSON.stringify(waObj),value2:'',updated_by:curUser?.u||'',updated_at:now}]).catch(()=>{});
+  // Refresh S._rawConfig to include new entry
+  S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);
+  rbRenderWAList();
+  document.getElementById('rb-wa-label').value='';document.getElementById('rb-wa-num').value='';
   notif('WhatsApp number added');
 }
 
-function rbSetDefault(id){
+async function rbSetDefault(id){
   RB.waNumbers.forEach(n=>n.isDefault=n.id===id);
-  rbSave();rbRenderWAList();notif('Default number updated');
+  for(const n of RB.waNumbers){
+    await sb('DELETE','admin_config?type=eq.waNumber_'+encodeURIComponent(n.id)).catch(()=>{});
+    await dbInsert('admin_config',[{type:'waNumber_'+n.id,value1:JSON.stringify(n),value2:'',updated_by:curUser?.u||'',updated_at:new Date().toISOString()}]).catch(()=>{});
+  }
+  S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);
+  rbRenderWAList();notif('Default number updated');
 }
 
-function rbRemoveWA(id){
+async function rbRemoveWA(id){
+  await sb('DELETE','admin_config?type=eq.waNumber_'+encodeURIComponent(id)).catch(()=>{});
   RB.waNumbers=RB.waNumbers.filter(n=>n.id!==id);
-  if(RB.waNumbers.length&&!RB.waNumbers.find(n=>n.isDefault))RB.waNumbers[0].isDefault=true;
-  rbSave();rbRenderWAList();
+  if(RB.waNumbers.length&&!RB.waNumbers.find(n=>n.isDefault)){RB.waNumbers[0].isDefault=true;await rbSetDefault(RB.waNumbers[0].id);}
+  else{S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);rbRenderWAList();}
 }
 
 function rbRenderWAList(){
@@ -6198,7 +6314,9 @@ function rbRenderOutreach(){
      filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
     {id:'churn',title:'⚠ About to Churn',color:'var(--red)',
      rows:(()=>{
-       const churnList=all.filter(c=>{if(c.orders<3||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=21&&d<=30;});
+       const _cMin=parseInt(document.getElementById('ot-churn-min')?.value)||21;
+       const _cMax=parseInt(document.getElementById('ot-churn-max')?.value)||30;
+       const churnList=all.filter(c=>{if(c.orders<3||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=_cMin&&d<=_cMax;});
        return churnList.map(c=>{
          const d=Math.floor((today-c.lastOrder)/86400000);
          const typeBdg=c.type==='B2B'?'b-b2b':'b-b2c';
@@ -6212,7 +6330,7 @@ function rbRenderOutreach(){
        });
      })(),
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:'<span style="font-size:10px;color:var(--t3);">3+ orders, 21-30 days silent</span>'},
+     filterHtml:'<span style="font-size:10px;color:var(--t3);">3+ orders</span><input type="number" id="ot-churn-min" value="21" min="1" style="width:40px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:2px 5px;border-radius:4px;font-size:11px;text-align:center;margin:0 3px;" onchange="rbRenderOutreach()"><span style="font-size:10px;color:var(--t3);">–</span><input type="number" id="ot-churn-max" value="30" min="1" style="width:40px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:2px 5px;border-radius:4px;font-size:11px;text-align:center;margin:0 3px;" onchange="rbRenderOutreach()"><span style="font-size:10px;color:var(--t3);">days</span>'},
 
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),
@@ -6252,7 +6370,7 @@ function rbSwitchTab(name, el){
   rbCurTab=name;
   if(name==='rb-customers'){rbRenderCusts();rbRenderStats();}
   if(name==='rb-outreach'){rbRenderOutreach();alertsUpdateBadge();}
-  if(name==='rb-templates'){if(curUser?.role==='viewer'){notif('⚠ Access restricted');return;}rbRenderTpls();}
+  if(name==='rb-templates'){const _ta=getUserAccess(curUser);if(!_ta.templates){notif('⚠ Access restricted');return;}rbRenderTpls();}
   if(name==='rb-activity'){rbRenderAct();}
 }
 
