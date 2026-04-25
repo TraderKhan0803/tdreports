@@ -670,9 +670,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     </div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta" style="display:none">No data</span>
-      <button id="kpi-cur-toggle" onclick="toggleKpiCurrency()" class="hbtn" style="font-family:'DM Mono',monospace;font-size:10px;">Show USD</button>
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--pur);color:var(--pur)" onclick="showSuper()">★ Super</button>
+      <div style="display:flex;gap:3px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;flex-shrink:0;">
+        <button id="cur-btn-pkr" onclick="setGlobalCurrency('PKR')" style="padding:4px 10px;border:none;background:var(--acc);color:#fff;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">PKR</button>
+        <button id="cur-btn-usd" onclick="setGlobalCurrency('USD')" style="padding:4px 10px;border:none;background:transparent;color:var(--t2);font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">USD</button>
+      </div>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
     </div>
   </div>
@@ -1151,10 +1154,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <!-- Controls row -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
         <div class="ec-year-tabs" id="ec-year-tabs-main"></div>
-        <div class="ec-cur-toggle" style="margin-left:auto;">
-          <button class="ec-cur-btn active" id="ec-main-pkr" onclick="ecSetCurMain('PKR')">PKR</button>
-          <button class="ec-cur-btn" id="ec-main-usd" onclick="ecSetCurMain('USD')">USD</button>
-        </div>
+        <div style="margin-left:auto;"></div>
         <button onclick="exDownloadExcel('all')" style="padding:4px 11px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">⬇ Excel</button>
       </div>
 
@@ -1635,6 +1635,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
 <script>
 'use strict';
+// ═══════════════════════════════════════════════
+// TEZZ DELIVERY ANALYTICS DASHBOARD
+// Version: 24 | Updated: April 2026
+// GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
 // ═══════════════════════════════════════════════
@@ -2239,13 +2243,6 @@ function getKpiRate(){
   const months=Object.keys(EX_HISTORICAL.rates);
   const lastMk=months[months.length-1];
   return EX_HISTORICAL.rates[lastMk]||USD_RATE;
-}
-
-function toggleKpiCurrency(){
-  kpiCurrency=kpiCurrency==='PKR'?'USD':'PKR';
-  const btn=document.getElementById('kpi-cur-toggle');
-  if(btn)btn.textContent=kpiCurrency==='PKR'?'Show USD':'Show PKR';
-  renderDashboard(selCust||undefined);
 }
 
 function renderKPIs(elId,orders){
@@ -4066,6 +4063,7 @@ function renderCustomerSummary(){
   const frag=document.createDocumentFragment();
   custs.forEach(c=>{
     const tr=document.createElement('tr');
+    if(c.Type==='B2B')tr.className='b2b-row';
     tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
@@ -4108,7 +4106,7 @@ function renderAtRisk(){
   const frag=document.createDocumentFragment();
   atRisk.forEach(c=>{
     const urgency=c.DaysInactive>90?'var(--red)':c.DaysInactive>60?'var(--acc)':'var(--t2)';
-    const tr=document.createElement('tr');tr.className='r';
+    const tr=document.createElement('tr');tr.className='r'+(c.Type==='B2B'?' b2b-row':'');
     tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer" onclick="goToDashboardCustomer('${esc(c.Customer)}')">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:'DM Mono',monospace">${c.DaysInactive===999?'—':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
@@ -4247,8 +4245,8 @@ function getMktCustMap(){
   return Object.values(m).map(c=>({...c,AvgOrder:c.Sales/Math.max(1,c.Orders)}));
 }
 
-function mktRow(cells,custName){
-  const tr=document.createElement('tr');tr.className='r';
+function mktRow(cells,custName,isB2B){
+  const tr=document.createElement('tr');tr.className='r'+(isB2B?' b2b-row':'');
   const badge=rbActionedBadge(custName);
   const bell=getBellHtml('customer',custName);
   const cellsWithBadge=badge?cells.replace(
@@ -4268,7 +4266,7 @@ function renderMktWelcome(){
   // New customers whose FIRST order is within last X days
   const custs=getMktCustMap().filter(c=>c.FirstOrder&&c.FirstOrder>=cutoff).sort((a,b)=>b.FirstOrder-a.FirstOrder);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer));});
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer,c.Type==='B2B'));});
   const tb=document.getElementById('mkt-welcome-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No new customers in this period</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -4285,7 +4283,7 @@ function renderMktQuiet(){
     .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)}))
     .sort((a,b)=>b.DaysSilent-a.DaysSilent);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));});
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer,c.Type==='B2B'));});
   const tb=document.getElementById('mkt-quiet-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No first-time customers gone quiet</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -4351,7 +4349,7 @@ function renderMktVIP(){
   custs.forEach(c=>{
     const daysSince=c.LastOrder?Math.floor((today-c.LastOrder)/86400000):999;
     const recColor=daysSince>60?'var(--red)':daysSince>30?'var(--acc)':'var(--grn)';
-    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer));
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer,c.Type==='B2B'));
   });
   const tb=document.getElementById('mkt-vip-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers meeting this threshold</td>';tb.appendChild(tr);}
@@ -4524,12 +4522,24 @@ function ecFmt(v){
   if(ecCurrencyMain==='PKR')return Math.round(v).toLocaleString();
   return'$'+parseFloat(v.toFixed(0)).toLocaleString();
 }
-function ecSetCurMain(cur){
+function setGlobalCurrency(cur){
   ecCurrencyMain=cur;
-  document.getElementById('ec-main-pkr').className='ec-cur-btn'+(cur==='PKR'?' active':'');
-  document.getElementById('ec-main-usd').className='ec-cur-btn'+(cur==='USD'?' active':'');
-  ecRenderUnified();
+  kpiCurrency=cur;
+  // Update topbar buttons
+  const pkrBtn=document.getElementById('cur-btn-pkr');
+  const usdBtn=document.getElementById('cur-btn-usd');
+  if(pkrBtn){pkrBtn.style.background=cur==='PKR'?'var(--acc)':'transparent';pkrBtn.style.color=cur==='PKR'?'#fff':'var(--t2)';}
+  if(usdBtn){usdBtn.style.background=cur==='USD'?'var(--acc)':'transparent';usdBtn.style.color=cur==='USD'?'#fff':'var(--t2)';}
+  // Re-render everything affected
+  renderDashboard(selCust||undefined);
+  if(currentMode==='exec'){
+    if(ecCurTab==='growth')grRender();
+    else ecRenderUnified();
+  }
+  notif(cur==='PKR'?'Showing PKR':'Showing USD');
 }
+
+function ecSetCurMain(cur){setGlobalCurrency(cur);}
 function ecSetYearMain(year){ecYearMain=year;ecRenderUnified();}
 function ecToggleSection(section){
   const tbody=document.getElementById('ec-unified-tbody');if(!tbody)return;
@@ -4734,10 +4744,40 @@ function ecShowGrowthTabIfAllowed(){
 
 const GR_CAC_KEY='tezz_cac_spend';
 
-function grLoadSpend(){
-  try{return JSON.parse(localStorage.getItem(GR_CAC_KEY)||'{}');}catch(e){return{};}
+async function grLoadSpendFromDB(){
+  try{
+    const cfg=S._rawConfig||[];
+    const row=cfg.find(r=>r.type===GR_CAC_KEY);
+    if(row)return JSON.parse(row.value1||'{}');
+    // Fallback to localStorage for migration
+    const local=localStorage.getItem(GR_CAC_KEY);
+    return local?JSON.parse(local):{};
+  }catch(e){return{};}
 }
-function grSaveSpend(obj){localStorage.setItem(GR_CAC_KEY,JSON.stringify(obj));}
+
+function grLoadSpend(){
+  // Sync read from S._rawConfig (already loaded)
+  try{
+    const cfg=S._rawConfig||[];
+    const row=cfg.find(r=>r.type===GR_CAC_KEY);
+    if(row)return JSON.parse(row.value1||'{}');
+    const local=localStorage.getItem(GR_CAC_KEY);
+    return local?JSON.parse(local):{};
+  }catch(e){return{};}
+}
+
+async function grSaveSpend(obj){
+  // Save to Supabase (super admin only)
+  if(curUser?.role!=='super'){notif('⚠ Only Super Admin can edit marketing spend');return;}
+  try{
+    await sb('DELETE','admin_config?type=eq.'+GR_CAC_KEY).catch(()=>{});
+    await dbInsert('admin_config',[{type:GR_CAC_KEY,value1:JSON.stringify(obj),value2:'',updated_by:curUser.u,updated_at:new Date().toISOString()}]);
+    // Update in memory
+    S._rawConfig=S._rawConfig.filter(r=>r.type!==GR_CAC_KEY);
+    S._rawConfig.push({type:GR_CAC_KEY,value1:JSON.stringify(obj)});
+    notif('✓ Marketing spend saved');
+  }catch(e){notif('❌ Failed to save: '+e.message);}
+}
 
 function grRender(){
   const access=getUserAccess(curUser);
@@ -4914,13 +4954,21 @@ function grRender(){
   }).filter(Boolean);
 
   // fmt helpers
-  const fmtPKR=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':Math.round(v).toLocaleString();
+  const rate=getKpiRate();
+  const inUSD=kpiCurrency==='USD';
+  const fmtPKR=v=>{
+    const val=inUSD?v/rate:v;
+    const prefix=inUSD?'$':'PKR ';
+    if(val>=1000000)return prefix+(val/1000000).toFixed(1)+'M';
+    if(val>=1000)return prefix+Math.round(val/1000)+'K';
+    return prefix+Math.round(val).toLocaleString();
+  };
   const colRet=v=>v===null?'—':v>=70?'gr-ret-high':v>=50?'gr-ret-mid':'gr-ret-low';
 
   // Build CAC input HTML
   const cacHtml=`
     <div class="gr-cac-box">
-      <div class="gr-cac-title">Monthly Marketing Spend (PKR) — used to calculate CAC</div>
+      <div class="gr-cac-title">Monthly Marketing Spend (PKR) — used to calculate CAC ${curUser?.role!=='super'?'<span style="color:var(--acc);font-size:10px;"> · View only — Super Admin can edit</span>':''}</div>
       <div class="gr-cac-grid">
         ${months.map(mk=>{
           const[,m]=mk.split('-').map(Number);
@@ -5038,15 +5086,22 @@ function grRender(){
   grUpdateCAC();
 }
 
-function grUpdateCAC(){
+async function grUpdateCAC(){
   const data=window._grData;if(!data)return;
   const spend=grLoadSpend();
-  // Save current inputs
+  // Save current inputs (super admin only)
+  const isSuper=curUser?.role==='super';
+  let changed=false;
   data.months.forEach(mk=>{
     const inp=document.getElementById('cac-'+mk);
-    if(inp){const v=parseFloat(inp.value)||0;if(v>0)spend[mk]=v;else delete spend[mk];}
+    if(inp){
+      if(!isSuper){inp.disabled=true;inp.title='Only Super Admin can edit';}
+      const v=parseFloat(inp.value)||0;
+      if(v>0&&spend[mk]!==v){spend[mk]=v;changed=true;}
+      else if(v===0&&spend[mk]){delete spend[mk];changed=true;}
+    }
   });
-  grSaveSpend(spend);
+  if(changed&&isSuper)await grSaveSpend(spend);
   data.spend=spend;
   // Calculate avg CAC across months with spend
   const cacMonths=data.months.filter(mk=>spend[mk]&&data.newCustsPerMonth[mk]);
@@ -5388,9 +5443,11 @@ function rbRenderCusts(){
   const el=document.getElementById('rb-cust-list');
   if(!el)return;
   if(!f.length){el.innerHTML='<div class="rb-empty">No customers found</div>';return;}
-  el.innerHTML=f.map(c=>`
-    <div class="rb-cust-row" onclick="rbOpenC('${c.id}')">
-      <div class="rb-av">${c.name[0].toUpperCase()}</div>
+  el.innerHTML=f.map(c=>{
+    const isB2B=S.adminB2B.some(b=>b.toLowerCase()===c.name.toLowerCase());
+    const b2bStyle=isB2B?'border-left:3px solid rgba(168,85,247,.5);background:rgba(168,85,247,.04);':'';
+    return`<div class="rb-cust-row" onclick="rbOpenC('${c.id}')" style="${b2bStyle}">
+      <div class="rb-av" style="${isB2B?'background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4);color:var(--pur);':''}">${c.name[0].toUpperCase()}</div>
       <div style="flex:1;min-width:100px;">
         <div class="rb-cname">${esc(c.name)}</div>
         <div class="rb-cmeta">${c.phone||'—'} · ${c.city||'—'} · last order: ${c.lastOrder||'?'}</div>
@@ -5403,7 +5460,7 @@ function rbRenderCusts(){
         <button onclick="event.stopPropagation();rbQWA('${c.id}')" style="padding:4px 9px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);border-radius:4px;color:#25D366;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">💬 WA</button>
         <span onclick="event.stopPropagation();">${getBellHtml('customer',c.name)}</span>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 function rbBc(s){return{new:'rb-new',active:'rb-active',vip:'rb-vip',silent:'rb-silent',winback:'rb-winback'}[s]||'rb-active';}
