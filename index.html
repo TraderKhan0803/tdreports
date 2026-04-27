@@ -1,5 +1,11 @@
-// Version: 24 | 25 April 2026
 <!DOCTYPE html>
+<!--
+  TEZZ DELIVERY ANALYTICS DASHBOARD
+  Version  : 25
+  Updated  : April 2026
+  Repo     : github.com/TraderKhan0803/tdreports
+  Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -212,6 +218,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .log-time{font-family:'DM Mono',monospace;color:var(--t3);white-space:nowrap;font-size:10px;}
 .log-user{color:var(--acc);font-weight:600;white-space:nowrap;}
 .mb12{margin-bottom:12px;}
+
+/* ── HISTORY PROGRESS BAR ── */
+#history-progress{display:none;position:fixed;top:0;left:0;right:0;height:3px;background:rgba(249,115,22,.15);z-index:9999;}
+#history-progress-bar{height:100%;background:var(--acc);width:0%;transition:width .4s ease;border-radius:0 2px 2px 0;}
+#history-label{position:fixed;top:6px;left:50%;transform:translateX(-50%);background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;padding:2px 12px;font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;z-index:9999;display:none;white-space:nowrap;}
+
+/* ── SKELETON LOADER ── */
+.skel{background:linear-gradient(90deg,var(--sur2) 25%,var(--sur3) 50%,var(--sur2) 75%);background-size:200% 100%;animation:skel-shine 1.5s infinite;border-radius:var(--r2);}
+@keyframes skel-shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.kpi-skel{height:72px;}
+.panel-skel{height:300px;border-radius:var(--r);}
 
 /* ── NOTIF ── */
 .notif{position:fixed;bottom:20px;right:20px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 16px;font-size:12px;z-index:999;animation:slideIn .2s ease;border-left:3px solid var(--acc);max-width:320px;}
@@ -559,6 +576,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .dt th.sortable.asc::after{content:' ↑';opacity:1;color:var(--acc);}
 .dt th.sortable.desc::after{content:' ↓';opacity:1;color:var(--acc);}
 
+/* ── AI ASSISTANT ── */
+.ai-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--bdr);background:var(--sur2);color:var(--t2);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.ai-chip:hover{border-color:var(--acc);color:var(--acc);}
+.ai-msg{max-width:85%;padding:10px 14px;border-radius:var(--r);font-size:13px;line-height:1.6;}
+.ai-msg.user{align-self:flex-end;background:var(--acc);color:#fff;border-radius:var(--r) var(--r) 4px var(--r);}
+.ai-msg.assistant{align-self:flex-start;background:var(--sur2);color:var(--txt);border-radius:var(--r) var(--r) var(--r) 4px;border:1px solid var(--bdr);}
+.ai-msg.assistant pre{background:var(--bg);border-radius:4px;padding:8px;margin-top:6px;font-size:11px;overflow-x:auto;}
+.ai-msg-wrap{display:flex;flex-direction:column;gap:4px;}
+.ai-msg-meta{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
+.ai-msg-actions{display:flex;gap:6px;margin-top:4px;}
+.ai-action-btn{padding:2px 9px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-size:10px;cursor:pointer;font-family:'DM Mono',monospace;}
+.ai-action-btn:hover{border-color:var(--grn);color:var(--grn);}
+.ai-thinking{display:flex;gap:4px;align-items:center;padding:10px 14px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:ai-pulse 1.2s infinite;}
+.ai-dot:nth-child(2){animation-delay:.2s;}
+.ai-dot:nth-child(3){animation-delay:.4s;}
+@keyframes ai-pulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
 /* ── ALERT BELL ── */
 .alert-bell{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;cursor:pointer;border-radius:50%;font-size:11px;transition:all .15s;vertical-align:middle;margin-left:3px;flex-shrink:0;}
 .alert-bell.has-alert{color:var(--grn);opacity:1;}
@@ -655,6 +690,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="tab" onclick="switchTab('product',this)" id="nav-product">Product</div>
             <div class="tab" onclick="switchTab('reports',this)" id="nav-reports">Reports</div>
       <div class="tab" onclick="switchTab('marketing',this)" id="nav-marketing">Marketing</div>
+      <div class="tab" onclick="switchTab('assistant',this)" id="nav-assistant">🤖 TD Assistant</div>
     </div>
     <!-- Raabta tabs -->
     <div id="raabta-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
@@ -1148,6 +1184,37 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       </div>
     </div>
 
+    <!-- ═══ TD ASSISTANT ═══ -->
+    <div class="tab-panel" id="tab-assistant" style="overflow-y:auto;padding:0;display:flex;flex-direction:column;flex:1;min-height:0;">
+      <!-- Header -->
+      <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--acc);">🤖 TD Assistant</div>
+          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">Ask anything about your data</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="ai-usage-display" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></div>
+          <button onclick="aiClearConversation()" style="padding:4px 11px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;">Clear chat</button>
+        </div>
+      </div>
+      <!-- Context bar -->
+      <div id="ai-context-bar" style="padding:6px 18px;background:rgba(249,115,22,.06);border-bottom:1px solid var(--bdr);font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;flex-shrink:0;"></div>
+      <!-- Messages -->
+      <div id="ai-messages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;"></div>
+      <!-- Suggestion chips -->
+      <div id="ai-suggestions" style="padding:8px 18px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--bdr);background:var(--sur);flex-shrink:0;">
+        <button onclick="aiAsk('Who should I contact this week for reactivation?')" class="ai-chip">Who to contact this week?</button>
+        <button onclick="aiAsk('What are my top selling products this month?')" class="ai-chip">Top products this month</button>
+        <button onclick="aiAsk('Which customers are at risk of churning?')" class="ai-chip">Churn risk customers</button>
+        <button onclick="aiAsk('How is my sales performance vs last month?')" class="ai-chip">Sales vs last month</button>
+      </div>
+      <!-- Input -->
+      <div style="padding:12px 18px;border-top:1px solid var(--bdr);background:var(--sur);display:flex;gap:8px;flex-shrink:0;">
+        <input type="text" id="ai-input" placeholder="Ask about your customers, sales, products…" style="flex:1;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:9px 14px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend();}">
+        <button onclick="aiSend()" id="ai-send-btn" style="padding:9px 18px;background:var(--acc);border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">Send</button>
+      </div>
+    </div>
+
     <!-- ═══ EXEC: P&L ═══ -->
     <!-- ═══ EXEC: UNIFIED ═══ -->
     <div class="ec-panel" id="tab-ec-main" style="overflow-y:auto;padding:14px 18px;">
@@ -1293,6 +1360,8 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
   </div>
 </div>
 
+<div id="history-progress"><div id="history-progress-bar"></div></div>
+<div id="history-label">Loading full history…</div>
 <div id="loader" style="display:none;position:fixed;inset:0;background:rgba(13,15,20,.88);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
   <div class="spin"></div>
   <div id="loader-msg" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--t2);">Loading…</div>
@@ -1480,6 +1549,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div id="sup-tab-users"   onclick="switchSuperTab('users')"   style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--pur);border-bottom:2px solid var(--pur);font-family:'Syne',sans-serif;">👥 Users</div>
       <div id="sup-tab-exec"    onclick="switchSuperTab('exec')"    style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">📊 Exec Finance</div>
       <div id="sup-tab-logs"    onclick="switchSuperTab('logs')"    style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">📋 Logs</div>
+      <div id="sup-tab-ai"      onclick="switchSuperTab('ai')"      style="padding:9px 18px;cursor:pointer;font-size:12px;font-weight:700;color:var(--t3);border-bottom:2px solid transparent;font-family:'Syne',sans-serif;">🤖 AI Usage</div>
     </div>
 
     <!-- USERS TAB -->
@@ -1586,6 +1656,24 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       </div>
     </div>
 
+    <!-- AI USAGE TAB -->
+    <div id="sup-content-ai" style="display:none;">
+      <div class="adm-card mb12">
+        <div class="adm-title" style="color:var(--pur)">🤖 TD Assistant — Usage & Token Monitor</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Track API usage across all users. Estimated cost: $3/1M input tokens, $15/1M output tokens.</div>
+        <div id="ai-token-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:14px;">
+          <div style="color:var(--t3);font-size:12px;">Loading…</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:8px;">Per-User Usage (Today)</div>
+        <div id="ai-usage-table" style="overflow-x:auto;"></div>
+      </div>
+      <div class="adm-card">
+        <div class="adm-title" style="color:var(--pur)">Per-User Question Limits</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Override the default 20 questions/day per user. Super admins always have unlimited access.</div>
+        <div id="ai-limits-list"></div>
+      </div>
+    </div>
+
     <!-- LOGS TAB -->
     <div id="sup-content-logs" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
@@ -1638,7 +1726,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 24 | Updated: April 2026
+// Version: 25 | Updated: April 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -1815,9 +1903,179 @@ function onLoginSuccess(){
 }
 
 // ═══════════════════════════════════════════════
-// LOAD DATA
+// LOAD DATA — TWO PHASE
 // ═══════════════════════════════════════════════
+
+// Determine current month key e.g. "2026-04"
+function getCurrentMonthKey(){
+  const now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+}
+
+// Parse a raw order row from Supabase into app format
+function parseOrder(o){
+  return{
+    Order_ID:o.order_id,Customer:o.customer||'',Address:o.address||'',
+    Phone:o.phone||'',Placed_On:o.placed_on||'',Payment:o.payment||'',
+    Source:o.source||'',Status:o.status||'',
+    Total_Sales:parseFloat(o.total_sales)||0,
+    Other_Details:o.other_details||'',Scheduled:o.scheduled||'',
+    City:o.city||'(Unknown)',Customer_Type:o.customer_type||'B2C',
+    IsFirstOrder:o.is_first_order||'Recurring Customer',
+    Year:parseInt(o.year)||null,Month:parseInt(o.month)||null,
+    Order_Date_Str:o.order_date_str||'—',
+    Order_Date:(()=>{
+      if(o.order_date_iso&&o.order_date_iso!=='null'&&o.order_date_iso!==''){
+        const p=String(o.order_date_iso).split('-');
+        if(p.length===3){const d=new Date(+p[0],+p[1]-1,+p[2]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
+      }
+      if(o.order_date_str&&o.order_date_str!=='—'){
+        const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+        const m=String(o.order_date_str).match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+        if(m&&mo[m[2]]!==undefined){const d=new Date(+m[3],mo[m[2]],+m[1]);if(!isNaN(d.getTime())&&d.getFullYear()>=2020&&d.getFullYear()<=2030)return d;}
+      }
+      return null;
+    })()
+  };
+}
+
+function parseProduct(p){
+  return{SR_NO:p.sr_no||'',Product_ID:p.product_id||'',Mart_ID:p.mart_id||'',
+    Product_Name:p.product_name||'',Order_ID:p.order_id||'',
+    Qty:parseFloat(p.qty)||0,Unit_Price:parseFloat(p.unit_price)||0,
+    Total_Price:parseFloat(p.total_price)||0};
+}
+
+let _historyLoading=false;
+let _historyLoaded=false;
+
+function showHistoryProgress(pct,label){
+  const bar=document.getElementById('history-progress');
+  const fill=document.getElementById('history-progress-bar');
+  const lbl=document.getElementById('history-label');
+  if(!bar)return;
+  if(pct>=100){
+    bar.style.display='none';if(lbl)lbl.style.display='none';
+    _historyLoaded=true;_historyLoading=false;
+    notif('✓ Full history loaded');
+    // Refresh current view silently
+    applyFilters();updateMeta();
+  } else {
+    bar.style.display='block';
+    if(fill)fill.style.width=pct+'%';
+    if(lbl){lbl.style.display='block';lbl.textContent=label||'Loading full history… '+Math.round(pct)+'%';}
+  }
+}
+
 async function loadAllData(){
+  showLoader('Connecting to database…');
+  try{
+    // Phase 0: Config + users in parallel (fast, cached)
+    showLoader('Loading config…');
+    const cachedConfig=_getCachedConfig();
+    const [config,users]=await Promise.all([
+      cachedConfig?Promise.resolve(cachedConfig):dbGet('admin_config','select=*'),
+      dbGet('users','select=username,role,email')
+    ]);
+    if(!cachedConfig)_setCachedConfig(config);
+
+    // Parse config immediately
+    S.adminB2B=[];S.adminTests=[];S.cityMappings=[];S.manualCities={};
+    S._rawConfig=config;
+    config.forEach(r=>{
+      if(r.type==='b2b'&&r.value1)S.adminB2B.push(r.value1);
+      if(r.type==='testRule'&&r.value1)S.adminTests.push({c:r.value1,s:r.value2||''});
+      if(r.type==='cityMapping'&&r.value1)S.cityMappings.push({keyword:r.value1,city:r.value2||''});
+      if(r.type==='manualCity'&&r.value1)S.manualCities[r.value1]=r.value2||'';
+    });
+    S.users=users.map(u=>({u:u.username,role:u.role,email:u.email||''}));
+    const layoutCfg=config.find(r=>r.type==='panelLayout_'+curUser?.u);
+    if(layoutCfg&&layoutCfg.value1){try{panelLayout=JSON.parse(layoutCfg.value1);}catch(e){panelLayout={};}}
+
+    // Phase 1: Current month only — fast
+    const mk=getCurrentMonthKey();
+    const [,mm]=mk.split('-').map(Number);
+    showLoader('Loading current month…');
+    const [curOrders,curProds]=await Promise.all([
+      fetchAllRows('orders','year=eq.'+new Date().getFullYear()+'&month=eq.'+mm),
+      fetchAllRows('products','order_id=in.(select order_id from orders where year='+new Date().getFullYear()+' and month='+mm+')')
+        .catch(()=>[]) // products join may fail gracefully
+    ]);
+
+    S.orders=curOrders.map(parseOrder);
+    S.prods=curProds.map(parseProduct);
+    await loadLinks();
+    hideLoader();
+    launchApp();
+
+    // Phase 2: Load history in background
+    _historyLoading=true;_historyLoaded=false;
+    _loadHistoryInBackground(mk);
+
+  }catch(e){hideLoader();notif('❌ Failed to load: '+e.message);console.error(e);}
+}
+
+async function _loadHistoryInBackground(currentMk){
+  try{
+    showHistoryProgress(5,'Loading full history…');
+    const BATCH=5000;let allOrders=[],from=0,totalFetched=0;
+    // Fetch all orders except current month (already loaded)
+    const [,mm]=currentMk.split('-').map(Number);
+    const yr=new Date().getFullYear();
+
+    while(true){
+      const to=from+BATCH-1;
+      const opts={method:'GET',headers:{
+        'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json','Range':from+'-'+to,
+        'Range-Unit':'items','Prefer':'count=none'
+      }};
+      // Exclude current month
+      const url=SUPABASE_URL+'/rest/v1/orders?select=*&not.and=(year.eq.'+yr+',month.eq.'+mm+')';
+      const res=await fetch(url,opts);
+      if(!res.ok)break;
+      const t=await res.text();
+      const rows=t?JSON.parse(t):[];
+      allOrders=allOrders.concat(rows);
+      totalFetched+=rows.length;
+      const pct=Math.min(90,5+(totalFetched/16000)*85);
+      showHistoryProgress(pct,'Loading full history… '+totalFetched.toLocaleString()+' orders');
+      if(rows.length<BATCH)break;
+      from+=BATCH;
+    }
+
+    // Load all products in background
+    showHistoryProgress(90,'Loading product history…');
+    const allProds=await fetchAllRows('products');
+
+    // Merge with current month data
+    const curOrderIds=new Set(S.orders.map(o=>o.Order_ID));
+    const newOrders=allOrders.map(parseOrder).filter(o=>!curOrderIds.has(o.Order_ID));
+    S.orders=[...S.orders,...newOrders];
+    S.prods=allProds.map(parseProduct);
+
+    showHistoryProgress(100,'Full history loaded');
+  }catch(e){
+    console.error('History load failed:',e);
+    showHistoryProgress(100,'');
+  }
+}
+
+// Config cache helpers
+function _getCachedConfig(){
+  try{
+    const c=localStorage.getItem('tezz_config_cache');
+    if(!c)return null;
+    const{ts,data}=JSON.parse(c);
+    if(Date.now()-ts>3600000)return null; // 1 hour TTL
+    return data;
+  }catch(e){return null;}
+}
+function _setCachedConfig(data){
+  try{localStorage.setItem('tezz_config_cache',JSON.stringify({ts:Date.now(),data}));}catch(e){}
+}
+
+async function loadAllData_UNUSED(){
   showLoader('Connecting to database…');
   try{
     showLoader('Loading orders…');
@@ -1878,6 +2136,35 @@ async function loadAllData(){
   }catch(e){hideLoader();notif('❌ Failed to load: '+e.message);console.error(e);}
 }
 
+// Full reload (used by admin upload, delete etc) — loads everything
+async function reloadAllData(){
+  showLoader('Reloading all data…');
+  try{
+    _setCachedConfig(null); // invalidate cache
+    localStorage.removeItem('tezz_config_cache');
+    const [orders,products,config,users]=await Promise.all([
+      fetchAllRows('orders'),fetchAllRows('products'),
+      dbGet('admin_config','select=*'),
+      dbGet('users','select=username,role,email')
+    ]);
+    S.orders=orders.map(parseOrder);
+    S.prods=products.map(parseProduct);
+    S.adminB2B=[];S.adminTests=[];S.cityMappings=[];S.manualCities={};
+    S._rawConfig=config;
+    config.forEach(r=>{
+      if(r.type==='b2b'&&r.value1)S.adminB2B.push(r.value1);
+      if(r.type==='testRule'&&r.value1)S.adminTests.push({c:r.value1,s:r.value2||''});
+      if(r.type==='cityMapping'&&r.value1)S.cityMappings.push({keyword:r.value1,city:r.value2||''});
+      if(r.type==='manualCity'&&r.value1)S.manualCities[r.value1]=r.value2||'';
+    });
+    S.users=users.map(u=>({u:u.username,role:u.role,email:u.email||''}));
+    await loadLinks();
+    hideLoader();
+    buildDynamicFilters();buildTimeNav();applyFilters();updateMeta();updateUploadMeta();
+    _historyLoaded=true;
+  }catch(e){hideLoader();notif('❌ Failed to reload: '+e.message);}
+}
+
 function launchApp(){
   document.getElementById('app').style.display='flex';
   buildDynamicFilters();
@@ -1921,6 +2208,7 @@ function switchTab(name,el,fromNav){
   if(name==='product')renderProduct();
   if(name==='reports')renderReport();
   if(name==='marketing')renderMarketing();
+  if(name==='assistant'){aiInit();aiUpdateContextBar();}
   updateBackBar();
 }
 
@@ -2701,7 +2989,7 @@ async function showSuper(){
 }
 
 function switchSuperTab(tab){
-  ['users','exec','logs'].forEach(t=>{
+  ['users','exec','logs','ai'].forEach(t=>{
     const btn=document.getElementById('sup-tab-'+t);
     const cont=document.getElementById('sup-content-'+t);
     const isActive=t===tab;
@@ -2709,6 +2997,7 @@ function switchSuperTab(tab){
     if(cont)cont.style.display=isActive?'':'none';
   });
   if(tab==='exec')exRenderAll();
+  if(tab==='ai')aiRenderSuperPanel();
 }
 
 // ═══════════════════════════════════════════════
@@ -3243,7 +3532,7 @@ async function runAdminUpload(){
   document.getElementById('adm-lbl-orders').classList.remove('loaded');
   document.getElementById('adm-lbl-products').classList.remove('loaded');
   document.getElementById('adm-upload-btn').disabled=true;
-  await loadAllData();updateUploadMeta();renderUploadHistory();
+  await reloadAllData();updateUploadMeta();renderUploadHistory();
 }
 
 async function saveBatchMeta(batchId,type,filename,rowCount){
@@ -3269,7 +3558,7 @@ async function deleteBatch(batchId,type){
     // Remove batch meta
     await sb('DELETE','admin_config?type=eq.batch&value1=eq.'+encodeURIComponent(batchId));
     hideLoader();notif('✓ Batch deleted');
-    await loadAllData();renderUploadHistory();
+    await reloadAllData();renderUploadHistory();
   }catch(e){hideLoader();notif('❌ Delete failed: '+e.message);}
 }
 
@@ -3322,7 +3611,7 @@ async function executeDataClear(){
     await sb('DELETE','products?id=neq.00000000-0000-0000-0000-000000000000');
     await sb('DELETE','orders?id=neq.00000000-0000-0000-0000-000000000000');
     logActivity('admin','Deleted ALL orders and products data');
-    hideLoader();notif('✅ All data deleted');await loadAllData();
+    hideLoader();notif('✅ All data deleted');await reloadAllData();
   }catch(e){hideLoader();notif('❌ Delete failed: '+e.message);}
 }
 
@@ -3448,6 +3737,66 @@ async function saveEditedPerms(username){
   notif(`✓ Permissions updated for "${username}"`);
   logActivity('admin',`Updated permissions for ${username}`);
 }
+async function aiRenderSuperPanel(){
+  // Token stats
+  try{
+    const usage=await dbGet('ai_usage','select=username,date,questions_used,tokens_input,tokens_output&order=date.desc&limit=200');
+    const today=aiGetPKTDate();
+    const todayRows=usage.filter(r=>r.date===today);
+    const allTokIn=usage.reduce((s,r)=>s+(r.tokens_input||0),0);
+    const allTokOut=usage.reduce((s,r)=>s+(r.tokens_output||0),0);
+    const todayTokIn=todayRows.reduce((s,r)=>s+(r.tokens_input||0),0);
+    const todayTokOut=todayRows.reduce((s,r)=>s+(r.tokens_output||0),0);
+    const estCostAll=((allTokIn/1000000)*3)+((allTokOut/1000000)*15);
+    const estCostToday=((todayTokIn/1000000)*3)+((todayTokOut/1000000)*15);
+    const statsEl=document.getElementById('ai-token-stats');
+    if(statsEl)statsEl.innerHTML=[
+      ['Total Input Tokens',allTokIn.toLocaleString(),'var(--blu)'],
+      ['Total Output Tokens',allTokOut.toLocaleString(),'var(--pur)'],
+      ['Est. Total Cost','$'+estCostAll.toFixed(4),'var(--acc)'],
+      ['Today Input',todayTokIn.toLocaleString(),'var(--blu)'],
+      ['Today Output',todayTokOut.toLocaleString(),'var(--pur)'],
+      ['Est. Today Cost','$'+estCostToday.toFixed(4),'var(--acc)'],
+    ].map(([l,v,c])=>`<div class="gr-kpi"><div class="gr-kpi-label">${l}</div><div class="gr-kpi-value" style="font-size:16px;color:${c};">${v}</div></div>`).join('');
+
+    // Per-user today table
+    const byUser={};
+    todayRows.forEach(r=>{if(!byUser[r.username])byUser[r.username]={q:0,ti:0,to:0};byUser[r.username].q+=r.questions_used||0;byUser[r.username].ti+=r.tokens_input||0;byUser[r.username].to+=r.tokens_output||0;});
+    const tableEl=document.getElementById('ai-usage-table');
+    if(tableEl)tableEl.innerHTML=Object.keys(byUser).length?
+      `<table class="dt" style="width:100%"><thead><tr><th>User</th><th style="text-align:right">Questions</th><th style="text-align:right">Input Tokens</th><th style="text-align:right">Output Tokens</th><th style="text-align:right">Est Cost</th></tr></thead><tbody>`
+      +Object.entries(byUser).map(([u,d])=>`<tr><td>${esc(u)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.q}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.ti.toLocaleString()}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.to.toLocaleString()}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">$${(((d.ti/1000000)*3)+((d.to/1000000)*15)).toFixed(4)}</td></tr>`).join('')
+      +'</tbody></table>'
+      :'<div style="color:var(--t3);font-size:12px;">No usage today</div>';
+  }catch(e){console.error(e);}
+
+  // Per-user limits
+  try{
+    const limitsEl=document.getElementById('ai-limits-list');
+    if(!limitsEl)return;
+    limitsEl.innerHTML=S.users.filter(u=>u.role!=='super').map(u=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);">
+        <span style="flex:1;font-size:12px;">${esc(u.u)} <span class="role-badge role-${u.role}">${u.role}</span></span>
+        <input type="number" id="ai-lim-${esc(u.u)}" value="20" min="0" max="1000" style="width:70px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:4px 7px;border-radius:var(--r2);font-size:12px;text-align:center;">
+        <button onclick="aiSaveLimit('${esc(u.u)}')" style="padding:4px 11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:11px;cursor:pointer;">Save</button>
+      </div>`).join('');
+    // Load existing limits
+    const limits=await dbGet('ai_user_limits','select=username,daily_limit');
+    limits.forEach(l=>{const inp=document.getElementById('ai-lim-'+l.username);if(inp)inp.value=l.daily_limit;});
+  }catch(e){}
+}
+
+async function aiSaveLimit(username){
+  const inp=document.getElementById('ai-lim-'+username);
+  const val=parseInt(inp?.value)||20;
+  try{
+    await sb('DELETE','ai_user_limits?username=eq.'+encodeURIComponent(username)).catch(()=>{});
+    await dbInsert('ai_user_limits',[{username,daily_limit:val,updated_by:curUser.u,updated_at:new Date().toISOString()}]);
+    notif('✓ Limit updated for '+username+': '+val+' questions/day');
+    logActivity('admin','Set AI limit for '+username+': '+val);
+  }catch(e){notif('❌ '+e.message);}
+}
+
 function resetUserPassword(username){
   const overlay=document.createElement('div');
   overlay.id='reset-pw-overlay';
@@ -3828,7 +4177,7 @@ async function addTestFilter(){
     hideLoader();
     notif(`✓ Test rule added — ${count} matching record(s) deleted`);
     logActivity('admin',`Added test rule: ${c}${s?' ('+s+')':''} — deleted ${count} records`);
-    await loadAllData();
+    await reloadAllData();
   }catch(e){hideLoader();notif('❌ '+e.message);}
 }
 
@@ -3894,7 +4243,7 @@ async function recalcNewCustomers(){
     hideLoader();
     notif(`✓ Recalculated — ${updates.length} records updated`);
     logActivity('admin',`Recalculated new customers: ${updates.length} updates`);
-    await loadAllData();
+    await reloadAllData();
   }catch(e){hideLoader();notif('❌ '+e.message);}
 }
 
@@ -4454,6 +4803,17 @@ function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_poll
   }
   showLogin();
 })();
+
+// ═══════════════════════════════════════════════
+// TD ASSISTANT — STATE
+// ═══════════════════════════════════════════════
+const AI_WORKER='https://tezz-ai.atif-k-bashir.workers.dev';
+const AI_MODEL='claude-sonnet-4-20250514';
+const AI_DEFAULT_LIMIT=20;
+let aiConversation=[]; // {role, content, id, ts, tokens_in, tokens_out}
+let aiUsageToday=0;
+let aiDailyLimit=AI_DEFAULT_LIMIT;
+let aiLoading=false;
 
 // ═══════════════════════════════════════════════
 // RAABTA — STATE & STORAGE
@@ -5982,6 +6342,249 @@ function rbOpenOutreachCust(name){
 }
 
 // ── UPDATED rbInit — Fatima = full access ─────────────────────────────────────
+
+// ═══════════════════════════════════════════════
+// TD ASSISTANT — CORE
+// ═══════════════════════════════════════════════
+
+function aiGetPKTDate(){
+  // Pakistan Standard Time (UTC+5)
+  const now=new Date();
+  const pkt=new Date(now.getTime()+5*60*60*1000);
+  return pkt.toISOString().split('T')[0];
+}
+
+async function aiInit(){
+  // Load usage for today
+  const today=aiGetPKTDate();
+  try{
+    const usage=await dbGet('ai_usage','username=eq.'+encodeURIComponent(curUser.u)+'&date=eq.'+today+'&select=questions_used,tokens_input,tokens_output');
+    aiUsageToday=usage.length?usage[0].questions_used:0;
+  }catch(e){aiUsageToday=0;}
+  // Load user limit override
+  try{
+    const lim=await dbGet('ai_user_limits','username=eq.'+encodeURIComponent(curUser.u)+'&select=daily_limit');
+    aiDailyLimit=lim.length?lim[0].daily_limit:(curUser.role==='super'?999999:AI_DEFAULT_LIMIT);
+  }catch(e){aiDailyLimit=curUser.role==='super'?999999:AI_DEFAULT_LIMIT;}
+  // Load conversation history
+  try{
+    const hist=await dbGet('ai_conversations','username=eq.'+encodeURIComponent(curUser.u)+'&order=created_at.asc&limit=50&select=id,role,content,tokens_input,tokens_output,created_at');
+    aiConversation=hist.map(h=>({id:h.id,role:h.role,content:h.content,ts:h.created_at,tokens_in:h.tokens_input||0,tokens_out:h.tokens_output||0}));
+  }catch(e){aiConversation=[];}
+  aiUpdateUsageDisplay();
+  aiRenderMessages();
+  aiUpdateContextBar();
+}
+
+function aiUpdateUsageDisplay(){
+  const el=document.getElementById('ai-usage-display');
+  if(!el)return;
+  if(curUser?.role==='super'){el.textContent='Unlimited';el.style.color='var(--grn)';return;}
+  const remaining=aiDailyLimit-aiUsageToday;
+  el.textContent=aiUsageToday+'/'+aiDailyLimit+' questions used today';
+  el.style.color=remaining<=3?'var(--red)':remaining<=7?'var(--acc)':'var(--t3)';
+}
+
+function aiUpdateContextBar(){
+  const el=document.getElementById('ai-context-bar');if(!el)return;
+  // Build context description
+  const period=navLevel==='month'?MONTHS[(navMonth||1)-1]+' '+(navYear||''):
+    navLevel==='year'?(navYear||'All time'):'All time';
+  const filters=[];
+  if(fSt.ctype!=='all')filters.push(fSt.ctype);
+  if(fSt.cities.size>0&&fSt.cities.size<_availCities.length)filters.push([...fSt.cities].join(', '));
+  el.textContent='Context: '+period+' · '+filtered.length+' orders'+(filters.length?' · '+filters.join(' · '):'')
+    +' · Active tab: '+(curTab||'dashboard');
+}
+
+function aiBuildContext(){
+  // Pre-aggregate data for AI context — no raw rows
+  const O=filtered;
+  const totalSales=O.reduce((s,o)=>s+o.Total_Sales,0);
+  const b2bOrders=O.filter(o=>o.Customer_Type==='B2B');
+  const b2cOrders=O.filter(o=>o.Customer_Type!=='B2B');
+  const custMap={};
+  O.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!custMap[n])custMap[n]={name:n,orders:0,sales:0,type:o.Customer_Type};custMap[n].orders++;custMap[n].sales+=o.Total_Sales;});
+  const custs=Object.values(custMap).sort((a,b)=>b.sales-a.sales);
+  const today=new Date();
+  const atRisk=custs.filter(c=>{
+    const lastOrd=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name).sort((a,b)=>(b.Order_Date||0)-(a.Order_Date||0))[0];
+    if(!lastOrd?.Order_Date)return false;
+    return Math.floor((today-lastOrd.Order_Date)/86400000)>30;
+  });
+  return{
+    period:navLevel==='month'?MONTHS[(navMonth||1)-1]+' '+(navYear||''):(navYear||'All time'),
+    activeTab:curTab,
+    filters:{type:fSt.ctype,cities:[...fSt.cities]},
+    summary:{
+      totalOrders:O.length,totalSales:Math.round(totalSales),
+      b2cOrders:b2cOrders.length,b2bOrders:b2bOrders.length,
+      b2cSales:Math.round(b2cOrders.reduce((s,o)=>s+o.Total_Sales,0)),
+      b2bSales:Math.round(b2bOrders.reduce((s,o)=>s+o.Total_Sales,0)),
+      uniqueCustomers:custs.length,newCustomers:O.filter(o=>o.IsFirstOrder==='New Customer').length,
+      avgOrderSize:O.length?Math.round(totalSales/O.length):0,
+    },
+    topCustomers:custs.slice(0,10).map(c=>({name:c.name,type:c.type,orders:c.orders,sales:Math.round(c.sales)})),
+    atRiskCount:atRisk.length,
+    atRiskCustomers:atRisk.slice(0,5).map(c=>c.name),
+    historyLoaded:_historyLoaded,
+  };
+}
+
+function aiRenderMessages(){
+  const el=document.getElementById('ai-messages');if(!el)return;
+  if(!aiConversation.length){
+    el.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--t3);"><div style="font-size:32px;margin-bottom:12px;">🤖</div><div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:700;color:var(--t2);margin-bottom:6px;">TD Assistant</div><div style="font-size:12px;line-height:1.6;">Ask me about your sales, customers,<br>products, or who to contact next.</div></div>';
+    return;
+  }
+  el.innerHTML=aiConversation.map(m=>{
+    const isUser=m.role==='user';
+    const time=m.ts?new Date(m.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+    const actions=!isUser?`<div class="ai-msg-actions"><button class="ai-action-btn" onclick="aiShareWA('${m.id}')">📤 Share</button>${m.tokens_in?'<span style="font-size:9px;color:var(--t3);align-self:center;font-family:\'DM Mono\',monospace;">'+((m.tokens_in||0)+(m.tokens_out||0)).toLocaleString()+' tokens</span>':''}</div>`:'';
+    // Format content - handle newlines and basic markdown
+    const formatted=esc(m.content).replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>');
+    return`<div class="ai-msg-wrap" style="align-items:${isUser?'flex-end':'flex-start'}">
+      <div class="ai-msg ${m.role}">${formatted}</div>
+      <div class="ai-msg-meta" style="text-align:${isUser?'right':'left'}">${isUser?'You':' TD Assistant'} · ${time}</div>
+      ${actions}
+    </div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+function aiShowThinking(){
+  const el=document.getElementById('ai-messages');if(!el)return;
+  const div=document.createElement('div');
+  div.id='ai-thinking-indicator';
+  div.className='ai-msg-wrap';
+  div.style.alignItems='flex-start';
+  div.innerHTML='<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+}
+
+function aiHideThinking(){
+  document.getElementById('ai-thinking-indicator')?.remove();
+}
+
+async function aiSend(){
+  const inp=document.getElementById('ai-input');
+  const q=(inp?.value||'').trim();
+  if(!q||aiLoading)return;
+  aiAsk(q);
+  if(inp)inp.value='';
+}
+
+async function aiAsk(question){
+  if(aiLoading)return;
+  // Check limit
+  if(curUser?.role!=='super'&&aiUsageToday>=aiDailyLimit){
+    notif('You\'ve used your '+aiDailyLimit+' questions for today. Resets at midnight PKT.');
+    return;
+  }
+  aiLoading=true;
+  const sendBtn=document.getElementById('ai-send-btn');
+  if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='...';}
+
+  // Add user message
+  const userMsg={id:'u'+Date.now(),role:'user',content:question,ts:new Date().toISOString()};
+  aiConversation.push(userMsg);
+  aiRenderMessages();
+  aiShowThinking();
+
+  try{
+    const ctx=aiBuildContext();
+    const systemPrompt=`You are TD Assistant, an AI analyst for Tezz Delivery — a grocery delivery business based in Islamabad, Pakistan. You help the team understand their sales data, customer behaviour, and make operational decisions.
+
+Current data context:
+${JSON.stringify(ctx,null,2)}
+
+Guidelines:
+- Be concise and actionable. Lead with the key insight, then explain.
+- Use PKR for all monetary values unless asked otherwise.
+- When recommending customers to contact, give specific names from the data.
+- You understand Pakistani business context — B2B customers are restaurants/cafes, B2C are households.
+- If historical data isn't loaded yet, mention it may affect completeness.
+- Never mention Claude, Anthropic, or any AI company. You are TD Assistant.
+- Format responses clearly — use bullet points for lists, bold for key numbers.`;
+
+    const messages=aiConversation.slice(-10).map(m=>({role:m.role,content:m.content}));
+
+    const res=await fetch(AI_WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:AI_MODEL,
+        max_tokens:1000,
+        system:systemPrompt,
+        messages
+      })
+    });
+
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message||'API error');
+
+    const reply=data.content?.[0]?.text||'Sorry, I could not generate a response.';
+    const tokIn=data.usage?.input_tokens||0;
+    const tokOut=data.usage?.output_tokens||0;
+    const msgId='a'+Date.now();
+
+    aiHideThinking();
+    const assistantMsg={id:msgId,role:'assistant',content:reply,ts:new Date().toISOString(),tokens_in:tokIn,tokens_out:tokOut};
+    aiConversation.push(assistantMsg);
+    aiRenderMessages();
+
+    // Save to Supabase
+    const today=aiGetPKTDate();
+    await dbInsert('ai_conversations',[
+      {id:userMsg.id,username:curUser.u,role:'user',content:question,context_summary:JSON.stringify({period:ctx.period,tab:ctx.activeTab}),tokens_input:0,tokens_output:0,created_at:userMsg.ts},
+      {id:msgId,username:curUser.u,role:'assistant',content:reply,context_summary:'',tokens_input:tokIn,tokens_output:tokOut,created_at:assistantMsg.ts}
+    ]).catch(()=>{});
+
+    // Update usage
+    aiUsageToday++;
+    // Upsert usage record
+    const existing=await dbGet('ai_usage','username=eq.'+encodeURIComponent(curUser.u)+'&date=eq.'+today).catch(()=>[]);
+    if(existing.length){
+      await fetch(SUPABASE_URL+'/rest/v1/ai_usage?username=eq.'+encodeURIComponent(curUser.u)+'&date=eq.'+today,{
+        method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({questions_used:aiUsageToday,tokens_input:(existing[0].tokens_input||0)+tokIn,tokens_output:(existing[0].tokens_output||0)+tokOut})
+      }).catch(()=>{});
+    } else {
+      await dbInsert('ai_usage',[{id:'u'+Date.now(),username:curUser.u,date:today,questions_used:1,tokens_input:tokIn,tokens_output:tokOut}]).catch(()=>{});
+    }
+    aiUpdateUsageDisplay();
+
+  }catch(e){
+    aiHideThinking();
+    const errMsg={id:'e'+Date.now(),role:'assistant',content:'Sorry, I encountered an error: '+e.message+'. Please try again.',ts:new Date().toISOString()};
+    aiConversation.push(errMsg);
+    aiRenderMessages();
+  }finally{
+    aiLoading=false;
+    if(sendBtn){sendBtn.disabled=false;sendBtn.textContent='Send';}
+  }
+}
+
+async function aiClearConversation(){
+  if(!confirm('Clear your conversation history?'))return;
+  try{
+    await sb('DELETE','ai_conversations?username=eq.'+encodeURIComponent(curUser.u)).catch(()=>{});
+    aiConversation=[];
+    aiRenderMessages();
+    notif('✓ Conversation cleared');
+  }catch(e){notif('❌ '+e.message);}
+}
+
+function aiShareWA(msgId){
+  const msg=aiConversation.find(m=>m.id===msgId);
+  if(!msg)return;
+  const userQ=aiConversation[aiConversation.indexOf(msg)-1];
+  const ctx=aiBuildContext();
+  const nl='\n';
+  const text='*TD Assistant Insight*'+nl+ctx.period+nl+nl+(userQ?'Q: '+userQ.content+nl+nl:'')+'A: '+msg.content+nl+nl+'_via Tezz Analytics_';
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
 
 // ═══════════════════════════════════════════════
 // ALERTS SYSTEM
