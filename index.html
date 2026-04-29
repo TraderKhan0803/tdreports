@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 25
+  Version  : 26
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -1590,8 +1590,35 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div id="sup-content-exec" style="display:none;">
       <!-- Sub-tabs -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-        <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn on"  style="font-size:11px;">✏ Data Entry</button>
+        <button id="ex-tab-upload"   onclick="switchExecTab('upload')"   class="dbtn on"  style="font-size:11px;">📤 Upload P&L</button>
+        <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn"     style="font-size:11px;">✏ Data Entry</button>
         <button id="ex-tab-settings" onclick="switchExecTab('settings')" class="dbtn"     style="font-size:11px;">⚙ Settings</button>
+      </div>
+
+      <!-- P&L UPLOAD -->
+      <div id="ex-content-upload">
+        <div class="adm-card mb12">
+          <div class="adm-title" style="color:var(--grn);">📤 Upload P&L Spreadsheet</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:14px;">Upload your P&L Excel file. The system reads the <strong>Profits 2025</strong> and <strong>Expenses 2025</strong> tabs automatically. A preview will show before anything is saved.</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);cursor:pointer;font-size:12px;color:var(--txt);">
+              📁 Choose File
+              <input type="file" id="pl-file-input" accept=".xlsx,.xls" style="display:none;" onchange="plReadFile(this)">
+            </label>
+            <div id="pl-file-name" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">No file selected</div>
+          </div>
+          <div id="pl-preview" style="display:none;">
+            <div style="font-size:12px;font-weight:600;color:var(--txt);margin-bottom:8px;">Preview — verify before saving:</div>
+            <div id="pl-preview-table" style="overflow-x:auto;max-height:350px;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--r2);"></div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <div style="font-size:12px;color:var(--t2);">Save range:</div>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="pl-range" value="all" checked style="accent-color:var(--acc);"> All months in file (replace from start)</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="pl-range" value="current"> Current month only</label>
+              <button onclick="plSaveToSupabase()" style="padding:8px 20px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;">✓ Confirm & Save to Supabase</button>
+            </div>
+            <div id="pl-save-status" style="margin-top:8px;font-size:11px;color:var(--t3);"></div>
+          </div>
+        </div>
       </div>
 
       <!-- DATA ENTRY -->
@@ -1726,7 +1753,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 25 | Updated: April 2026
+// Version: 26 | Updated: April 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -1889,6 +1916,7 @@ function onLoginSuccess(){
   if(curUser.role==='super')document.getElementById('btn-super').style.display='';
   loadAllData().then(()=>{
     startAlertPolling();
+    loadFinancials();
     const access=getUserAccess(curUser);
     const lmA=document.getElementById('lm-analytics');
     const lmR=document.getElementById('lm-raabta');
@@ -2537,11 +2565,14 @@ function getKpiRate(){
 function renderKPIs(elId,orders){
   const uniq=new Set(orders.map(o=>o.Customer.toLowerCase())).size;
   const totalSalesPKR=orders.reduce((s,o)=>s+o.Total_Sales,0);
+  // Apply sales adjustment for known data issues
+  const _adjKey=navLevel==='month'&&navYear&&navMonth?navYear+'-'+(String(navMonth).padStart(2,'0')):null;
+  const _adj=_adjKey?getSalesAdj(_adjKey):0;
   const days=getUniqueDays(orders);
   const newC=orders.filter(o=>o.IsFirstOrder==='New Customer').length;
   const rate=getKpiRate();
   const inUSD=kpiCurrency==='USD';
-  const totalSales=inUSD?totalSalesPKR/rate:totalSalesPKR;
+  const totalSales=inUSD?(totalSalesPKR+_adj)/rate:(totalSalesPKR+_adj);
   const avgOrd=orders.length?totalSales/orders.length:0;
   const cur=inUSD?'USD':'PKR';
   const fmtV=v=>inUSD?'$'+parseFloat(v.toFixed(0)).toLocaleString():fmt(v);
@@ -3129,13 +3160,14 @@ function exFmtSign(v){
 // ── DATA ENTRY ────────────────────────────────────────────────────────────────
 function switchExecTab(tab){
   exCurTab=tab;
-  ['input','settings'].forEach(t=>{
+  ['upload','input','settings'].forEach(t=>{
     const btn=document.getElementById('ex-tab-'+t);
     const cont=document.getElementById('ex-content-'+t);
     const isActive=t===tab;
     if(btn)btn.className='dbtn'+(isActive?' on':'');
     if(cont)cont.style.display=isActive?'':'none';
   });
+  if(tab==='upload')plRenderUploadPanel();
   if(tab==='input')exRenderInputForm();
   if(tab==='settings')exRenderSettings();
 }
@@ -3260,7 +3292,7 @@ function exDownloadExcel(type){
     if(isB2B){salesB2B[mk]+=o.Total_Sales;ordersB2B[mk]++;custsB2B[mk].add(resolveCustomerName(o.Customer));basketsB2B[mk].push(o.Total_Sales);}
     else{salesB2C[mk]+=o.Total_Sales;ordersB2C[mk]++;custsB2C[mk].add(resolveCustomerName(o.Customer));basketsB2C[mk].push(o.Total_Sales);}
   });
-  const totalSales=months.map(mk=>(salesB2C[mk]||0)+(salesB2B[mk]||0));
+  const totalSales=months.map(mk=>(salesB2C[mk]||0)+(salesB2B[mk]||0)+getSalesAdj(mk));
   const totalOrders=months.map(mk=>(ordersB2C[mk]||0)+(ordersB2B[mk]||0));
   const avgBasketB2C=months.map(mk=>basketsB2C[mk].length?Math.round(basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length):0);
   const avgBasketB2B=months.map(mk=>basketsB2B[mk].length?Math.round(basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length):0);
@@ -4752,6 +4784,216 @@ function downloadMktList(type){
 }
 
 // ═══════════════════════════════════════════════
+// P&L SPREADSHEET UPLOAD
+// ═══════════════════════════════════════════════
+let _plParsed=null; // {months:[], revenues:{mk:{cat:amt}}, expenses:{mk:{cat:amt}}}
+
+function plRenderUploadPanel(){
+  // Reset state
+  document.getElementById('pl-preview').style.display='none';
+  document.getElementById('pl-file-name').textContent='No file selected';
+  _plParsed=null;
+}
+
+function plExcelSerialToMonthKey(serial){
+  // Excel serial date to YYYY-MM
+  const d=new Date(Math.round((serial-25569)*86400*1000));
+  const y=d.getUTCFullYear();
+  const m=String(d.getUTCMonth()+1).padStart(2,'0');
+  return y+'-'+m;
+}
+
+function plReadFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  document.getElementById('pl-file-name').textContent=file.name;
+  document.getElementById('pl-preview').style.display='none';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});
+      // Read Profits 2025 tab
+      const profitSheet=wb.Sheets['Profits 2025'];
+      const expSheet=wb.Sheets['Expenses 2025'];
+      if(!profitSheet&&!expSheet){notif('⚠ Could not find Profits 2025 or Expenses 2025 tabs');return;}
+      const revenues={},expenses={};
+      const allMonths=new Set();
+      // Parse Profits 2025
+      if(profitSheet){
+        const rows=XLSX.utils.sheet_to_json(profitSheet,{header:1,defval:null});
+        if(rows.length>0){
+          const hdr=rows[0];
+          // Find month columns (numeric serial dates)
+          const monthCols=[];
+          hdr.forEach((h,i)=>{if(typeof h==='number'&&h>40000&&h<50000){const mk=plExcelSerialToMonthKey(h);monthCols.push({col:i,mk});allMonths.add(mk);}});
+          // Read each category row
+          for(let r=1;r<rows.length;r++){
+            const row=rows[r];
+            const cat=row[0];
+            if(!cat||typeof cat!=='string'||cat.trim()==='')continue;
+            const catName=cat.trim();
+            monthCols.forEach(({col,mk})=>{
+              const v=row[col];
+              if(v!=null&&v!==''&&!isNaN(parseFloat(v))){
+                if(!revenues[mk])revenues[mk]={};
+                revenues[mk][catName]=(revenues[mk][catName]||0)+parseFloat(v);
+              }
+            });
+          }
+        }
+      }
+      // Parse Expenses 2025
+      if(expSheet){
+        const rows=XLSX.utils.sheet_to_json(expSheet,{header:1,defval:null});
+        if(rows.length>0){
+          const hdr=rows[0];
+          const monthCols=[];
+          hdr.forEach((h,i)=>{
+            if(typeof h==='number'&&h>40000&&h<50000){const mk=plExcelSerialToMonthKey(h);monthCols.push({col:i,mk});allMonths.add(mk);}
+            else if(typeof h==='string'){
+              // Try to parse date strings like "01-Jan-25"
+              const dm=String(h).match(/(\d{1,2})[-/](\w{3})[-/](\d{2,4})/);
+              if(dm){
+                const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                const yr=dm[3].length===2?2000+parseInt(dm[3]):parseInt(dm[3]);
+                if(mo[dm[2]]!==undefined){const mk=yr+'-'+String(mo[dm[2]]+1).padStart(2,'0');monthCols.push({col:i,mk});allMonths.add(mk);}
+              }
+            }
+          });
+          for(let r=1;r<rows.length;r++){
+            const row=rows[r];
+            const cat=row[0];
+            if(!cat||typeof cat!=='string'||cat.trim()==='')continue;
+            const catName=cat.trim();
+            if(catName.toLowerCase()==='total')continue;
+            monthCols.forEach(({col,mk})=>{
+              const v=row[col];
+              if(v!=null&&v!==''&&!isNaN(parseFloat(v))&&parseFloat(v)>0){
+                if(!expenses[mk])expenses[mk]={};
+                expenses[mk][catName]=(expenses[mk][catName]||0)+parseFloat(v);
+              }
+            });
+          }
+        }
+      }
+      const months=[...allMonths].sort();
+      _plParsed={months,revenues,expenses};
+      plShowPreview();
+    }catch(err){notif('❌ Failed to read file: '+err.message);console.error(err);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function plShowPreview(){
+  if(!_plParsed)return;
+  const{months,revenues,expenses}=_plParsed;
+  const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtMk=mk=>{const[y,m]=mk.split('-');return MONTHS_SHORT[parseInt(m)-1]+' '+y.slice(2);};
+  // Build preview table
+  const revCats=new Set();
+  const expCats=new Set();
+  months.forEach(mk=>{
+    Object.keys(revenues[mk]||{}).forEach(c=>revCats.add(c));
+    Object.keys(expenses[mk]||{}).forEach(c=>expCats.add(c));
+  });
+  let html='<table class="dt" style="font-size:10px;min-width:600px;">';
+  html+='<thead><tr><th style="min-width:160px;">Category</th>'+months.map(mk=>'<th style="text-align:right;min-width:70px;">'+fmtMk(mk)+'</th>').join('')+'</tr></thead><tbody>';
+  // Revenue section
+  html+='<tr><td colspan="'+(months.length+1)+'" style="background:rgba(34,197,94,.08);color:var(--grn);font-weight:700;padding:6px 10px;font-size:11px;">💰 Revenue</td></tr>';
+  [...revCats].forEach(cat=>{
+    html+='<tr><td style="padding-left:14px;color:var(--t2);">'+esc(cat)+'</td>';
+    months.forEach(mk=>{const v=revenues[mk]?.[cat];html+='<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+(v!=null?Math.round(v).toLocaleString():'—')+'</td>';});
+    html+='</tr>';
+  });
+  // Revenue totals
+  html+='<tr style="font-weight:600;"><td style="color:var(--grn);">Total Revenue</td>';
+  months.forEach(mk=>{const t=Object.values(revenues[mk]||{}).reduce((s,v)=>s+v,0);html+='<td style="text-align:right;color:var(--grn);font-family:\'DM Mono\',monospace;">'+Math.round(t).toLocaleString()+'</td>';});
+  html+='</tr>';
+  // Expense section
+  html+='<tr><td colspan="'+(months.length+1)+'" style="background:rgba(239,68,68,.08);color:var(--red);font-weight:700;padding:6px 10px;font-size:11px;">💸 Expenses</td></tr>';
+  [...expCats].forEach(cat=>{
+    html+='<tr><td style="padding-left:14px;color:var(--t2);">'+esc(cat)+'</td>';
+    months.forEach(mk=>{const v=expenses[mk]?.[cat];html+='<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+(v!=null?Math.round(v).toLocaleString():'—')+'</td>';});
+    html+='</tr>';
+  });
+  // Expense totals
+  html+='<tr style="font-weight:600;"><td style="color:var(--red);">Total Expenses</td>';
+  months.forEach(mk=>{const t=Object.values(expenses[mk]||{}).reduce((s,v)=>s+v,0);html+='<td style="text-align:right;color:var(--red);font-family:\'DM Mono\',monospace;">'+Math.round(t).toLocaleString()+'</td>';});
+  html+='</tr>';
+  html+='</tbody></table>';
+  document.getElementById('pl-preview-table').innerHTML=html;
+  document.getElementById('pl-preview').style.display='block';
+}
+
+async function plSaveToSupabase(){
+  if(!_plParsed){notif('⚠ No data to save');return;}
+  const{months,revenues,expenses}=_plParsed;
+  const rangeEl=document.querySelector('input[name="pl-range"]:checked');
+  const saveAll=!rangeEl||rangeEl.value==='all';
+  const statusEl=document.getElementById('pl-save-status');
+  statusEl.textContent='Saving…';statusEl.style.color='var(--acc)';
+  // Determine months to save
+  const now=new Date();
+  const curMk=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthsToSave=saveAll?months:months.filter(mk=>mk===curMk);
+  if(!monthsToSave.length){statusEl.textContent='No data for selected range.';return;}
+  try{
+    // Delete existing records for these months
+    for(const mk of monthsToSave){
+      await sb('DELETE','financials?month=eq.'+encodeURIComponent(mk)).catch(()=>{});
+    }
+    // Build insert rows
+    const inserts=[];
+    monthsToSave.forEach(mk=>{
+      Object.entries(revenues[mk]||{}).forEach(([cat,amt])=>{
+        if(amt>0)inserts.push({id:'r_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'revenue',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});
+      });
+      Object.entries(expenses[mk]||{}).forEach(([cat,amt])=>{
+        if(amt>0)inserts.push({id:'e_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'expense',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});
+      });
+    });
+    // Insert in batches of 50
+    for(let i=0;i<inserts.length;i+=50){
+      await dbInsert('financials',inserts.slice(i,i+50));
+    }
+    // Reload financials into memory
+    await loadFinancials();
+    statusEl.textContent='✓ Saved '+inserts.length+' records for '+monthsToSave.length+' months. EC Report updated.';
+    statusEl.style.color='var(--grn)';
+    notif('✓ P&L data saved to Supabase');
+    logActivity('admin','Uploaded P&L data: '+monthsToSave.join(', '));
+  }catch(err){statusEl.textContent='❌ Save failed: '+err.message;statusEl.style.color='var(--red)';notif('❌ '+err.message);}
+}
+
+// ═══════════════════════════════════════════════
+// FINANCIALS FROM SUPABASE
+// ═══════════════════════════════════════════════
+let _financialsLoaded=false;
+
+async function loadFinancials(){
+  try{
+    const rows=await dbGet('financials','select=month,category,amount,type&order=month.asc');
+    if(!rows.length){_financialsLoaded=true;return;}
+    rows.forEach(r=>{
+      const mk=r.month;
+      if(!EX_HISTORICAL.pkr[mk])EX_HISTORICAL.pkr[mk]={revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+      const entry=EX_HISTORICAL.pkr[mk];
+      if(r.type==='revenue'){entry.revCats[r.category]=(entry.revCats[r.category]||0)+r.amount;}
+      else if(r.type==='expense'){entry.expCats[r.category]=(entry.expCats[r.category]||0)+r.amount;}
+    });
+    Object.keys(EX_HISTORICAL.pkr).forEach(mk=>{
+      const e=EX_HISTORICAL.pkr[mk];
+      const rev=Object.values(e.revCats||{}).reduce((s,v)=>s+v,0);
+      const exp=Object.values(e.expCats||{}).reduce((s,v)=>s+v,0);
+      if(rev>0)e.revenue=rev;
+      if(exp>0)e.expenses=exp;
+      e.profit=e.revenue-e.expenses;
+    });
+    _financialsLoaded=true;
+  }catch(e){console.error('loadFinancials:',e);_financialsLoaded=true;}
+}
+
+// ═══════════════════════════════════════════════
 // BACKGROUND POLLING — alerts every 5 minutes
 // ═══════════════════════════════════════════════
 let _pollInterval=null;
@@ -4863,6 +5105,15 @@ async function rbInit(){
 
 let currentMode='analytics';
 let ecCurTab='main';
+// ── SALES ADJUSTMENTS (hardcoded pending source file fixes) ──────────────────
+const SALES_ADJUSTMENTS={
+  '2024-08':49485,    // Aug 2024 B2B data correction
+  '2024-12':6049486,  // Dec 2024 B2B data correction
+  '2025-08':1041535,  // Aug 2025 B2B data correction
+  '2025-09':331771,   // Sep 2025 B2B data correction
+};
+function getSalesAdj(mk){return SALES_ADJUSTMENTS[mk]||0;}
+
 let ecCurrencyMain='PKR';
 let ecYearMain=null;
 let ecRevExpanded=false;
@@ -4957,7 +5208,7 @@ function ecRenderUnified(){
   months.forEach(mk=>{
     const days=new Date(parseInt(mk.split('-')[0]),parseInt(mk.split('-')[1]),0).getDate();
     const c2=cv(mk);
-    totalSalesMonth[mk]=((salesB2C[mk]||0)+(salesB2B[mk]||0))*c2;
+    totalSalesMonth[mk]=((salesB2C[mk]||0)+(salesB2B[mk]||0)+getSalesAdj(mk))*c2;
     totalOrdersMonth[mk]=(ordersB2C[mk]||0)+(ordersB2B[mk]||0);
     avgBasketB2C[mk]=basketsB2C[mk].length?basketsB2C[mk].reduce((s,v)=>s+v,0)/basketsB2C[mk].length*c2:null;
     avgBasketB2B[mk]=basketsB2B[mk].length?basketsB2B[mk].reduce((s,v)=>s+v,0)/basketsB2B[mk].length*c2:null;
