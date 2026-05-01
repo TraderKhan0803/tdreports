@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 26
+  Version  : 27
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -25,7 +25,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 #forgot-screen{display:none;align-items:center;justify-content:center;min-height:100vh;}
 .auth-box{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:36px;width:360px;text-align:center;}
 .auth-logo{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--acc);letter-spacing:-2px;margin-bottom:4px;}
-.auth-sub{color:var(--t3);font-size:11px;font-family:'DM Mono',monospace;letter-spacing:2px;margin-bottom:28px;}
+.auth-sub{color:var(--t3);font-size:11px;font-family:\'DM Mono\',monospace;letter-spacing:2px;margin-bottom:28px;}
 .auth-inp{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:var(--r2);font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:9px;}
 .auth-inp:focus{outline:none;border-color:var(--acc);}
 .auth-btn{width:100%;padding:11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;}
@@ -46,22 +46,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .hbtn{background:var(--sur2);border:1px solid var(--bdr);color:var(--t2);padding:5px 11px;border-radius:var(--r2);cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .hbtn:hover{border-color:var(--acc);color:var(--acc);}
-.meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);}
+.meta{font-family:\'DM Mono\',monospace;font-size:10px;color:var(--t3);}
 .user-chip{background:var(--sur3);border:1px solid var(--bdr);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--t2);cursor:pointer;}
 
 /* ── TIME NAV BAR ── */
 .timebar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 18px;display:flex;align-items:center;gap:8px;height:42px;flex-shrink:0;overflow:visible;}
-.dr-pill{display:flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;border:1px solid var(--bdr);background:transparent;cursor:pointer;font-size:11px;color:var(--t2);font-family:'DM Mono',monospace;transition:all .15s;white-space:nowrap;}
+.dr-pill{display:flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;border:1px solid var(--bdr);background:transparent;cursor:pointer;font-size:11px;color:var(--t2);font-family:\'DM Mono\',monospace;transition:all .15s;white-space:nowrap;}
 .dr-pill.active{border-color:var(--acc);color:var(--acc);background:rgba(249,115,22,.08);}
 .dr-pill:hover{border-color:var(--acc);color:var(--acc);}
 .dr-popover{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;z-index:200;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.3);}
 .dr-popover.open{display:block;}
 .dr-presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
-.dr-preset{padding:3px 10px;border-radius:12px;font-size:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);cursor:pointer;font-family:'DM Mono',monospace;}
+.dr-preset{padding:3px 10px;border-radius:12px;font-size:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);cursor:pointer;font-family:\'DM Mono\',monospace;}
 .dr-preset:hover{border-color:var(--acc);color:var(--acc);}
 .dr-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .dr-label{font-size:11px;color:var(--t3);width:32px;flex-shrink:0;}
-.dr-inp{flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 8px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;outline:none;}
+.dr-inp{flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 8px;border-radius:4px;font-size:11px;font-family:\'DM Mono\',monospace;outline:none;}
 .dr-inp:focus{border-color:var(--acc);}
 .dr-apply{width:100%;padding:7px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;}
 .dr-clear{width:100%;padding:5px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t3);font-size:11px;cursor:pointer;margin-top:5px;}
@@ -86,7 +86,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .filter-drawer{background:var(--sur);border-bottom:1px solid var(--bdr);padding:12px 18px;display:none;flex-direction:column;gap:10px;flex-shrink:0;}
 .filter-drawer.open{display:flex;}
 .frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.flbl{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;width:90px;flex-shrink:0;}
+.flbl{font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:.6px;width:90px;flex-shrink:0;}
 .ftag{background:transparent;border:1px solid var(--bdr);border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;color:var(--t2);transition:all .15s;}
 .ftag:hover{border-color:var(--acc);color:var(--txt);}
 .ftag.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;}
@@ -112,9 +112,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .kpi.c-grn::before{background:var(--grn);}
 .kpi.c-blu::before{background:var(--blu);}
 .kpi.c-pur::before{background:var(--pur);}
-.kpi-lbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:5px;}
+.kpi-lbl{font-family:\'DM Mono\',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:5px;}
 .kpi-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--txt);line-height:1;}
-.kpi-sub{font-size:10px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.kpi-sub{font-size:10px;color:var(--t3);margin-top:2px;font-family:\'DM Mono\',monospace;}
 
 /* ── DRAG PANELS ── */
 .panels-container{display:flex;gap:8px;flex:1;min-height:0;position:relative;}
@@ -122,7 +122,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .panel-header{padding:9px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;cursor:grab;background:var(--sur2);user-select:none;flex-shrink:0;}
 .panel-header:active{cursor:grabbing;}
 .panel-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--txt);}
-.panel-count{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
+.panel-count{font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;}
 .panel-body{flex:1;overflow-y:auto;min-height:0;}
 .panel-body::-webkit-scrollbar{width:3px;}
 .panel-body::-webkit-scrollbar-thumb{background:var(--bdr);}
@@ -131,7 +131,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* ── TABLES ── */
 .dt{width:100%;border-collapse:collapse;font-size:12px;}
-.dt th{background:var(--sur2);padding:7px 11px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0;z-index:1;cursor:pointer;}
+.dt th{background:var(--sur2);padding:7px 11px;text-align:left;font-family:\'DM Mono\',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0;z-index:1;cursor:pointer;}
 .dt th:hover{color:var(--txt);}
 .dt td{padding:7px 11px;border-bottom:1px solid var(--bdr);color:var(--t2);}
 .dt tr:last-child td{border-bottom:none;}
@@ -143,10 +143,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .dt tr.r-child:hover td{background:var(--sur2);color:var(--txt);cursor:pointer;}
 .tree-toggle{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;font-size:9px;margin-right:4px;color:var(--t3);cursor:pointer;user-select:none;transition:transform .15s;}
 .tree-toggle.open{transform:rotate(90deg);color:var(--acc);}
-.dt tfoot td{background:var(--sur2);color:var(--txt);font-weight:600;font-family:'DM Mono',monospace;font-size:11px;padding:7px 11px;border-top:2px solid var(--bdr);}
+.dt tfoot td{background:var(--sur2);color:var(--txt);font-weight:600;font-family:\'DM Mono\',monospace;font-size:11px;padding:7px 11px;border-top:2px solid var(--bdr);}
 
 /* ── BADGES ── */
-.bdg{display:inline-block;padding:2px 6px;border-radius:20px;font-size:9px;font-family:'DM Mono',monospace;}
+.bdg{display:inline-block;padding:2px 6px;border-radius:20px;font-size:9px;font-family:\'DM Mono\',monospace;}
 .b-b2b{background:rgba(168,85,247,.2);color:var(--pur);}
 .b-b2c{background:rgba(59,130,246,.15);color:var(--blu);}
 .b-del{background:rgba(34,197,94,.15);color:var(--grn);}
@@ -165,16 +165,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .st{overflow-y:auto;min-height:0;}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .stitle{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--txt);}
-.hint{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
+.hint{font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;}
 .mb12{margin-bottom:12px;}
 
 /* ── INFO BOX ── */
 .info-box{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;}
 .info-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px;line-height:1.3;}
 .info-row{margin-bottom:8px;}
-.info-lbl{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
+.info-lbl{font-size:9px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
 .info-val{font-size:12px;color:var(--txt);line-height:1.4;}
-.info-empty{color:var(--t3);font-size:11px;font-family:'DM Mono',monospace;padding:20px 0;text-align:center;}
+.info-empty{color:var(--t3);font-size:11px;font-family:\'DM Mono\',monospace;padding:20px 0;text-align:center;}
 
 /* ── PRODUCT SEARCH ── */
 .psbar{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:12px;}
@@ -207,22 +207,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .up-btn:hover{border-color:var(--acc);color:var(--acc);}
 .up-btn.loaded{border-color:var(--grn);color:var(--grn);background:rgba(34,197,94,.08);border-style:solid;}
 .up-btn input{display:none;}
-.up-log{display:none;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px;font-size:11px;font-family:'DM Mono',monospace;max-height:140px;overflow-y:auto;margin-top:10px;}
+.up-log{display:none;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px;font-size:11px;font-family:\'DM Mono\',monospace;max-height:140px;overflow-y:auto;margin-top:10px;}
 .user-row{display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--bg);border-radius:var(--r2);border:1px solid var(--bdr);font-size:11px;margin-bottom:4px;}
 .user-row span{flex:1;color:var(--t2);}
-.role-badge{padding:2px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;}
+.role-badge{padding:2px 7px;border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;}
 .role-viewer{background:rgba(59,130,246,.15);color:var(--blu);}
 .role-admin{background:rgba(249,115,22,.15);color:var(--acc);}
 .role-super{background:rgba(168,85,247,.15);color:var(--pur);}
 .log-entry{padding:5px 9px;border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);display:flex;gap:10px;}
-.log-time{font-family:'DM Mono',monospace;color:var(--t3);white-space:nowrap;font-size:10px;}
+.log-time{font-family:\'DM Mono\',monospace;color:var(--t3);white-space:nowrap;font-size:10px;}
 .log-user{color:var(--acc);font-weight:600;white-space:nowrap;}
 .mb12{margin-bottom:12px;}
 
 /* ── HISTORY PROGRESS BAR ── */
 #history-progress{display:none;position:fixed;top:0;left:0;right:0;height:3px;background:rgba(249,115,22,.15);z-index:9999;}
 #history-progress-bar{height:100%;background:var(--acc);width:0%;transition:width .4s ease;border-radius:0 2px 2px 0;}
-#history-label{position:fixed;top:6px;left:50%;transform:translateX(-50%);background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;padding:2px 12px;font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;z-index:9999;display:none;white-space:nowrap;}
+#history-label{position:fixed;top:6px;left:50%;transform:translateX(-50%);background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;padding:2px 12px;font-size:10px;color:var(--acc);font-family:\'DM Mono\',monospace;z-index:9999;display:none;white-space:nowrap;}
 
 /* ── SKELETON LOADER ── */
 .skel{background:linear-gradient(90deg,var(--sur2) 25%,var(--sur3) 50%,var(--sur2) 75%);background-size:200% 100%;animation:skel-shine 1.5s infinite;border-radius:var(--r2);}
@@ -238,7 +238,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 #loader{display:none;position:fixed;inset:0;background:rgba(13,15,20,.88);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .spin{width:36px;height:36px;border:3px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg)}}
-#loader-msg{font-family:'DM Mono',monospace;font-size:12px;color:var(--t2);}
+#loader-msg{font-family:\'DM Mono\',monospace;font-size:12px;color:var(--t2);}
 
 /* ── SCROLLBARS ── */
 ::-webkit-scrollbar{width:4px;height:4px;}
@@ -262,11 +262,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 }
 
 /* Already actioned badge */
-.actioned-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:2px 8px;font-size:10px;color:var(--grn);font-family:'DM Mono',monospace;white-space:nowrap;}
+.actioned-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:2px 8px;font-size:10px;color:var(--grn);font-family:\'DM Mono\',monospace;white-space:nowrap;}
 .actioned-badge.warn{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:var(--acc);}
 
 /* Mode indicator in logo */
-.mode-label{font-size:9px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:8px;font-weight:700;letter-spacing:.5px;}
+.mode-label{font-size:9px;font-family:\'DM Mono\',monospace;padding:1px 6px;border-radius:8px;font-weight:700;letter-spacing:.5px;}
 .mode-analytics{background:rgba(249,115,22,.15);color:var(--acc);}
 .mode-raabta{background:rgba(34,197,94,.15);color:var(--grn);}
 
@@ -346,7 +346,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   }
   .bn-item{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;cursor:pointer;font-size:9px;font-family:'DM Mono',monospace;
+    gap:3px;cursor:pointer;font-size:9px;font-family:\'DM Mono\',monospace;
     color:var(--t3);letter-spacing:.3px;text-transform:uppercase;
     border:none;background:none;padding:4px 0;transition:color .15s;
     -webkit-tap-highlight-color:transparent;
@@ -381,8 +381,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .rb-card-body{padding:14px;}
 .rb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px;}
 .rb-stat{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 13px;}
-.rb-stat-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--acc);line-height:1;}
-.rb-stat-lbl{font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;}
+.rb-stat-num{font-family:\'DM Mono\',monospace;font-size:22px;font-weight:500;color:var(--acc);line-height:1;}
+.rb-stat-lbl{font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;}
 .rb-stat.sg .rb-stat-num{color:var(--grn);}
 .rb-stat.sb .rb-stat-num{color:var(--blu);}
 .rb-stat.sr .rb-stat-num{color:var(--red);}
@@ -391,10 +391,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .rb-cust-row:hover{border-color:var(--acc);}
 .rb-av{width:34px;height:34px;border-radius:50%;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--acc);flex-shrink:0;}
 .rb-cname{font-weight:600;font-size:13px;color:var(--txt);}
-.rb-cmeta{font-size:10px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-cmeta{font-size:10px;color:var(--t3);margin-top:2px;font-family:\'DM Mono\',monospace;}
 .rb-tags{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
 .rb-actions{display:flex;gap:5px;flex-shrink:0;}
-.rb-bdg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Mono',monospace;}
+.rb-bdg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;font-family:\'DM Mono\',monospace;}
 .rb-new{background:rgba(59,130,246,.15);color:var(--blu);}
 .rb-active{background:rgba(34,197,94,.15);color:var(--grn);}
 .rb-vip{background:rgba(168,85,247,.15);color:var(--pur);}
@@ -413,43 +413,43 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 @keyframes rbsu{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .rb-mhd{background:var(--sur2);border-bottom:1px solid var(--bdr);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
 .rb-mname{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--txt);}
-.rb-mphone{font-size:11px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-mphone{font-size:11px;color:var(--t3);margin-top:2px;font-family:\'DM Mono\',monospace;}
 .rb-mcls{background:var(--sur3);border:1px solid var(--bdr);color:var(--t2);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .rb-mcls:hover{border-color:var(--red);color:var(--red);}
 .rb-mbody{padding:18px;}
 .rb-igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px;}
 @media(max-width:480px){.rb-igrid{grid-template-columns:1fr 1fr;}}
 .rb-ii{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;}
-.rb-il{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;}
-.rb-iv{font-size:12px;font-weight:600;color:var(--txt);margin-top:3px;font-family:'DM Mono',monospace;}
+.rb-il{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:\'DM Mono\',monospace;}
+.rb-iv{font-size:12px;font-weight:600;color:var(--txt);margin-top:3px;font-family:\'DM Mono\',monospace;}
 .rb-dvd{height:1px;background:var(--bdr);margin:11px 0;}
-.rb-sec{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;margin-bottom:8px;}
+.rb-sec{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-family:\'DM Mono\',monospace;margin-bottom:8px;}
 .rb-tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
 @media(max-width:440px){.rb-tpl-grid{grid-template-columns:1fr;}}
 .rb-tpl-btn{padding:8px 10px;border-radius:var(--r2);border:1px solid var(--bdr);background:var(--sur2);cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;transition:border-color .15s;display:flex;flex-direction:column;gap:2px;}
 .rb-tpl-btn:hover{border-color:#25D366;background:rgba(37,211,102,.07);}
 .rb-tpl-btn .tn{font-size:11px;font-weight:600;color:var(--txt);}
-.rb-tpl-btn .tt{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;}
+.rb-tpl-btn .tt{font-size:9px;color:var(--t3);font-family:\'DM Mono\',monospace;}
 .rb-log{padding:8px 11px;border-left:2px solid var(--acc);background:var(--sur2);border-radius:0 var(--r2) var(--r2) 0;margin-bottom:5px;font-size:12px;}
 .rb-lt{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;}
 .rb-la{font-weight:600;color:var(--txt);}
-.rb-lm{color:var(--t3);font-size:10px;font-family:'DM Mono',monospace;}
+.rb-lm{color:var(--t3);font-size:10px;font-family:\'DM Mono\',monospace;}
 .rb-ln{color:var(--t2);margin-top:3px;}
-.rb-lo{color:var(--acc);font-size:10px;margin-top:2px;font-family:'DM Mono',monospace;}
+.rb-lo{color:var(--acc);font-size:10px;margin-top:2px;font-family:\'DM Mono\',monospace;}
 .rb-osel{padding:5px 9px;border-radius:var(--r2);border:1px solid var(--bdr);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt);background:var(--sur2);outline:none;}
 .rb-osel:focus{border-color:var(--acc);}
 .rb-osel option{background:var(--sur2);}
 .rb-tp-card{border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:7px;}
 .rb-tp-hd{padding:9px 13px;background:var(--sur2);border-bottom:1px solid transparent;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
 .rb-tp-card.open .rb-tp-hd{border-bottom-color:var(--bdr);}
-.rb-tp-num{font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;}
+.rb-tp-num{font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:\'DM Mono\',monospace;}
 .rb-tp-name{font-weight:600;font-size:12px;color:var(--txt);}
 .rb-tp-body{padding:12px;display:none;}
 .rb-tp-card.open .rb-tp-body{display:block;}
 .rb-tpl-text{background:var(--sur2);border-left:2px solid var(--grn);padding:10px 13px;border-radius:0 var(--r2) var(--r2) 0;font-size:12px;line-height:1.8;color:var(--txt);white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
 .rb-tpl-text.ur{direction:rtl;text-align:right;border-left:none;border-right:2px solid var(--acc);font-size:13px;}
 .rb-ltabs{display:flex;gap:5px;margin-bottom:8px;}
-.rb-ltab{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;transition:all .15s;}
+.rb-ltab{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--sur2);color:var(--t3);font-family:\'DM Mono\',monospace;transition:all .15s;}
 .rb-ltab.active{background:var(--acc);color:#fff;border-color:var(--acc);}
 .rb-qi{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px;transition:border-color .15s;}
 .rb-qi:hover{border-color:var(--acc);}
@@ -458,27 +458,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .rb-qm{background:var(--acc);}
 .rb-ql{background:var(--grn);}
 .rb-act-table{width:100%;border-collapse:collapse;}
-.rb-act-table th{text-align:left;padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);border-bottom:1px solid var(--bdr);background:var(--sur2);font-family:'DM Mono',monospace;}
+.rb-act-table th{text-align:left;padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);border-bottom:1px solid var(--bdr);background:var(--sur2);font-family:\'DM Mono\',monospace;}
 .rb-act-table td{padding:9px 11px;font-size:12px;border-bottom:1px solid var(--bdr);vertical-align:top;color:var(--t2);}
 .rb-act-table tr:last-child td{border-bottom:none;}
 .rb-act-table tr:hover td{background:var(--sur2);}
 .rb-hbr{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
-.rb-hbl{font-size:10px;width:58px;color:var(--t3);text-transform:capitalize;font-family:'DM Mono',monospace;}
+.rb-hbl{font-size:10px;width:58px;color:var(--t3);text-transform:capitalize;font-family:\'DM Mono\',monospace;}
 .rb-hbt{flex:1;background:var(--bdr);border-radius:4px;height:5px;overflow:hidden;}
 .rb-hbf{height:100%;border-radius:4px;transition:width .5s;}
-.rb-hbc{font-size:10px;font-weight:700;color:var(--txt);width:20px;text-align:right;font-family:'DM Mono',monospace;}
-.rb-empty{text-align:center;padding:28px;color:var(--t3);font-family:'DM Mono',monospace;font-size:11px;}
+.rb-hbc{font-size:10px;font-weight:700;color:var(--txt);width:20px;text-align:right;font-family:\'DM Mono\',monospace;}
+.rb-empty{text-align:center;padding:28px;color:var(--t3);font-family:\'DM Mono\',monospace;font-size:11px;}
 .rb-wa-num-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);margin-bottom:5px;font-size:12px;}
 .rb-wa-num-row .num-label{flex:1;color:var(--txt);font-weight:500;}
-.rb-wa-num-row .num-val{color:var(--t2);font-family:'DM Mono',monospace;font-size:11px;}
-.rb-wa-num-row .num-def{padding:2px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;}
+.rb-wa-num-row .num-val{color:var(--t2);font-family:\'DM Mono\',monospace;font-size:11px;}
+.rb-wa-num-row .num-def{padding:2px 7px;border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;cursor:pointer;}
 .tab-sep{width:1px;height:20px;background:var(--bdr);margin:0 4px;flex-shrink:0;}
 .tpl-editor-card{border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:8px;}
 .tpl-editor-hd{padding:9px 13px;background:var(--sur2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
 .tpl-editor-hd:hover{background:var(--sur3);}
 .tpl-editor-body{padding:12px;display:none;border-top:1px solid var(--bdr);}
 .tpl-editor-card.open .tpl-editor-body{display:block;}
-.tpl-editor-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;margin-bottom:4px;margin-top:9px;}
+.tpl-editor-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;margin-bottom:4px;margin-top:9px;}
 .tpl-editor-label:first-child{margin-top:0;}
 .tpl-textarea{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.7;resize:vertical;outline:none;min-height:95px;}
 .tpl-textarea:focus{border-color:var(--acc);}
@@ -495,13 +495,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ec-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
 .ec-panel.active{display:flex;}
 .ec-year-tabs{display:flex;gap:5px;margin-bottom:0;flex-wrap:wrap;}
-.ec-year-tab{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-family:'DM Mono',monospace;transition:all .15s;}
+.ec-year-tab{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-family:\'DM Mono\',monospace;transition:all .15s;}
 .ec-year-tab.active{background:var(--pur);color:#fff;border-color:var(--pur);}
 /* Unified spreadsheet table */
 .ec-unified-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--bdr);border-radius:var(--r);}
 .ec-unified{border-collapse:collapse;width:100%;min-width:600px;}
 .ec-unified th,.ec-unified td{padding:7px 10px;border-bottom:1px solid var(--bdr);white-space:nowrap;font-size:12px;}
-.ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:left;position:sticky;top:0;z-index:3;}
+.ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:\'DM Mono\',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:left;position:sticky;top:0;z-index:3;}
 .ec-unified thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:5;background:var(--sur2);}
 .ec-unified td:first-child{position:sticky;left:0;background:var(--sur);z-index:2;border-right:1px solid var(--bdr);min-width:180px;max-width:210px;}
 .ec-unified tr:hover td{background:var(--sur2);}
@@ -521,37 +521,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ec-card-hd{padding:11px 14px;background:var(--sur2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .ec-card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--txt);text-transform:uppercase;}
 .ec-cur-toggle{display:flex;gap:5px;}
-.ec-cur-btn{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;border:1px solid var(--bdr);background:transparent;color:var(--t3);}
+.ec-cur-btn{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:\'DM Mono\',monospace;border:1px solid var(--bdr);background:transparent;color:var(--t3);}
 .ec-cur-btn.active{background:var(--pur);color:#fff;border-color:var(--pur);}
 
 /* ── GROWTH & RETENTION ── */
 .gr-panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:14px 18px;}
 .gr-panel.active{display:flex;}
 .gr-section{margin-bottom:18px;}
-.gr-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}
+.gr-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}
 .gr-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
 .gr-kpi-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
 .gr-kpi{background:var(--sur2);border-radius:var(--r);padding:11px 13px;position:relative;cursor:default;}
 .gr-kpi:hover{outline:1px solid var(--bdr);}
 .gr-kpi-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;z-index:50;min-width:200px;}
 .gr-kpi:hover .gr-kpi-tooltip{display:block;}
-.gr-kpi-formula{font-family:'DM Mono',monospace;font-size:10px;color:var(--acc);background:rgba(249,115,22,.08);padding:3px 7px;border-radius:3px;margin-bottom:5px;}
+.gr-kpi-formula{font-family:\'DM Mono\',monospace;font-size:10px;color:var(--acc);background:rgba(249,115,22,.08);padding:3px 7px;border-radius:3px;margin-bottom:5px;}
 .gr-kpi-tdesc{font-size:10px;color:var(--t2);line-height:1.4;}
-.gr-kpi-bench{font-size:10px;color:var(--grn);margin-top:4px;font-family:'DM Mono',monospace;}
-.gr-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:5px;}
+.gr-kpi-bench{font-size:10px;color:var(--grn);margin-top:4px;font-family:\'DM Mono\',monospace;}
+.gr-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:5px;}
 .gr-kpi-value{font-size:20px;font-weight:700;font-family:'Syne',sans-serif;line-height:1;}
 .gr-kpi-sub{font-size:10px;color:var(--t3);margin-top:3px;}
 .gr-cac-box{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;}
 .gr-cac-title{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:10px;}
 .gr-cac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:10px;}
 .gr-cac-month{display:flex;flex-direction:column;gap:3px;}
-.gr-cac-month label{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
-.gr-cac-month input{background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:4px 7px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;width:100%;}
+.gr-cac-month label{font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;}
+.gr-cac-month input{background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:4px 7px;border-radius:4px;font-size:11px;font-family:\'DM Mono\',monospace;width:100%;}
 .gr-cohort-wrap{overflow-x:auto;border:1px solid var(--bdr);border-radius:var(--r);}
 .gr-cohort{border-collapse:collapse;width:100%;min-width:400px;}
 .gr-cohort th{background:var(--sur2);color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap;}
 .gr-cohort th:first-child{text-align:left;}
-.gr-cohort td{padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:11px;font-family:'DM Mono',monospace;text-align:right;white-space:nowrap;}
+.gr-cohort td{padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:11px;font-family:\'DM Mono\',monospace;text-align:right;white-space:nowrap;}
 .gr-cohort td:first-child{text-align:left;font-family:'DM Sans',sans-serif;color:var(--t2);}
 .gr-cohort tr:last-child td{border-bottom:none;}
 .gr-ret-high{color:var(--grn);}
@@ -584,9 +584,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ai-msg.assistant{align-self:flex-start;background:var(--sur2);color:var(--txt);border-radius:var(--r) var(--r) var(--r) 4px;border:1px solid var(--bdr);}
 .ai-msg.assistant pre{background:var(--bg);border-radius:4px;padding:8px;margin-top:6px;font-size:11px;overflow-x:auto;}
 .ai-msg-wrap{display:flex;flex-direction:column;gap:4px;}
-.ai-msg-meta{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
+.ai-msg-meta{font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;}
 .ai-msg-actions{display:flex;gap:6px;margin-top:4px;}
-.ai-action-btn{padding:2px 9px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-size:10px;cursor:pointer;font-family:'DM Mono',monospace;}
+.ai-action-btn{padding:2px 9px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--t3);font-size:10px;cursor:pointer;font-family:\'DM Mono\',monospace;}
 .ai-action-btn:hover{border-color:var(--grn);color:var(--grn);}
 .ai-thinking{display:flex;gap:4px;align-items:center;padding:10px 14px;}
 .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:ai-pulse 1.2s infinite;}
@@ -605,7 +605,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 .alert-card.today{border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.04);}
 .alert-card.future{border-color:var(--bdr);background:var(--sur2);}
 .alert-card.done{opacity:.5;}
-.alert-due-badge{padding:2px 8px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap;}
+.alert-due-badge{padding:2px 8px;border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;font-weight:700;white-space:nowrap;}
 .alert-due-badge.overdue{background:rgba(239,68,68,.15);color:var(--red);}
 .alert-due-badge.today{background:rgba(249,115,22,.15);color:var(--acc);}
 .alert-due-badge.future{background:rgba(100,116,139,.15);color:var(--t3);}
@@ -665,21 +665,21 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
   <div class="topbar">
     <!-- Logo with dropdown -->
     <div style="position:relative;" id="logo-wrap">
-      <div class="logo" onclick="toggleLogoMenu()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;">TEZZ. <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">▾</span></div>
+      <div class="logo" onclick="toggleLogoMenu()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;">TEZZ. <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-top:2px;">▾</span></div>
       <div id="logo-menu" style="display:none;position:fixed;top:54px;left:12px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r);min-width:200px;z-index:9999;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.6);">
         <div onclick="setMode('analytics')" id="lm-analytics" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
           <span style="font-size:16px;">📊</span>
-          <div><div>Tezz Analytics</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Data &amp; reports</div></div>
+          <div><div>Tezz Analytics</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:\'DM Mono\',monospace;">Data &amp; reports</div></div>
         </div>
         <div style="height:1px;background:var(--bdr);"></div>
         <div onclick="setMode('raabta')" id="lm-raabta" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
           <span style="font-size:16px;">💬</span>
-          <div><div>Tezz Raabta</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Customer messaging</div></div>
+          <div><div>Tezz Raabta</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:\'DM Mono\',monospace;">Customer messaging</div></div>
         </div>
         <div style="height:1px;background:var(--bdr);"></div>
         <div onclick="setMode('exec')" id="lm-exec" style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--txt);transition:background .15s;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''">
           <span style="font-size:16px;">📈</span>
-          <div><div>Executive Committee</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:'DM Mono',monospace;">Financial reports</div></div>
+          <div><div>Executive Committee</div><div style="font-size:10px;color:var(--t3);font-weight:400;font-family:\'DM Mono\',monospace;">Financial reports</div></div>
         </div>
       </div>
     </div>
@@ -695,7 +695,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <!-- Raabta tabs -->
     <div id="raabta-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
       <div class="tab active" onclick="rbSwitchTab('rb-customers',this)" id="nav-rb-customers">Customers</div>
-      <div class="tab" onclick="rbSwitchTab('rb-outreach',this)" id="nav-rb-outreach">Outreach <span id="rb-alert-badge" style="display:none;background:rgba(239,68,68,.2);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:'DM Mono',monospace;">0</span></div>
+      <div class="tab" onclick="rbSwitchTab('rb-outreach',this)" id="nav-rb-outreach">Outreach <span id="rb-alert-badge" style="display:none;background:rgba(239,68,68,.2);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:\'DM Mono\',monospace;">0</span></div>
       <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates" style="display:none;">Templates</div>
       <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
     </div>
@@ -710,8 +710,8 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <button class="hbtn" id="btn-admin" style="display:none" onclick="showAdmin()">⚙ Admin</button>
       <button class="hbtn" id="btn-super" style="display:none;border-color:var(--pur);color:var(--pur)" onclick="showSuper()">★ Super</button>
       <div style="display:flex;gap:3px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;flex-shrink:0;">
-        <button id="cur-btn-pkr" onclick="setGlobalCurrency('PKR')" style="padding:4px 10px;border:none;background:var(--acc);color:#fff;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">PKR</button>
-        <button id="cur-btn-usd" onclick="setGlobalCurrency('USD')" style="padding:4px 10px;border:none;background:transparent;color:var(--t2);font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">USD</button>
+        <button id="cur-btn-pkr" onclick="setGlobalCurrency('PKR')" style="padding:4px 10px;border:none;background:var(--acc);color:#fff;font-size:10px;font-family:\'DM Mono\',monospace;font-weight:700;cursor:pointer;">PKR</button>
+        <button id="cur-btn-usd" onclick="setGlobalCurrency('USD')" style="padding:4px 10px;border:none;background:transparent;color:var(--t2);font-size:10px;font-family:\'DM Mono\',monospace;font-weight:700;cursor:pointer;">USD</button>
       </div>
       <div class="user-chip" onclick="doLogout()">👤 <span id="hdr-user"></span> · logout</div>
     </div>
@@ -722,7 +722,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <button onclick="goBack()" style="display:flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bdr);color:var(--t2);padding:4px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">
       &#8592; <span id="back-label">Back</span>
     </button>
-    <span id="back-context" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></span>
+    <span id="back-context" style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;"></span>
   </div>
 
   <!-- TIME NAV BAR -->
@@ -992,9 +992,9 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <!-- At-Risk -->
       <div id="rpt-atrisk" style="display:none;">
         <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
-          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">Inactive for more than 30 days —</span>
-          <span id="risk-count" style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;"></span>
-          <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-left:4px;">Click any customer to view their full history on the dashboard.</span>
+          <span style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;">Inactive for more than 30 days —</span>
+          <span id="risk-count" style="font-size:11px;color:var(--red);font-family:\'DM Mono\',monospace;"></span>
+          <span style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-left:4px;">Click any customer to view their full history on the dashboard.</span>
         </div>
         <div class="kpi-row mb12" id="rpt-risk-kpis"></div>
         <div class="tw"><div style="overflow-x:auto;"><table class="dt">
@@ -1037,70 +1037,36 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-welcome-count"></div>
         </div>
 
-        <!-- Panel 2: Gone Quiet -->
-        <div class="tw" style="display:flex;flex-direction:column;">
-          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <!-- Panel 2: Lapsed Customers (replaces Gone Quiet + About to Churn + Reactivation) -->
+        <div class="tw" style="display:flex;flex-direction:column;grid-column:span 2;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:8px;">
             <div>
-              <div class="stitle" style="color:var(--acc);">🔇 Gone Quiet</div>
-              <div class="hint">Ordered once — not seen since</div>
+              <div class="stitle" style="color:var(--pur);">⏸ Lapsed Customers</div>
+              <div class="hint">Customers who haven't reordered — prioritise by Signal column</div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:11px;color:var(--t3);">Silent for</span>
-              <input type="number" id="mkt-quiet-days" value="14" min="1" max="90" onchange="renderMarketing()" style="width:48px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
-              <span style="font-size:11px;color:var(--t3);">days+</span>
-              <button onclick="downloadMktList('quiet')" style="padding:3px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
-            </div>
-          </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Only Order</th><th style="text-align:right">Days Silent</th><th style="text-align:right">Value</th></tr></thead>
-            <tbody id="mkt-quiet-body"></tbody></table>
-          </div>
-          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-quiet-count"></div>
-        </div>
-
-        <!-- Panel 3: About to Churn -->
-        <div class="tw" style="display:flex;flex-direction:column;">
-          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div>
-              <div class="stitle" style="color:var(--red);">⚠ About to Churn</div>
-              <div class="hint">Active customers showing early churn signals</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:11px;color:var(--t3);">3+ orders, silent</span>
-              <input type="number" id="mkt-churn-min" value="21" min="1" max="90" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:11px;color:var(--t3);">Inactive</span>
+              <input type="number" id="mkt-lapsed-min" value="30" min="1" max="365" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
               <span style="font-size:11px;color:var(--t3);">–</span>
-              <input type="number" id="mkt-churn-max" value="30" min="1" max="90" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <input type="number" id="mkt-lapsed-max" value="60" min="1" max="365" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
               <span style="font-size:11px;color:var(--t3);">days</span>
-              <button onclick="downloadMktList('churn')" style="padding:3px 10px;background:var(--red);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
+              <button onclick="document.getElementById('mkt-lapsed-guide').style.display=document.getElementById('mkt-lapsed-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? Guide</button>
+              <button onclick="downloadMktList('lapsed')" style="padding:3px 10px;background:var(--pur);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;">⬇</button>
             </div>
           </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
+          <div id="mkt-lapsed-guide" style="display:none;padding:10px 14px;background:rgba(168,85,247,.06);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.7;">
+            <strong style="color:var(--pur);">How to use this table:</strong><br>
+            Set the day range to find customers who haven't reordered. Sort by <strong>Signal</strong> to prioritise who to contact first.<br>
+            <span style="color:var(--red);">● Overdue</span> — last order was longer ago than their usual gap. Contact now.<br>
+            <span style="color:var(--acc);">● Slightly overdue</span> — approaching their usual gap. Send a gentle nudge.<br>
+            <span style="color:var(--grn);">● On schedule</span> — within their normal reorder cycle. May not need contact yet.<br>
+            <strong>Examples:</strong> 30–60 days = customers lost last month (highest priority) · 60–90 days = drifting away · 90+ days = long-term lapsed
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:320px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Avg Gap</th><th>Signal</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
-            <tbody id="mkt-churn-body"></tbody></table>
+            <tbody id="mkt-lapsed-body"></tbody></table>
           </div>
-          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-churn-count"></div>
-        </div>
-
-        <!-- Panel 4: Reactivation Targets -->
-        <div class="tw" style="display:flex;flex-direction:column;">
-          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div>
-              <div class="stitle" style="color:var(--pur);">♻ Reactivation Targets</div>
-              <div class="hint">Were loyal — now gone quiet</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <input type="number" id="mkt-react-min" value="30" min="1" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
-              <span style="font-size:11px;color:var(--t3);">–</span>
-              <input type="number" id="mkt-react-max" value="60" min="1" onchange="renderMarketing()" style="width:44px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
-              <span style="font-size:11px;color:var(--t3);">days inactive</span>
-              <button onclick="downloadMktList('react')" style="padding:3px 10px;background:var(--pur);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
-            </div>
-          </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
-            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Avg Gap</th><th>Signal</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
-            <tbody id="mkt-react-body"></tbody></table>
-          </div>
-          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-react-count"></div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-lapsed-count"></div>
         </div>
 
         <!-- Panel 4: Bulk & VIP -->
@@ -1190,15 +1156,15 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <div>
           <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--acc);">🤖 TD Assistant</div>
-          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">Ask anything about your data</div>
+          <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-top:2px;">Ask anything about your data</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div id="ai-usage-display" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></div>
+          <div id="ai-usage-display" style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;"></div>
           <button onclick="aiClearConversation()" style="padding:4px 11px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t3);font-size:11px;cursor:pointer;">Clear chat</button>
         </div>
       </div>
       <!-- Context bar -->
-      <div id="ai-context-bar" style="padding:6px 18px;background:rgba(249,115,22,.06);border-bottom:1px solid var(--bdr);font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;flex-shrink:0;"></div>
+      <div id="ai-context-bar" style="padding:6px 18px;background:rgba(249,115,22,.06);border-bottom:1px solid var(--bdr);font-size:10px;color:var(--acc);font-family:\'DM Mono\',monospace;flex-shrink:0;"></div>
       <!-- Messages -->
       <div id="ai-messages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;"></div>
       <!-- Suggestion chips -->
@@ -1271,12 +1237,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="rb-mbody">
       <div class="rb-igrid" id="rb-mig"></div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
-        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;">Status:</span>
+        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;">Status:</span>
         <select class="rb-osel" id="rb-mss" onchange="rbUpdStatus()">
           <option value="new">🆕 New</option><option value="active">✅ Active</option>
           <option value="vip">⭐ VIP</option><option value="silent">😶 Silent</option><option value="winback">🔄 Win-Back</option>
         </select>
-        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;">Language:</span>
+        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;">Language:</span>
         <select class="rb-osel" id="rb-mls" onchange="rbUpdLang()">
           <option value="en">🇬🇧 English</option><option value="ur">🇵🇰 Urdu</option><option value="?">❓ Unknown</option>
         </select>
@@ -1314,14 +1280,14 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="rb-mhd"><div><div class="rb-mname">Add Customer</div></div><button class="rb-mcls" onclick="document.getElementById('rb-am').classList.remove('open')">✕</button></div>
     <div class="rb-mbody">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Full Name *</label><input id="rb-an" class="adm-inp" placeholder="Ayesha Khan" style="width:100%;"></div>
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">WhatsApp Number *</label><input id="rb-aph" class="adm-inp" placeholder="923001234567" style="width:100%;"></div>
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">City</label><input id="rb-ac" class="adm-inp" placeholder="Karachi" style="width:100%;"></div>
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Language</label><select id="rb-al" class="adm-inp"><option value="?">Unknown</option><option value="en">English</option><option value="ur">Urdu</option></select></div>
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Status</label><select id="rb-ast" class="adm-inp"><option value="new">New</option><option value="active">Active</option><option value="vip">VIP</option></select></div>
-        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Last Order Date</label><input type="date" id="rb-ad" class="adm-inp" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">Full Name *</label><input id="rb-an" class="adm-inp" placeholder="Ayesha Khan" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">WhatsApp Number *</label><input id="rb-aph" class="adm-inp" placeholder="923001234567" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">City</label><input id="rb-ac" class="adm-inp" placeholder="Karachi" style="width:100%;"></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">Language</label><select id="rb-al" class="adm-inp"><option value="?">Unknown</option><option value="en">English</option><option value="ur">Urdu</option></select></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">Status</label><select id="rb-ast" class="adm-inp"><option value="new">New</option><option value="active">Active</option><option value="vip">VIP</option></select></div>
+        <div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">Last Order Date</label><input type="date" id="rb-ad" class="adm-inp" style="width:100%;"></div>
       </div>
-      <div style="margin-top:9px;"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">Notes</label><textarea id="rb-anotes" class="adm-inp" placeholder="Any notes…" style="width:100%;min-height:60px;resize:vertical;"></textarea></div>
+      <div style="margin-top:9px;"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;display:block;margin-bottom:4px;">Notes</label><textarea id="rb-anotes" class="adm-inp" placeholder="Any notes…" style="width:100%;min-height:60px;resize:vertical;"></textarea></div>
       <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:10px;">
         <button onclick="document.getElementById('rb-am').classList.remove('open')" style="padding:6px 13px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
         <button onclick="rbSaveNew()" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Add Customer</button>
@@ -1364,7 +1330,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 <div id="history-label">Loading full history…</div>
 <div id="loader" style="display:none;position:fixed;inset:0;background:rgba(13,15,20,.88);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
   <div class="spin"></div>
-  <div id="loader-msg" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--t2);">Loading…</div>
+  <div id="loader-msg" style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--t2);">Loading…</div>
 </div>
 
 <!-- ═══ CONFIRM CLEAR MODAL ═══ -->
@@ -1405,7 +1371,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div class="adm-title">📂 Data Management</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files <span title="Date of most recently uploaded order record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
+            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files <span title="Date of most recently uploaded order record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
             <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-orders-last-date" style="color:var(--txt);font-weight:600">—</span></div>
             <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-orders-last-file" style="color:var(--t2)">—</span></div>
             <label class="up-btn" id="adm-lbl-orders">
@@ -1415,7 +1381,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <div style="font-size:10px;color:var(--t3);">Multiple files supported — processed in order.</div>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files <span title="Date of most recently uploaded product record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
+            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files <span title="Date of most recently uploaded product record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
             <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-prods-last-date" style="color:var(--txt);font-weight:600">—</span></div>
             <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-prods-last-file" style="color:var(--t2)">—</span></div>
             <label class="up-btn" id="adm-lbl-products">
@@ -1470,7 +1436,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div id="link-builder" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:12px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
             <div>
-              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Primary Name <span style="color:var(--t3)">(shown in all reports)</span></div>
+              <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Primary Name <span style="color:var(--t3)">(shown in all reports)</span></div>
               <div style="position:relative;">
                 <input class="adm-inp" id="link-primary-search" placeholder="Search primary…" oninput="searchLinkField('primary')" autocomplete="off" style="width:100%;">
                 <div id="link-primary-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
@@ -1478,7 +1444,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               <div id="link-primary-selected" style="margin-top:6px;min-height:24px;"></div>
             </div>
             <div>
-              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Add Alias <span style="color:var(--t3)">(names to merge in)</span></div>
+              <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Add Alias <span style="color:var(--t3)">(names to merge in)</span></div>
               <div style="position:relative;">
                 <input class="adm-inp" id="link-alias-search" placeholder="Search alias to add…" oninput="searchLinkField('alias')" autocomplete="off" style="width:100%;">
                 <div id="link-alias-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);z-index:50;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
@@ -1491,7 +1457,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <button class="adm-add" onclick="saveLinkGroup()" style="background:var(--grn);">Save Link</button>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:.6px;">Existing Links</div>
         <div class="adm-list" id="list-links" style="max-height:240px;"></div>
       </div>
 
@@ -1569,7 +1535,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="adm-add" onclick="addUser()">+ Add User</button>
         </div>
         <div id="viewer-access-opts" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px;margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap;">
-          <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;width:100%;margin-bottom:4px;">VIEWER ACCESS — tick what this user can see:</div>
+          <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;width:100%;margin-bottom:4px;">VIEWER ACCESS — tick what this user can see:</div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-analytics" checked style="accent-color:var(--acc);"> 📊 Tezz Analytics</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-raabta" checked style="accent-color:var(--acc);"> 💬 Tezz Raabta</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-exec" style="accent-color:var(--pur);"> 📈 Exec Committee</label>
@@ -1605,7 +1571,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               📁 Choose File
               <input type="file" id="pl-file-input" accept=".xlsx,.xls" style="display:none;" onchange="plReadFile(this)">
             </label>
-            <div id="pl-file-name" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">No file selected</div>
+            <div id="pl-file-name" style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;">No file selected</div>
           </div>
           <div id="pl-preview" style="display:none;">
             <div style="font-size:12px;font-weight:600;color:var(--txt);margin-bottom:8px;">Preview — verify before saving:</div>
@@ -1628,7 +1594,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Enter data for months not covered by the uploaded spreadsheet (Oct 2025 onwards).</div>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
             <div>
-              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">YEAR</div>
+              <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:4px;">YEAR</div>
               <select id="ex-input-year" onchange="exRenderInputForm()" class="adm-inp" style="width:90px;">
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
@@ -1636,7 +1602,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               </select>
             </div>
             <div>
-              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">MONTH</div>
+              <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:4px;">MONTH</div>
               <select id="ex-input-month" onchange="exRenderInputForm()" class="adm-inp" style="width:100px;">
                 <option value="0">January</option><option value="1">February</option><option value="2">March</option>
                 <option value="3">April</option><option value="4">May</option><option value="5">June</option>
@@ -1753,7 +1719,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 26 | Updated: April 2026
+// Version: 27 | Updated: April 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -2628,7 +2594,7 @@ function renderDashboard(pinnedCust){
     const toggleHtml=hasAliases
       ?`<span class="tree-toggle${isOpen?' open':''}" onclick="event.stopPropagation();toggleCustTree('${esc(c.Customer)}')">▶</span>`
       :'<span style="display:inline-block;width:18px;"></span>';
-    tr.innerHTML=`<td>${toggleHtml}${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right" data-sort="${c.Orders}">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${c.Sales}">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td>${toggleHtml}${esc(c.Customer)}${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td style="text-align:right" data-sort="${c.Orders}">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${c.Sales}">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>drillCust(c.Customer);
     frag.appendChild(tr);
 
@@ -2641,7 +2607,7 @@ function renderDashboard(pinnedCust){
         if(!stats||stats.Orders===0)return;
         const childTr=document.createElement('tr');
         childTr.className='r-child'+(selCust===c.Customer?' sel':'');
-        childTr.innerHTML=`<td style="padding-left:28px;color:var(--t3);font-size:11px;">↳ ${esc(alias)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${stats.Orders}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:var(--t2)">${fmtFull(stats.Sales)}</td>`;
+        childTr.innerHTML=`<td style="padding-left:28px;color:var(--t3);font-size:11px;">↳ ${esc(alias)}</td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace">${stats.Orders}</td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace;color:var(--t2)">${fmtFull(stats.Sales)}</td>`;
         childTr.onclick=()=>drillAlias(alias,c.Customer);
         frag.appendChild(childTr);
       });
@@ -2675,7 +2641,7 @@ function drillAlias(aliasName,primaryName){
   orders.forEach(o=>{
     const tr=document.createElement('tr');
     tr.className='r'+(selOrder===o.Order_ID?' sel':'');
-    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
+    tr.innerHTML=`<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
     tr.onclick=()=>drillOrder(o.Order_ID,o.Total_Sales);
     frag.appendChild(tr);
   });
@@ -2718,7 +2684,7 @@ function renderOrdersDrill(){
   orders.forEach(o=>{
     const tr=document.createElement('tr');
     tr.className='r'+(selOrder===o.Order_ID?' sel':'');
-    tr.innerHTML=`<td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
+    tr.innerHTML=`<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--acc)">${esc(o.Order_ID)}${getBellHtml('order',o.Order_ID)}</td><td style="font-size:11px;text-align:right" data-sort="${o.Order_Date?.getTime()||0}">${esc(o.Order_Date_Str)}</td><td>${sbadge(o.Status)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${o.Total_Sales}">${fmtFull(o.Total_Sales)}</td>`;
     tr.onclick=()=>drillOrder(o.Order_ID,o.Total_Sales);
     frag.appendChild(tr);
   });
@@ -2739,7 +2705,7 @@ function drillOrder(oid,orderTotal){
   items.forEach(p=>{
     itemsTotal+=p.Total_Price;
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td title="${esc(p.Product_Name)}">${esc(p.Product_Name.slice(0,32)+(p.Product_Name.length>32?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Qty}">${p.Qty}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Unit_Price}">${fmtFull(p.Unit_Price)}</td><td style="text-align:right;font-family:'DM Mono',monospace" data-sort="${p.Total_Price}">${fmtFull(p.Total_Price)}</td>`;
+    tr.innerHTML=`<td title="${esc(p.Product_Name)}">${esc(p.Product_Name.slice(0,32)+(p.Product_Name.length>32?'…':''))}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${p.Qty}">${p.Qty}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${p.Unit_Price}">${fmtFull(p.Unit_Price)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace" data-sort="${p.Total_Price}">${fmtFull(p.Total_Price)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-items');tb.innerHTML='';
@@ -2770,22 +2736,22 @@ function showCustInfo(cust){
   const gl=daysSince!==null&&avgGap?gapLabel(daysSince,avgGap):'';
   // Recent orders (up to 5, from all time)
   const recentRows=allOrds.map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
-    <span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px;">${esc(o.Order_ID)}</span>
+    <span style="color:var(--acc);font-family:\'DM Mono\',monospace;font-size:10px;">${esc(o.Order_ID)}</span>
     <span style="color:var(--t3);font-size:10px;">${esc(o.Order_Date_Str||'—')}</span>
-    <span style="font-family:'DM Mono',monospace;">${fmtFull(o.Total_Sales)}</span>
+    <span style="font-family:\'DM Mono\',monospace;">${fmtFull(o.Total_Sales)}</span>
   </div>`).join('');
   document.getElementById('cust-info-box').innerHTML=`
     <div class="info-name">${esc(cust)}</div>
     <div class="info-row"><div class="info-lbl">Status</div><div class="info-val" style="color:${statusColor};font-weight:600;">${status}</div></div>
     <div class="info-row"><div class="info-lbl">Phone</div><div class="info-val">${esc(phone)}</div></div>
     <div class="info-row"><div class="info-lbl">Address</div><div class="info-val" style="font-size:10px;">${esc(addr)}</div></div>
-    <div class="info-row"><div class="info-lbl">All Orders</div><div class="info-val" style="font-family:'DM Mono',monospace;">${allOrds.length}</div></div>
-    <div class="info-row"><div class="info-lbl">Lifetime Spend</div><div class="info-val" style="color:var(--grn);font-family:'DM Mono',monospace;">${fmtFull(totalSpend)}</div></div>
+    <div class="info-row"><div class="info-lbl">All Orders</div><div class="info-val" style="font-family:\'DM Mono\',monospace;">${allOrds.length}</div></div>
+    <div class="info-row"><div class="info-lbl">Lifetime Spend</div><div class="info-val" style="color:var(--grn);font-family:\'DM Mono\',monospace;">${fmtFull(totalSpend)}</div></div>
     <div class="info-row"><div class="info-lbl">First Order</div><div class="info-val" style="font-size:11px;">${firstOrd?.Order_Date_Str||'—'}</div></div>
     <div class="info-row"><div class="info-lbl">Last Order</div><div class="info-val" style="font-size:11px;">${lastOrd?.Order_Date_Str||'—'}${daysSince!==null?' ('+daysSince+'d ago)':''}</div></div>
-    ${avgGap?`<div class="info-row"><div class="info-lbl">Avg Gap</div><div class="info-val" style="font-family:'DM Mono',monospace;"><span style="color:${gc};font-weight:600;">${avgGap}d</span>${gl?' <span style="font-size:10px;color:'+gc+';">('+gl+')</span>':''}</div></div>`:''}
-    ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:'DM Mono',monospace;">${filtOrds.length} of ${allOrds.length} orders shown · ${allOrds.length-filtOrds.length} not displayed (outside date range or filtered status)</div>`:''}
-    <div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:4px;">ALL ORDER HISTORY</div>
+    ${avgGap?`<div class="info-row"><div class="info-lbl">Avg Gap</div><div class="info-val" style="font-family:\'DM Mono\',monospace;"><span style="color:${gc};font-weight:600;">${avgGap}d</span>${gl?' <span style="font-size:10px;color:'+gc+';">('+gl+')</span>':''}</div></div>`:''}
+    ${filtOrds.length!==allOrds.length?`<div style="font-size:10px;color:var(--t3);margin:4px 0;font-family:\'DM Mono\',monospace;">${filtOrds.length} of ${allOrds.length} orders shown · ${allOrds.length-filtOrds.length} not displayed (outside date range or filtered status)</div>`:''}
+    <div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:4px;">ALL ORDER HISTORY</div>
     <div style="max-height:180px;overflow-y:auto;">${recentRows||'<div style="color:var(--t3);font-size:11px;">No orders</div>'}</div>`;
 }
 
@@ -2839,7 +2805,7 @@ function renderCustomer(pinnedCust){
     totO+=c.Orders;totS+=c.Sales;
     const tr=document.createElement('tr');
     tr.className='r'+(selRankedCust===c.Customer?' sel':'')+(c.Type==='B2B'?' b2b-row':'');
-    tr.innerHTML=`<td style="color:var(--t3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`;
+    tr.innerHTML=`<td style="color:var(--t3);font-family:\'DM Mono\',monospace;font-size:11px">${i+1}</td><td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="event.stopPropagation();goToDashboardCustomer('${esc(c.Customer)}','Customer tab')">${esc(c.Customer)}</span>${c.IsNew?'<span class="bdg b-new" style="margin-left:4px">new</span>':''}${getBellHtml('customer',c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td>`;
     tr.onclick=()=>{
       selRankedCust=selRankedCust===c.Customer?null:c.Customer;
       renderCustomer(selRankedCust||undefined);
@@ -3189,12 +3155,12 @@ function exRenderInputForm(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="adm-card">
         <div class="adm-title" style="color:var(--grn);margin-bottom:10px;">💰 Revenue (PKR)</div>
-        ${revCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-rev-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.revCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
+        ${revCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-rev-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.revCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
         <div style="font-size:10px;color:var(--t3);margin-top:8px;">Exchange rate: 1 USD = ${rate} PKR</div>
       </div>
       <div class="adm-card">
         <div class="adm-title" style="color:var(--red);margin-bottom:10px;">📋 Expenses (PKR)</div>
-        ${expCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-exp-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.expCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
+        ${expCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-exp-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.expCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
       </div>
     </div>
     <div style="margin-top:14px;display:flex;gap:10px;">
@@ -3437,7 +3403,7 @@ function buildCityAssign(){
     return`<div class="city-row" id="city-row-${btoa(a).slice(0,12).replace(/[^a-z0-9]/gi,'')}" style="align-items:flex-start;flex-direction:column;gap:4px;padding:8px 0;">
       <div style="display:flex;align-items:center;gap:8px;width:100%;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:10px;color:var(--acc);font-family:'DM Mono',monospace;margin-bottom:2px;">${esc(custs)}</div>
+          <div style="font-size:10px;color:var(--acc);font-family:\'DM Mono\',monospace;margin-bottom:2px;">${esc(custs)}</div>
           <div class="city-addr" title="${esc(a)}" style="font-size:11px;color:var(--t2);">${esc(a.slice(0,80))}</div>
         </div>
         <input class="city-inp" placeholder="City…" data-addr="${esc(a)}" value="${esc(S.manualCities[a]||'')}" style="width:130px;flex-shrink:0;" onkeydown="if(event.key==='Enter')saveSingleCity(this)">
@@ -3609,7 +3575,7 @@ async function renderUploadHistory(){
         return`<tr>
           <td title="${esc(meta.filename||'')}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">${esc((meta.filename||'unknown').slice(0,30))}</td>
           <td><span class="bdg ${meta.type==='orders'?'b-b2b':'b-b2c'}">${meta.type||'—'}</span></td>
-          <td style="text-align:right;font-family:'DM Mono',monospace;">${(meta.rowCount||0).toLocaleString()}</td>
+          <td style="text-align:right;font-family:\'DM Mono\',monospace;">${(meta.rowCount||0).toLocaleString()}</td>
           <td style="font-size:11px;color:var(--t3);">${dateStr}</td>
           <td style="font-size:11px;">${esc(meta.uploadedBy||'—')}</td>
           <td><button onclick="deleteBatch('${esc(r.value1)}','${esc(meta.type||'orders')}')" style="padding:2px 8px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:10px;cursor:pointer;">Delete</button></td>
@@ -3797,7 +3763,7 @@ async function aiRenderSuperPanel(){
     const tableEl=document.getElementById('ai-usage-table');
     if(tableEl)tableEl.innerHTML=Object.keys(byUser).length?
       `<table class="dt" style="width:100%"><thead><tr><th>User</th><th style="text-align:right">Questions</th><th style="text-align:right">Input Tokens</th><th style="text-align:right">Output Tokens</th><th style="text-align:right">Est Cost</th></tr></thead><tbody>`
-      +Object.entries(byUser).map(([u,d])=>`<tr><td>${esc(u)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.q}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.ti.toLocaleString()}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.to.toLocaleString()}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">$${(((d.ti/1000000)*3)+((d.to/1000000)*15)).toFixed(4)}</td></tr>`).join('')
+      +Object.entries(byUser).map(([u,d])=>`<tr><td>${esc(u)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.q}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.ti.toLocaleString()}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.to.toLocaleString()}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--acc)">$${(((d.ti/1000000)*3)+((d.to/1000000)*15)).toFixed(4)}</td></tr>`).join('')
       +'</tbody></table>'
       :'<div style="color:var(--t3);font-size:12px;">No usage today</div>';
   }catch(e){console.error(e);}
@@ -3931,7 +3897,7 @@ function filterLogs(){
   });
   const el=document.getElementById('log-all-entries');
   if(!el)return;
-  const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:'DM Mono',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+  const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
   el.innerHTML=filtered.map(fmtE).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No matching logs</div>';
 }
 
@@ -3946,11 +3912,11 @@ async function renderSuperLog(){
     document.getElementById('log-admin-changes').innerHTML=changes.slice(0,50).map(fmtE).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No changes yet</div>';
     const pageviews=logs.filter(l=>l.type==='pageview');
     const pt={};pageviews.forEach(l=>{const m=l.message.match(/Spent (\d+)s on (\w+)/);if(m){pt[m[2]]=(pt[m[2]]||0)+parseInt(m[1]);}});
-    document.getElementById('log-page-time').innerHTML=Object.entries(pt).map(([tab,secs])=>`<div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 14px;text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t3);text-transform:uppercase">${tab}</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--acc)">${Math.floor(secs/60)}m ${secs%60}s</div></div>`).join('')||'<div style="color:var(--t3);font-size:12px">No page time yet</div>';
+    document.getElementById('log-page-time').innerHTML=Object.entries(pt).map(([tab,secs])=>`<div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 14px;text-align:center;"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t3);text-transform:uppercase">${tab}</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--acc)">${Math.floor(secs/60)}m ${secs%60}s</div></div>`).join('')||'<div style="color:var(--t3);font-size:12px">No page time yet</div>';
     // Populate full log
     const allEl=document.getElementById('log-all-entries');
     if(allEl){
-      const fmtFull=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:'DM Mono',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+      const fmtFull=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
       allEl.innerHTML=logs.slice(0,200).map(fmtFull).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No logs</div>';
     }
     // Populate user filter
@@ -4053,7 +4019,7 @@ function searchLinkField(field){
   el.innerHTML=matches.map(n=>{
     // Count raw orders for this name
     const cnt=S.orders.filter(o=>o.Customer===n).length;
-    return`<div onclick="selectLinkField('${field}','${esc(n)}')" style="padding:6px 10px;cursor:pointer;font-size:12px;color:var(--t2);display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''"><span>${esc(n)}</span><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${cnt} orders</span></div>`;
+    return`<div onclick="selectLinkField('${field}','${esc(n)}')" style="padding:6px 10px;cursor:pointer;font-size:12px;color:var(--t2);display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background=''"><span>${esc(n)}</span><span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace">${cnt} orders</span></div>`;
   }).join('');
   el.style.display='block';
 }
@@ -4408,12 +4374,12 @@ function renderMonthlyReport(){
       if(prev&&last){const p=Math.round((last-prev)/prev*100);yoy=`<td style="text-align:right;color:${p>=0?'var(--grn)':'var(--red)'}">${p>=0?'+':''}${p}%</td>`;}
       else yoy='<td style="text-align:right;color:var(--t3)">—</td>';
     }
-    return`<tr>${'<td>'+m+'</td>'}${vals.map(v=>`<td style="text-align:right;font-family:'DM Mono',monospace">${v?fmtV(v):'<span style="color:var(--t3)">—</span>'}</td>`).join('')}${yoy}</tr>`;
+    return`<tr>${'<td>'+m+'</td>'}${vals.map(v=>`<td style="text-align:right;font-family:\'DM Mono\',monospace">${v?fmtV(v):'<span style="color:var(--t3)">—</span>'}</td>`).join('')}${yoy}</tr>`;
   }).join('');
   const totals=years.map(y=>matrix[y].reduce((s,v)=>s+v,0));
   let yoyTot='';
   if(years.length>=2){const p=totals[totals.length-2],l=totals[totals.length-1];if(p){const pct=Math.round((l-p)/p*100);yoyTot=`<td style="text-align:right;color:${pct>=0?'var(--grn)':'var(--red)'};font-weight:600">${pct>=0?'+':''}${pct}%</td>`;}}
-  tfoot.innerHTML=`<tr><td style="font-weight:600">Full Year</td>${totals.map(t=>`<td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtV(t)}</td>`).join('')}${yoyTot}</tr>`;
+  tfoot.innerHTML=`<tr><td style="font-weight:600">Full Year</td>${totals.map(t=>`<td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtV(t)}</td>`).join('')}${yoyTot}</tr>`;
 }
 
 function renderCustomerSummary(){
@@ -4446,14 +4412,14 @@ function renderCustomerSummary(){
   custs.forEach(c=>{
     const tr=document.createElement('tr');
     if(c.Type==='B2B')tr.className='b2b-row';
-    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('rpt-cust-tbody');tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   initSortableTable('rpt-cust-tbody',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'city',type:'text'},{key:'first',type:'date',align:'right'},{key:'last',type:'date',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'},{key:'phone',type:'text'}]);
-  document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
+  document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
 }
 
 // Shared helper — builds inactive customer list relative to last order in DB
@@ -4489,7 +4455,7 @@ function renderAtRisk(){
   atRisk.forEach(c=>{
     const urgency=c.DaysInactive>90?'var(--red)':c.DaysInactive>60?'var(--acc)':'var(--t2)';
     const tr=document.createElement('tr');tr.className='r'+(c.Type==='B2B'?' b2b-row':'');
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer" onclick="goToDashboardCustomer('${esc(c.Customer)}')">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:'DM Mono',monospace">${c.DaysInactive===999?'—':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer" onclick="goToDashboardCustomer('${esc(c.Customer)}')">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'Never'}</td><td style="text-align:right;color:${urgency};font-weight:600;font-family:\'DM Mono\',monospace">${c.DaysInactive===999?'—':c.DaysInactive+' days'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('rpt-risk-tbody');tb.innerHTML='';
@@ -4585,9 +4551,7 @@ function downloadAtRiskExcel(){
 // ═══════════════════════════════════════════════
 function renderMarketing(){
   renderMktWelcome();
-  renderMktQuiet();
-  renderMktChurn();
-  renderMktReactivation();
+  renderMktLapsed();
   renderMktVIP();
 }
 
@@ -4610,12 +4574,10 @@ function getMktToday(){
 }
 
 function getMktCustMap(){
-  const ctype=fSt?.ctype||'all';
+  // Always use full S.orders for customer history — not filtered period data
+  // This ensures first-order detection and last-order dates are accurate across all time
   const m={};
-  // Use filtered (respects date + type filters already applied)
-  filtered.forEach(o=>{
-    if(ctype==='B2B'&&o.Customer_Type!=='B2B')return;
-    if(ctype==='B2C'&&o.Customer_Type!=='B2C')return;
+  S.orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
     if(!m[name])m[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,FirstOrder:null,LastOrder:null,Phone:o.Phone||'—',Address:o.Address||'—'};
     m[name].Orders++;m[name].Sales+=o.Total_Sales;
@@ -4645,10 +4607,11 @@ function renderMktWelcome(){
   const days=parseInt(document.getElementById('mkt-welcome-days')?.value)||14;
   const today=getMktToday();
   const cutoff=new Date(today.getTime()-days*86400000);
-  // New customers whose FIRST order is within last X days
-  const custs=getMktCustMap().filter(c=>c.FirstOrder&&c.FirstOrder>=cutoff).sort((a,b)=>b.FirstOrder-a.FirstOrder);
+  // Use IsFirstOrder field — customers whose very first ever order is within last X days
+  const firstOrderCusts=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoff).map(o=>resolveCustomerName(o.Customer)));
+  const custs=getMktCustMap().filter(c=>firstOrderCusts.has(c.Customer)).sort((a,b)=>b.FirstOrder-a.FirstOrder);
   const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer,c.Type==='B2B'));});
+  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer,c.Type==='B2B'));});
   const tb=document.getElementById('mkt-welcome-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No new customers in this period</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
@@ -4656,30 +4619,14 @@ function renderMktWelcome(){
   initSortableTable('mkt-welcome-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'sales',type:'num',align:'right'},{key:'phone',type:'text'}]);
 }
 
-function renderMktQuiet(){
-  const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
+function renderMktLapsed(){
+  const minD=parseInt(document.getElementById('mkt-lapsed-min')?.value)||30;
+  const maxD=parseInt(document.getElementById('mkt-lapsed-max')?.value)||60;
   const today=getMktToday();
-  const cutoff=new Date(today.getTime()-days*86400000);
-  // First-timers only (1 order) silent X+ days
-  const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
-    .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)}))
-    .sort((a,b)=>b.DaysSilent-a.DaysSilent);
-  const frag=document.createDocumentFragment();
-  custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysSilent}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer,c.Type==='B2B'));});
-  const tb=document.getElementById('mkt-quiet-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No first-time customers gone quiet</td>';tb.appendChild(tr);}
-  else tb.appendChild(frag);
-  document.getElementById('mkt-quiet-count').textContent=custs.length+' first-time customers silent '+days+'+ days';
-  initSortableTable('mkt-quiet-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
-}
-
-function renderMktChurn(){
-  const minD=parseInt(document.getElementById('mkt-churn-min')?.value)||21;
-  const maxD=parseInt(document.getElementById('mkt-churn-max')?.value)||30;
-  const today=getMktToday();
-  // Customers with 3+ orders inactive between minD and maxD days — early churn signal
+  // All customers (any order count) whose last order was between minD and maxD days ago
+  // Uses S.orders (all-time) via getMktCustMap so history is accurate regardless of filter
   const custs=getMktCustMap().filter(c=>{
-    if(c.Orders<3||!c.LastOrder)return false;
+    if(!c.LastOrder)return false;
     const d=Math.floor((today-c.LastOrder)/86400000);
     return d>=minD&&d<=maxD;
   }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
@@ -4689,38 +4636,31 @@ function renderMktChurn(){
     const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.Customer);
     const ag=calcAvgGap(custOrds);
     const gc2=ag?gapColor(c.DaysInactive,ag):'var(--t2)';
-    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--red);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t3);">${ag?ag+'d':'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:${gc2};font-weight:600;">${ag?gapLabel(c.DaysInactive,ag):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));
+    const isB2B=c.Type==='B2B';
+    frag.appendChild(mktRow(
+      '<td><span style="color:var(--acc);text-decoration:underline">'+esc(c.Customer)+'</span></td>'
+      +'<td><span class="bdg '+(isB2B?'b-b2b':'b-b2c')+'">'+c.Type+'</span></td>'
+      +'<td style="text-align:right;font-size:11px">'+fmtDate(c.LastOrder)+'</td>'
+      +'<td style="text-align:right;color:var(--acc);font-family:\'DM Mono\',monospace">'+c.DaysInactive+'d</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--t3);">'+(ag?ag+'d':'—')+'</td>'
+      +'<td style="font-family:\'DM Mono\',monospace;color:'+gc2+';font-weight:600;font-size:10px;">'+(ag?gapLabel(c.DaysInactive,ag):'—')+'</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace">'+c.Orders+'</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace">'+fmtFull(c.Sales)+'</td>',
+      c.Customer,isB2B));
   });
-  const tb=document.getElementById('mkt-churn-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:20px;color:var(--grn)">✓ No early churn signals in this range</td>';tb.appendChild(tr);}
+  const tb=document.getElementById('mkt-lapsed-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:20px;color:var(--grn)">✓ No lapsed customers in this range</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  document.getElementById('mkt-churn-count').textContent=custs.length+' loyal customers showing early churn signals ('+minD+'–'+maxD+' days)';
-  initSortableTable('mkt-churn-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'avggap',type:'num',align:'right'},{key:'signal',type:'text'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
+  document.getElementById('mkt-lapsed-count').textContent=custs.length+' customers inactive '+minD+'–'+maxD+' days';
+  initSortableTable('mkt-lapsed-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'days',type:'num',align:'right'},{key:'avggap',type:'num',align:'right'},{key:'signal',type:'text'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'}]);
 }
 
-function renderMktReactivation(){
-  const minD=parseInt(document.getElementById('mkt-react-min')?.value)||30;
-  const maxD=parseInt(document.getElementById('mkt-react-max')?.value)||60;
-  const today=getMktToday();
-  // Customers with 2+ orders who are inactive between minD and maxD days
-  const custs=getMktCustMap().filter(c=>{
-    if(c.Orders<2||!c.LastOrder)return false;
-    const d=Math.floor((today-c.LastOrder)/86400000);
-    return d>=minD&&d<=maxD;
-  }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
-  .sort((a,b)=>b.Sales-a.Sales);
-  const frag=document.createDocumentFragment();
-  custs.forEach(c=>{
-    const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.Customer);
-    const ag=calcAvgGap(custOrds);
-    const gc2=ag?gapColor(c.DaysInactive,ag):'var(--t2)';
-    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.LastOrder)}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${c.DaysInactive}d</td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--t3);">${ag?ag+'d':'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace;color:${gc2};font-weight:600;">${ag?gapLabel(c.DaysInactive,ag):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td>`,c.Customer));
-  });
-  const tb=document.getElementById('mkt-react-body');if(!tb)return;tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:20px;color:var(--t3)">No reactivation targets in this range</td>';tb.appendChild(tr);}
-  else tb.appendChild(frag);
-  document.getElementById('mkt-react-count').textContent=custs.length+' loyal customers inactive '+minD+'–'+maxD+' days';
-}
+// Keep stubs for download compatibility
+function renderMktQuiet(){renderMktLapsed();}
+
+function renderMktChurn(){renderMktLapsed();}
+
+function renderMktReactivation(){renderMktLapsed();}
 
 function renderMktVIP(){
   const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
@@ -4731,7 +4671,7 @@ function renderMktVIP(){
   custs.forEach(c=>{
     const daysSince=c.LastOrder?Math.floor((today-c.LastOrder)/86400000):999;
     const recColor=daysSince>60?'var(--red)':daysSince>30?'var(--acc)':'var(--grn)';
-    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.Orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer,c.Type==='B2B'));
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer,c.Type==='B2B'));
   });
   const tb=document.getElementById('mkt-vip-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers meeting this threshold</td>';tb.appendChild(tr);}
@@ -4749,30 +4689,15 @@ function downloadMktList(type){
     rows=[['Customer','Type','Phone','First Order','First Order Value'],
       ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.FirstOrder),Math.round(c.Sales)])];
     filename=`tezz_welcome_queue_${new Date().toISOString().slice(0,10)}.csv`;
-  }else if(type==='quiet'){
-    const days=parseInt(document.getElementById('mkt-quiet-days')?.value)||14;
-    const cutoff=new Date(today.getTime()-days*86400000);
-    const custs=getMktCustMap().filter(c=>c.Orders===1&&c.LastOrder&&c.LastOrder<cutoff)
-      .map(c=>({...c,DaysSilent:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>a.DaysSilent-b.DaysSilent);
-    rows=[['Customer','Type','Phone','Only Order Date','Days Silent','Order Value'],
-      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysSilent,Math.round(c.Sales)])];
-    filename=`tezz_gone_quiet_${new Date().toISOString().slice(0,10)}.csv`;
-  }else if(type==='react'){
-    const minD=parseInt(document.getElementById('mkt-react-min')?.value)||30;
-    const maxD=parseInt(document.getElementById('mkt-react-max')?.value)||60;
-    const custs=getMktCustMap().filter(c=>{if(c.Orders<2||!c.LastOrder)return false;const d=Math.floor((today-c.LastOrder)/86400000);return d>=minD&&d<=maxD;})
-      .map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>b.Sales-a.Sales);
-    rows=[['Customer','Type','Phone','Last Order','Days Inactive','Total Orders','Total Sales'],
-      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.Orders,Math.round(c.Sales)])];
-    filename=`tezz_reactivation_${new Date().toISOString().slice(0,10)}.csv`;
-  }else if(type==='churn'){
-    const minD=parseInt(document.getElementById('mkt-churn-min')?.value)||21;
-    const maxD=parseInt(document.getElementById('mkt-churn-max')?.value)||30;
-    const custs=getMktCustMap().filter(c=>{if(c.Orders<3||!c.LastOrder)return false;const d=Math.floor((today-c.LastOrder)/86400000);return d>=minD&&d<=maxD;})
-      .map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)})).sort((a,b)=>a.DaysInactive-b.DaysInactive);
-    rows=[['Customer','Type','Phone','Last Order','Days Inactive','Total Orders','Total Sales'],
-      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.Orders,Math.round(c.Sales)])];
-    filename=`tezz_about_to_churn_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='lapsed'||type==='quiet'||type==='react'||type==='churn'){
+    const minD=parseInt(document.getElementById('mkt-lapsed-min')?.value)||30;
+    const maxD=parseInt(document.getElementById('mkt-lapsed-max')?.value)||60;
+    const custs=getMktCustMap().filter(c=>{if(!c.LastOrder)return false;const d=Math.floor((today-c.LastOrder)/86400000);return d>=minD&&d<=maxD;})
+      .map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000),AvgGap:calcAvgGap(S.orders.filter(o=>resolveCustomerName(o.Customer)===c.Customer))}))
+      .sort((a,b)=>a.DaysInactive-b.DaysInactive);
+    rows=[['Customer','Type','Phone','Last Order','Days Inactive','Avg Gap','Signal','Total Orders','Total Sales'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.LastOrder),c.DaysInactive,c.AvgGap?c.AvgGap+'d':'—',c.AvgGap?gapLabel(c.DaysInactive,c.AvgGap):'—',c.Orders,Math.round(c.Sales)])];
+    filename=`tezz_lapsed_customers_${new Date().toISOString().slice(0,10)}.csv`;
   }else if(type==='vip'){
     const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
     const custs=getMktCustMap().filter(c=>c.AvgOrder>=threshold&&c.Orders>=2).sort((a,b)=>b.AvgOrder-a.AvgOrder);
@@ -5178,7 +5103,7 @@ function ecRenderUnified(){
   const rows=[];
   function sectionHdr(label,color,section,totByMonth){
     const grand=Object.values(totByMonth).reduce((s,v)=>s+(v||0),0);
-    return`<tr class="ec-section-hd" data-section="${section}" onclick="ecToggleSection('${section}')"><td style="color:${color};font-size:12px;"><span class="ec-chev" style="font-size:10px;margin-right:6px;color:var(--t3);">▶</span>${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color};font-family:'DM Mono',monospace;font-size:11px;font-weight:600;">${ecFmt(totByMonth[mk])}</td>`).join('')}<td class="ec-num" style="color:${color};font-weight:700;">${ecFmt(grand)}</td></tr>`;
+    return`<tr class="ec-section-hd" data-section="${section}" onclick="ecToggleSection('${section}')"><td style="color:${color};font-size:12px;"><span class="ec-chev" style="font-size:10px;margin-right:6px;color:var(--t3);">▶</span>${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color};font-family:\'DM Mono\',monospace;font-size:11px;font-weight:600;">${ecFmt(totByMonth[mk])}</td>`).join('')}<td class="ec-num" style="color:${color};font-weight:700;">${ecFmt(grand)}</td></tr>`;
   }
   function subRow(label,vals,color,section,tooltip){
     const total=Object.values(vals).reduce((s,v)=>s+(v||0),0);
@@ -5189,7 +5114,7 @@ function ecRenderUnified(){
     const nonNull=Object.values(vals).filter(v=>v!=null&&typeof v==='number');
     const total=nonNull.reduce((s,v)=>s+v,0);
     const lbl=tooltip?`<span class="ec-tip" title="${tooltip}">${label}</span>`:label;
-    return`<tr class="${bold?'ec-total-row':''}"><td style="color:${color};font-weight:${bold?700:500};">${lbl}</td>${months.map(mk=>{const v=vals[mk];if(v==null)return`<td class="ec-num" style="color:var(--t3);">—</td>`;if(typeof v==='string')return`<td class="ec-num" style="font-size:11px;color:${color};">${v}</td>`;const col=v<0?'var(--red)':color;return`<td class="ec-num" style="color:${col};font-weight:${bold?700:500};font-family:'DM Mono',monospace;">${Math.round(Math.abs(v)).toLocaleString()}${v<0?' <span style="font-size:9px;">(L)</span>':''}</td>`;}).join('')}<td class="ec-num" style="color:${total<0?'var(--red)':color};font-weight:${bold?700:500};">${Math.round(Math.abs(total)).toLocaleString()}${total<0?' <span style="font-size:9px;">(L)</span>':''}</td></tr>`;
+    return`<tr class="${bold?'ec-total-row':''}"><td style="color:${color};font-weight:${bold?700:500};">${lbl}</td>${months.map(mk=>{const v=vals[mk];if(v==null)return`<td class="ec-num" style="color:var(--t3);">—</td>`;if(typeof v==='string')return`<td class="ec-num" style="font-size:11px;color:${color};">${v}</td>`;const col=v<0?'var(--red)':color;return`<td class="ec-num" style="color:${col};font-weight:${bold?700:500};font-family:\'DM Mono\',monospace;">${Math.round(Math.abs(v)).toLocaleString()}${v<0?' <span style="font-size:9px;">(L)</span>':''}</td>`;}).join('')}<td class="ec-num" style="color:${total<0?'var(--red)':color};font-weight:${bold?700:500};">${Math.round(Math.abs(total)).toLocaleString()}${total<0?' <span style="font-size:9px;">(L)</span>':''}</td></tr>`;
   }
   // ── SALES PERFORMANCE ──
   rows.push(`<tr class="ec-sales-hd"><td colspan="${months.length+2}" style="color:var(--blu);font-weight:700;font-size:12px;padding:10px 10px 6px;">📈 Sales Performance</td></tr>`);
@@ -5228,7 +5153,7 @@ function ecRenderUnified(){
   const basketLabel=cur==='PKR'?'Avg Basket Size (PKR)':'Avg Basket Size (USD)';
   function salesHdr(label,vals,color){
     const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
-    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:${color||'var(--blu)'};font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color||'var(--blu)'};font-family:'DM Mono',monospace;">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="color:${color||'var(--blu)'};font-weight:700;">${ecFmt(total)}</td></tr>`;
+    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:${color||'var(--blu)'};font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="color:${color||'var(--blu)'};font-family:\'DM Mono\',monospace;">${vals[mk]!=null?ecFmt(vals[mk]):'—'}</td>`).join('')}<td class="ec-num" style="color:${color||'var(--blu)'};font-weight:700;">${ecFmt(total)}</td></tr>`;
   }
   function salesSub(label,vals){
     const nonNull=Object.values(vals).filter(v=>v!=null);
@@ -5242,7 +5167,7 @@ function ecRenderUnified(){
   }
   function countHdr(label,vals){
     const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
-    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:var(--t2);font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-family:'DM Mono',monospace;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
+    return`<tr style="background:rgba(59,130,246,.05);"><td style="font-weight:600;color:var(--t2);font-size:12px;">${label}</td>${months.map(mk=>`<td class="ec-num" style="font-family:\'DM Mono\',monospace;color:var(--t2);">${vals[mk]!=null?Math.round(vals[mk]).toLocaleString():'—'}</td>`).join('')}<td class="ec-num" style="font-weight:700;color:var(--t2);">${Math.round(total).toLocaleString()}</td></tr>`;
   }
   function countSub(label,vals){
     const total=Object.values(vals).filter(v=>v!=null).reduce((s,v)=>s+v,0);
@@ -5635,7 +5560,7 @@ function grRender(){
       </div>
       <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
       <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
-      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:'DM Mono',monospace;">${grPeriod==='t12m'?'Last 12 months':'All time'} · ${allCusts.length} customers · ${grOrders.length} orders</span>
+      <span style="font-size:10px;color:var(--t3);align-self:center;font-family:\'DM Mono\',monospace;">${grPeriod==='t12m'?'Last 12 months':'All time'} · ${allCusts.length} customers · ${grOrders.length} orders</span>
     </div>
 
     <div id="gr-capture">
@@ -6124,7 +6049,17 @@ function rbOpenC(id){
         +tpls.map(function(t){return '<button class="rb-tpl-btn" style="opacity:.4;cursor:not-allowed;"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';}).join('');
     } else {
       mt.innerHTML=tpls.map(function(t){
-        const msg=((lang==='ur'&&t.ur)?t.ur:t.en).replace('[Name]',c.name).replace('[\u0646\u0627\u0645]',c.name);
+        const rawMsg=(lang==='ur'&&t.ur)?t.ur:t.en;
+        const msg=rawMsg.replace('[Name]',c.name).replace('[\u0646\u0627\u0645]',c.name);
+        // Check for unresolved placeholders like [Item], [Alternative], [Group Link] etc.
+        const unresolvedMatch=msg.match(/\[[A-Za-z][^\]]*\]/);
+        if(unresolvedMatch){
+          const placeholder=unresolvedMatch[0];
+          return '<button class="rb-tpl-btn" style="opacity:.6;position:relative;" onclick="rbTplFillPlaceholder(\''+c.id+'\',\''+t.id+'\',\''+esc(c.name)+'\',\''+custPhone+'\')">'
+            +'<span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span>'
+            +'<span style="display:block;font-size:9px;color:var(--acc);margin-top:2px;">⚠ Needs: '+esc(placeholder)+'</span>'
+            +'</button>';
+        }
         const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
         return '<button class="rb-tpl-btn" onclick="rbSTpl(\''+c.id+'\',\''+t.id+'\',\''+lnk+'\')"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
       }).join('');
@@ -6168,6 +6103,46 @@ async function rbRenderMH(c){
 }
 
 function rbCloseCM(){document.getElementById('rb-cm').classList.remove('open');RB.acid=null;rbRenderAll();}
+
+function rbTplFillPlaceholder(cid,tid,custName,custPhone){
+  const tpls=rbGetTemplates();
+  const t=tpls.find(x=>x.id===tid);
+  if(!t)return;
+  const rawMsg=t.en;
+  const placeholders=[...rawMsg.matchAll(/\[[A-Za-z][^\]]*\]/g)].map(m=>m[0]).filter(p=>p!=='[Name]');
+  if(!placeholders.length)return;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  let inputsHtml=placeholders.map((p,i)=>'<div style="margin-bottom:10px;"><div style="font-size:11px;color:var(--t3);margin-bottom:4px;">'+esc(p)+'</div><input type="text" id="ph-inp-'+i+'" class="adm-inp" placeholder="Enter value for '+esc(p)+'" style="width:100%;"></div>').join('');
+  overlay.innerHTML='<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;width:340px;max-width:95vw;">'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:14px;font-weight:700;color:var(--acc);margin-bottom:4px;">Fill in template details</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:14px;">'+esc(t.name)+' — for '+esc(custName)+'</div>'
+    +inputsHtml
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">'
+    +'<button onclick="document.getElementById(\'ph-overlay\').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>'
+    +'<button onclick="rbTplSendFilled(\''+cid+'\',\''+tid+'\',\''+custPhone+'\','+JSON.stringify(placeholders)+')" style="padding:7px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Send on WhatsApp</button>'
+    +'</div></div>';
+  overlay.id='ph-overlay';
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('ph-inp-0')?.focus(),100);
+}
+
+function rbTplSendFilled(cid,tid,custPhone,placeholders){
+  const tpls=rbGetTemplates();
+  const t=tpls.find(x=>x.id===tid);
+  const c=RB.custs.find(x=>x.id===cid);
+  if(!t||!c)return;
+  let msg=t.en.replace('[Name]',c.name);
+  placeholders.forEach((p,i)=>{
+    const val=document.getElementById('ph-inp-'+i)?.value||p;
+    msg=msg.replace(p,val);
+  });
+  document.getElementById('ph-overlay')?.remove();
+  const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
+  window.open(lnk,'_blank');
+  rbSTpl(cid,tid,lnk);
+}
 
 function rbSTpl(cid,tid,lnk){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
@@ -6256,7 +6231,7 @@ function rbRenderQueue(){
       <div class="rb-av" style="width:30px;height:30px;font-size:12px;">${c.name[0]}</div>
       <div style="flex:1;min-width:80px;">
         <div style="font-weight:600;font-size:13px;color:var(--txt)">${esc(c.name)}</div>
-        <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rbQr(c)}</div>
+        <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace">${rbQr(c)}</div>
         ${actionedBadge?`<div style="margin-top:4px;">${actionedBadge}</div>`:''}
       </div>
       <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
@@ -6275,7 +6250,7 @@ function rbRenderTpls(){
     <div class="rb-tp-card" id="rbtc-${t.id}">
       <div class="rb-tp-hd" onclick="rbTogTpl('${t.id}')">
         <div style="display:flex;align-items:center;gap:7px;"><span class="rb-tp-num">${t.id}</span><span class="rb-tp-name">${esc(t.name)}</span></div>
-        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${esc(t.tim)}</span><span style="color:var(--t3);font-size:11px">▾</span></div>
+        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace">${esc(t.tim)}</span><span style="color:var(--t3);font-size:11px">▾</span></div>
       </div>
       <div class="rb-tp-body">
         <div class="rb-ltabs">
@@ -6325,11 +6300,11 @@ async function rbRenderAct(){
     }
     if(!allLogs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
     tb.innerHTML=allLogs.map(l=>`<tr>
-      <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px">${rbFt(l.ts)}</td>
+      <td style="white-space:nowrap;color:var(--t3);font-family:\'DM Mono\',monospace;font-size:10px">${rbFt(l.ts)}</td>
       <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
       <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
       <td style="color:var(--txt)">${esc(l.action)}</td>
-      <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
+      <td>${l.outcome?`<span style="color:var(--acc);font-family:\'DM Mono\',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
     </tr>`).join('');
   }catch(e){tb.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';}
 }
@@ -6389,7 +6364,7 @@ function rbRenderWAList(){
       <div class="num-def ${n.isDefault?'':''}">
         ${n.isDefault
           ?'<span style="background:rgba(34,197,94,.15);color:var(--grn);padding:2px 8px;border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;">DEFAULT</span>'
-          :`<button onclick="rbSetDefault('${n.id}')" style="padding:2px 8px;background:var(--sur3);border:1px solid var(--bdr);border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);cursor:pointer;">Set Default</button>`}
+          :`<button onclick="rbSetDefault('${n.id}')" style="padding:2px 8px;background:var(--sur3);border:1px solid var(--bdr);border-radius:10px;font-size:10px;font-family:\'DM Mono\',monospace;color:var(--t3);cursor:pointer;">Set Default</button>`}
       </div>
       <button onclick="rbRemoveWA('${n.id}')" class="rm-btn">✕</button>
     </div>`).join('');
@@ -6415,12 +6390,12 @@ function tplRenderEditor(){
     <div class="tpl-editor-card" id="tple-${i}">
       <div class="tpl-editor-hd" onclick="tplToggle(${i})">
         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-          <span style="font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;flex-shrink:0;">${t.id}</span>
+          <span style="font-size:10px;font-weight:700;color:var(--acc);background:rgba(249,115,22,.12);padding:2px 7px;border-radius:10px;font-family:\'DM Mono\',monospace;flex-shrink:0;">${t.id}</span>
           <span style="font-weight:600;font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.name)}</span>
-          <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${esc(t.tim)}</span>
+          <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;white-space:nowrap;">${esc(t.tim)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          ${t._isDefault?`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(249,115,22,.12);color:var(--acc);font-family:'DM Mono',monospace;">default</span>`:`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--blu);font-family:'DM Mono',monospace;">custom</span>`}
+          ${t._isDefault?`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(249,115,22,.12);color:var(--acc);font-family:\'DM Mono\',monospace;">default</span>`:`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--blu);font-family:\'DM Mono\',monospace;">custom</span>`}
           <span style="color:var(--t3);font-size:11px;">▾</span>
         </div>
       </div>
@@ -7094,7 +7069,7 @@ function _renderProdTable(){
     const tr=document.createElement('tr');
     tr.className='r'+(selProd===p.name?' sel':'');
     tr.dataset.name=p.name;tr.dataset.qty=p.qty;tr.dataset.rev=p.rev;
-    tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(p.rev)}</td>`;
+    tr.innerHTML=`<td title="${esc(p.name)}">${esc(p.name.slice(0,35)+(p.name.length>35?'…':''))}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(p.qty)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmt(p.rev)}</td>`;
     tr.onclick=()=>selectProduct(p.name);
     frag.appendChild(tr);
   });
@@ -7168,10 +7143,10 @@ function renderProdOrders(p){
       <div class="gr-kpi"><div class="gr-kpi-label">Avg Unit Price</div><div class="gr-kpi-value" style="font-size:16px;">${fmtFull(avgUnitPrice)}</div></div>
       <div class="gr-kpi"><div class="gr-kpi-label">Avg Qty/Month</div><div class="gr-kpi-value" style="font-size:18px;color:var(--pur);">${avgPerMonth}</div></div>
     </div>
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:5px;">Top Buyers</div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:5px;">Top Buyers</div>
     ${topBuyers.map(([name,d])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px;">
       <span>${esc(name)}</span>
-      <span style="font-family:'DM Mono',monospace;color:var(--grn);">${fmtFull(d.rev)}</span>
+      <span style="font-family:\'DM Mono\',monospace;color:var(--grn);">${fmtFull(d.rev)}</span>
     </div>`).join('')}`;
 
   // ── Panel 3: Individual Orders ──
@@ -7180,7 +7155,7 @@ function renderProdOrders(p){
   const frag=document.createDocumentFragment();
   lines.forEach(d=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${d.qty}</td>`;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.qty}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-prod-orders');tb.innerHTML='';
@@ -7190,7 +7165,7 @@ function renderProdOrders(p){
 
 // ── OUTREACH TAB — full rebuild with filters, counts, alerts, sorting ──────────
 // Persistent filter state — survives re-renders
-const _otFilters={welcomeDays:14,quietDays:14,reactMin:30,reactMax:60,vipMin:50000};
+const _otFilters={welcomeDays:14,quietDays:14,reactMin:30,reactMax:60,lapsedMin:30,lapsedMax:60,vipMin:50000};
 
 function otSetFilter(key,val){
   const n=parseInt(val);
@@ -7211,10 +7186,9 @@ function rbRenderOutreach(){
   // Use selected period end as reference, filtered orders for data scope
   const today=getMktToday();today.setHours(0,0,0,0);
   const ctype=fSt?.ctype||'all';
+  // Use S.orders (all-time) for accurate customer history
   const cm={};
-  filtered.forEach(o=>{
-    if(ctype==='B2B'&&o.Customer_Type!=='B2B')return;
-    if(ctype==='B2C'&&o.Customer_Type!=='B2C')return;
+  S.orders.forEach(o=>{
     const n=resolveCustomerName(o.Customer);
     if(!cm[n])cm[n]={name:n,type:o.Customer_Type,phone:o.Phone||'',orders:0,sales:0,firstOrder:null,lastOrder:null};
     cm[n].orders++;cm[n].sales+=o.Total_Sales;
@@ -7226,10 +7200,13 @@ function rbRenderOutreach(){
   const all=Object.values(cm);
 
   const cutoffW=new Date(today.getTime()-welcomeDays*86400000);
-  const cutoffQ=new Date(today.getTime()-quietDays*86400000);
-  const welcome=all.filter(c=>c.firstOrder&&c.firstOrder>=cutoffW).sort((a,b)=>b.firstOrder-a.firstOrder);
-  const quiet=all.filter(c=>c.orders===1&&c.lastOrder&&c.lastOrder<cutoffQ).sort((a,b)=>(today-b.lastOrder)-(today-a.lastOrder));
-  const react=all.filter(c=>{if(c.orders<2||!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=reactMin&&d<=reactMax;}).sort((a,b)=>b.sales-a.sales);
+  // Welcome: use IsFirstOrder field
+  const firstOrderSet=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW).map(o=>resolveCustomerName(o.Customer)));
+  const welcome=all.filter(c=>firstOrderSet.has(c.name)).sort((a,b)=>b.firstOrder-a.firstOrder);
+  // Lapsed: replaces quiet + react
+  const lapsedMin=_otFilters.lapsedMin||30;
+  const lapsedMax=_otFilters.lapsedMax||60;
+  const lapsed=all.filter(c=>{if(!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=lapsedMin&&d<=lapsedMax;}).sort((a,b)=>Math.floor((today-a.lastOrder)/86400000)-Math.floor((today-b.lastOrder)/86400000));
   const vip=all.filter(c=>c.orders>=2&&(c.sales/c.orders)>=vipMin).sort((a,b)=>(b.sales/b.orders)-(a.sales/a.orders));
 
   function actionTag(name){
@@ -7239,7 +7216,7 @@ function rbRenderOutreach(){
     let col='var(--grn)',bg='rgba(34,197,94,.12)',bdr='rgba(34,197,94,.25)';
     if(o.includes('Complaint')){col='var(--red)';bg='rgba(239,68,68,.12)';bdr='rgba(239,68,68,.25)';}
     else if(!o||o==='No Response'){col='var(--acc)';bg='rgba(249,115,22,.1)';bdr='rgba(249,115,22,.25)';}
-    return`<span style="background:${bg};border:1px solid ${bdr};border-radius:10px;padding:2px 7px;font-size:10px;color:${col};font-family:'DM Mono',monospace;white-space:nowrap;">✓ ${esc(l.user)} · ${rbFt(l.ts)}</span>`;
+    return`<span style="background:${bg};border:1px solid ${bdr};border-radius:10px;padding:2px 7px;font-size:10px;color:${col};font-family:\'DM Mono\',monospace;white-space:nowrap;">✓ ${esc(l.user)} · ${rbFt(l.ts)}</span>`;
   }
 
   function custBell(name){return getBellHtml('customer',name);}
@@ -7251,7 +7228,7 @@ function rbRenderOutreach(){
   const alertsHtml=`
     <div class="rb-card" style="margin-bottom:12px;">
       <div class="rb-card-hd" style="justify-content:space-between;">
-        <div class="rb-card-title" style="color:var(--red)">🔔 Active Alerts <span style="background:rgba(239,68,68,.15);color:var(--red);font-size:10px;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;">${active.length}</span></div>
+        <div class="rb-card-title" style="color:var(--red)">🔔 Active Alerts <span style="background:rgba(239,68,68,.15);color:var(--red);font-size:10px;padding:2px 8px;border-radius:10px;font-family:\'DM Mono\',monospace;">${active.length}</span></div>
         <button onclick="openAlertModal({linkType:'none',linkValue:'',display:'Manual alert'})" style="padding:4px 11px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;font-weight:600;">+ New Alert</button>
       </div>
       <div style="padding:12px;">
@@ -7264,22 +7241,22 @@ function rbRenderOutreach(){
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px;">
                 <span class="alert-due-badge ${cls}">${lbl}</span>
-                <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">${a.date}</span>
+                <span style="font-size:11px;color:var(--t3);font-family:\'DM Mono\',monospace;">${a.date}</span>
                 ${a.linkValue?`<span style="font-size:11px;color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="alertNavToLink('${esc(a.linkType)}','${esc(a.linkValue)}')">${esc(a.linkType)}: ${esc(a.linkValue)}</span>`:''}
               </div>
               <div style="font-size:12px;color:var(--txt);margin-bottom:3px;">${esc(a.note)}</div>
-              <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;">Created by ${esc(a.createdBy)} · ${rbFt(a.createdAt)}</div>
+              <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">Created by ${esc(a.createdBy)} · ${rbFt(a.createdAt)}</div>
             </div>
             <div style="display:flex;gap:5px;flex-shrink:0;">
               ${(curUser?.role!=='viewer'||a.createdBy===curUser?.u)?`<button onclick="dismissAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t3);font-size:11px;cursor:pointer;white-space:nowrap;" title="Mark done">✓ Done</button>`:''}
               ${isSuper?`<button onclick="hardDeleteAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:11px;cursor:pointer;white-space:nowrap;" title="Delete permanently">🗑</button>`:''}
             </div>
           </div>`;
-        }).join(''):`<div style="color:var(--t3);font-size:11px;font-family:'DM Mono',monospace;padding:8px 0;">No active alerts.</div>`}
+        }).join(''):`<div style="color:var(--t3);font-size:11px;font-family:\'DM Mono\',monospace;padding:8px 0;">No active alerts.</div>`}
 
         ${dismissed.length?`
         <details style="margin-top:10px;">
-          <summary style="font-size:10px;color:var(--t3);cursor:pointer;font-family:'DM Mono',monospace;margin-bottom:8px;">Completed (${dismissed.length})</summary>
+          <summary style="font-size:10px;color:var(--t3);cursor:pointer;font-family:\'DM Mono\',monospace;margin-bottom:8px;">Completed (${dismissed.length})</summary>
           <div style="margin-bottom:7px;display:flex;gap:6px;flex-wrap:wrap;">
             <input type="text" id="completed-search" placeholder="Search by customer, order ID or date…" oninput="rbFilterCompleted()" style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;">
           </div>
@@ -7287,11 +7264,11 @@ function rbRenderOutreach(){
             ${dismissed.map(a=>`<div class="alert-card done future" data-search="${esc((a.linkValue||'').toLowerCase())} ${esc(a.date)} ${esc(a.note.toLowerCase())}">
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
-                  <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);">${a.date}</span>
+                  <span style="font-size:10px;font-family:\'DM Mono\',monospace;color:var(--t3);">${a.date}</span>
                   ${a.linkValue?`<span style="font-size:10px;color:var(--acc);text-decoration:underline;cursor:pointer;" onclick="alertNavToLink('${esc(a.linkType)}','${esc(a.linkValue)}')">${esc(a.linkType)}: ${esc(a.linkValue)}</span>`:''}
                 </div>
                 <div style="font-size:11px;color:var(--t2);">${esc(a.note)}</div>
-                <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">Dismissed by ${esc(a.dismissedBy||'')} · ${rbFt(a.dismissedAt||a.createdAt)}</div>
+                <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-top:2px;">Dismissed by ${esc(a.dismissedBy||'')} · ${rbFt(a.dismissedAt||a.createdAt)}</div>
               </div>
               ${isSuper?`<button onclick="hardDeleteAlert('${a.id}')" style="padding:3px 9px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:11px;cursor:pointer;flex-shrink:0;" title="Delete permanently">🗑</button>`:''}
             </div>`).join('')}
@@ -7311,7 +7288,7 @@ function rbRenderOutreach(){
       <div class="rb-card-hd">
         <div>
           <div class="rb-card-title" style="color:${color}">${title}</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;">${rows.length} customer${rows.length!==1?'s':''}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px;font-family:\'DM Mono\',monospace;">${rows.length} customer${rows.length!==1?'s':''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${filterHtml}</div>
       </div>
@@ -7328,37 +7305,31 @@ function rbRenderOutreach(){
 
   const sections=[
     {id:'welcome',title:'🎉 Welcome Queue',color:'var(--grn)',
-     rows:welcome.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.firstOrder?fmtDate(c.firstOrder):'—'}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td><td style="font-size:11px">${esc(c.phone)}</td>`})),
+     rows:welcome.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace">${c.firstOrder?fmtDate(c.firstOrder):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td><td style="font-size:11px">${esc(c.phone)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'First Order',align:'right'},{label:'Value',align:'right'},{label:'Phone'}],
      filterHtml:filterInput('ot-welcome-days','welcomeDays','Last','days')},
-    {id:'quiet',title:'🔇 Gone Quiet',color:'var(--acc)',
-     rows:quiet.map(c=>{const d=Math.floor((today-c.lastOrder)/86400000);return{name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:'DM Mono',monospace">${c.lastOrder?fmtDate(c.lastOrder):'—'}</td><td style="text-align:right;color:var(--acc);font-family:'DM Mono',monospace">${d}d</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`};}),
-     cols:[{label:'Customer'},{label:'Type'},{label:'Only Order',align:'right'},{label:'Days Silent',align:'right'},{label:'Value',align:'right'}],
-     filterHtml:filterInput('ot-quiet-days','quietDays','Silent for','days+')},
-    {id:'react',title:'♻ Reactivation',color:'var(--pur)',
-     rows:(()=>{
-       return react.map(c=>{
-         const d=Math.floor((today-c.lastOrder)/86400000);
-         const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name);
-         const ag=calcAvgGap(custOrds);
-         const gc2=ag?gapColor(d,ag):'var(--t2)';
-         const typeBdg=c.type==='B2B'?'b-b2b':'b-b2c';
-         const cells='<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'
-           +esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
-           +'<td><span class="bdg '+typeBdg+'">'+c.type+'</span></td>'
-           +'<td style="text-align:right;font-size:11px;">'+fmtDate(c.lastOrder)+'</td>'
-           +'<td style="text-align:right;color:var(--pur);font-family:\'DM Mono\',monospace;">'+d+'d</td>'
-           +'<td style="text-align:right;color:var(--t3);font-family:\'DM Mono\',monospace;">'+(ag?ag+'d':'—')+'</td>'
-           +'<td style="color:'+gc2+';font-weight:600;font-size:10px;">'+(ag?gapLabel(d,ag):'—')+'</td>'
-           +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+c.orders+'</td>'
-           +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+fmtFull(c.sales)+'</td>';
-         return{name:c.name,cells};
-       });
-     })(),
+    {id:'lapsed',title:'⏸ Lapsed Customers',color:'var(--pur)',
+     rows:lapsed.map(c=>{
+       const d=Math.floor((today-c.lastOrder)/86400000);
+       const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name);
+       const ag=calcAvgGap(custOrds);
+       const gc2=ag?gapColor(d,ag):'var(--t2)';
+       const typeBdg=c.type==='B2B'?'b-b2b':'b-b2c';
+       const cells='<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'
+         +esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
+         +'<td><span class="bdg '+typeBdg+'">'+c.type+'</span></td>'
+         +'<td style="text-align:right;font-size:11px;">'+fmtDate(c.lastOrder)+'</td>'
+         +'<td style="text-align:right;color:var(--acc);font-family:\'DM Mono\',monospace;">'+d+'d</td>'
+         +'<td style="text-align:right;color:var(--t3);font-family:\'DM Mono\',monospace;">'+(ag?ag+'d':'—')+'</td>'
+         +'<td style="color:'+gc2+';font-weight:600;font-size:10px;">'+(ag?gapLabel(d,ag):'—')+'</td>'
+         +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+c.orders+'</td>'
+         +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+fmtFull(c.sales)+'</td>';
+       return{name:c.name,cells};
+     }),
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Avg Gap',align:'right'},{label:'Signal'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:filterInput('ot-react-min','reactMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-react-max','reactMax','','days inactive')},
+     filterHtml:'<span style="font-size:10px;color:var(--t3);">Inactive</span>'+filterInput('ot-lapsed-min','lapsedMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-lapsed-max','lapsedMax','','days')},
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
-     rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:'DM Mono',monospace">${c.orders}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmtFull(c.sales)}</td>`})),
+     rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:filterInput('ot-vip-min','vipMin','Avg ≥ PKR','')},
   ];
