@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 27
+  Version  : 28
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -1069,6 +1069,24 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-lapsed-count"></div>
         </div>
 
+        <!-- Panel 3: Never Converted -->
+        <div class="tw" style="display:flex;flex-direction:column;">
+          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+              <div class="stitle" style="color:var(--red);">✕ Never Converted</div>
+              <div class="hint">Placed an order but it was cancelled — never received a delivery</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="downloadMktList('never')" style="padding:3px 10px;background:var(--red);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;">⬇</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;max-height:280px;">
+            <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Attempt</th><th style="text-align:right">Attempts</th><th style="text-align:right">Phone</th></tr></thead>
+            <tbody id="mkt-never-body"></tbody></table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-never-count"></div>
+        </div>
+
         <!-- Panel 4: Bulk & VIP -->
         <div class="tw" style="display:flex;flex-direction:column;">
           <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
@@ -1596,8 +1614,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <div>
               <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:4px;">YEAR</div>
               <select id="ex-input-year" onchange="exRenderInputForm()" class="adm-inp" style="width:90px;">
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
                 <option value="2025">2025</option>
-                <option value="2026">2026</option>
+                <option value="2026" selected>2026</option>
                 <option value="2027">2027</option>
               </select>
             </div>
@@ -1719,7 +1739,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 27 | Updated: April 2026
+// Version: 28 | Updated: May 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -1883,6 +1903,7 @@ function onLoginSuccess(){
   loadAllData().then(()=>{
     startAlertPolling();
     loadFinancials();
+    fetchLiveRate();
     const access=getUserAccess(curUser);
     const lmA=document.getElementById('lm-analytics');
     const lmR=document.getElementById('lm-raabta');
@@ -2520,12 +2541,26 @@ function sortCusts(key){if(custSortKey===key)custSortAsc=!custSortAsc;else{custS
 
 let kpiCurrency='PKR';
 const USD_RATE=280.46; // fallback rate
+let _liveRate=null; // cached live rate
 
-function getKpiRate(){
-  // Try to get current rate from EC data
-  const months=Object.keys(EX_HISTORICAL.rates);
-  const lastMk=months[months.length-1];
-  return EX_HISTORICAL.rates[lastMk]||USD_RATE;
+async function fetchLiveRate(){
+  try{
+    const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const d=await r.json();
+    if(d.rates&&d.rates.PKR){_liveRate=d.rates.PKR;return d.rates.PKR;}
+  }catch(e){}
+  return USD_RATE;
+}
+
+function getKpiRate(mk){
+  // 1. Use stored monthly rate for specific month
+  if(mk&&EX_HISTORICAL.rates[mk])return EX_HISTORICAL.rates[mk];
+  // 2. Use live rate if fetched
+  if(_liveRate)return _liveRate;
+  // 3. Use most recent stored rate
+  const months=Object.keys(EX_HISTORICAL.rates).sort();
+  if(months.length)return EX_HISTORICAL.rates[months[months.length-1]];
+  return USD_RATE;
 }
 
 function renderKPIs(elId,orders){
@@ -3156,7 +3191,11 @@ function exRenderInputForm(){
       <div class="adm-card">
         <div class="adm-title" style="color:var(--grn);margin-bottom:10px;">💰 Revenue (PKR)</div>
         ${revCats.map(cat=>`<div style="margin-bottom:8px;"><div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:3px;">${esc(cat)}</div><input class="adm-inp" id="ex-in-rev-${mk}-${cat.replace(/\W/g,'_')}" type="number" value="${existing.revCats[cat]||''}" placeholder="0" style="width:100%;"></div>`).join('')}
-        <div style="font-size:10px;color:var(--t3);margin-top:8px;">Exchange rate: 1 USD = ${rate} PKR</div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+        <div style="font-size:10px;color:var(--t3);">Exchange rate: 1 USD =</div>
+        <input class="adm-inp" id="ex-in-fx-${mk}" type="number" value="${exData.fxOverrides?.[mk]||rate}" step="0.01" style="width:90px;" placeholder="${rate}">
+        <div style="font-size:10px;color:var(--t3);">PKR <span style="color:var(--acc);">(override)</span></div>
+      </div>
       </div>
       <div class="adm-card">
         <div class="adm-title" style="color:var(--red);margin-bottom:10px;">📋 Expenses (PKR)</div>
@@ -3183,6 +3222,17 @@ function exSaveInputForm(mk){
     if(v)expData[cat]=v;totalExp+=v;
   });
   exData.manual[mk]={revenue:totalRev,expenses:totalExp,profit:totalRev-totalExp,revCats:revData,expCats:expData};
+  // Save FX override
+  const fxInp=document.getElementById('ex-in-fx-'+mk);
+  const fxVal=parseFloat(fxInp?.value)||0;
+  if(fxVal>100&&fxVal<1000){
+    if(!exData.fxOverrides)exData.fxOverrides={};
+    exData.fxOverrides[mk]=fxVal;
+    EX_HISTORICAL.rates[mk]=fxVal;
+    // Save to Supabase
+    sb('DELETE','financials?month=eq.'+mk+'&category=eq.fx_rate').catch(()=>{});
+    dbInsert('financials',[{id:'fx_'+mk+'_manual',month:mk,category:'fx_rate',amount:fxVal,type:'fx_rate_override',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()}]).catch(()=>{});
+  }
   exSaveData();
   const[y,m]=mk.split('-').map(Number);
   notif(`✓ ${MONTHS[m-1]} ${y} saved`);
@@ -4552,6 +4602,7 @@ function downloadAtRiskExcel(){
 function renderMarketing(){
   renderMktWelcome();
   renderMktLapsed();
+  renderMktNeverConverted();
   renderMktVIP();
 }
 
@@ -4607,8 +4658,12 @@ function renderMktWelcome(){
   const days=parseInt(document.getElementById('mkt-welcome-days')?.value)||14;
   const today=getMktToday();
   const cutoff=new Date(today.getTime()-days*86400000);
-  // Use IsFirstOrder field — customers whose very first ever order is within last X days
-  const firstOrderCusts=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoff).map(o=>resolveCustomerName(o.Customer)));
+  // Use IsFirstOrder field — only customers with at least one delivered/collected order
+  const deliveredStatuses=new Set(['delivered','collected','assigned']);
+  const firstOrderCusts=new Set(
+    S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoff&&deliveredStatuses.has((o.Status||'').toLowerCase()))
+    .map(o=>resolveCustomerName(o.Customer))
+  );
   const custs=getMktCustMap().filter(c=>firstOrderCusts.has(c.Customer)).sort((a,b)=>b.FirstOrder-a.FirstOrder);
   const frag=document.createDocumentFragment();
   custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer,c.Type==='B2B'));});
@@ -4625,8 +4680,11 @@ function renderMktLapsed(){
   const today=getMktToday();
   // All customers (any order count) whose last order was between minD and maxD days ago
   // Uses S.orders (all-time) via getMktCustMap so history is accurate regardless of filter
+  // Customers with at least one delivered order
+  const hasDelivered=new Set(S.orders.filter(o=>['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
   const custs=getMktCustMap().filter(c=>{
     if(!c.LastOrder)return false;
+    if(!hasDelivered.has(c.Customer))return false; // skip cancelled-only
     const d=Math.floor((today-c.LastOrder)/86400000);
     return d>=minD&&d<=maxD;
   }).map(c=>({...c,DaysInactive:Math.floor((today-c.LastOrder)/86400000)}))
@@ -4660,6 +4718,40 @@ function renderMktQuiet(){renderMktLapsed();}
 
 function renderMktChurn(){renderMktLapsed();}
 
+function renderMktNeverConverted(){
+  const today=getMktToday();
+  const deliveredStatuses=new Set(['delivered','collected','assigned']);
+  // Customers who have ONLY cancelled/pending orders — never had a successful delivery
+  const custStatus={};
+  S.orders.forEach(o=>{
+    const name=resolveCustomerName(o.Customer);
+    if(!custStatus[name])custStatus[name]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'—',type:o.Customer_Type};
+    custStatus[name].attempts++;
+    if(deliveredStatuses.has((o.Status||'').toLowerCase()))custStatus[name].hasDelivered=true;
+    if(o.Order_Date&&(!custStatus[name].lastAttempt||o.Order_Date>custStatus[name].lastAttempt))custStatus[name].lastAttempt=o.Order_Date;
+  });
+  const custs=Object.entries(custStatus)
+    .filter(([,v])=>!v.hasDelivered&&v.attempts>0)
+    .map(([name,v])=>({Customer:name,Type:v.type,LastAttempt:v.lastAttempt,Attempts:v.attempts,Phone:v.phone}))
+    .sort((a,b)=>(b.LastAttempt||0)-(a.LastAttempt||0));
+  const frag=document.createDocumentFragment();
+  custs.forEach(c=>{
+    const isB2B=c.Type==='B2B';
+    frag.appendChild(mktRow(
+      '<td><span style="color:var(--acc);text-decoration:underline">'+esc(c.Customer)+'</span></td>'
+      +'<td><span class="bdg '+(isB2B?'b-b2b':'b-b2c')+'">'+c.Type+'</span></td>'
+      +'<td style="text-align:right;font-size:11px">'+(c.LastAttempt?fmtDate(c.LastAttempt):'—')+'</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace">'+c.Attempts+'</td>'
+      +'<td style="font-size:11px">'+esc(c.Phone)+'</td>',
+      c.Customer,isB2B));
+  });
+  const tb=document.getElementById('mkt-never-body');if(!tb)return;tb.innerHTML='';
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="5" style="text-align:center;padding:20px;color:var(--grn)">✓ All customers have been successfully delivered to</td>';tb.appendChild(tr);}
+  else tb.appendChild(frag);
+  document.getElementById('mkt-never-count').textContent=custs.length+' customers who never received a delivery';
+  initSortableTable('mkt-never-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'date',type:'date',align:'right'},{key:'attempts',type:'num',align:'right'},{key:'phone',type:'text'}]);
+}
+
 function renderMktReactivation(){renderMktLapsed();}
 
 function renderMktVIP(){
@@ -4689,6 +4781,14 @@ function downloadMktList(type){
     rows=[['Customer','Type','Phone','First Order','First Order Value'],
       ...custs.map(c=>[c.Customer,c.Type,c.Phone,fmtDate(c.FirstOrder),Math.round(c.Sales)])];
     filename=`tezz_welcome_queue_${new Date().toISOString().slice(0,10)}.csv`;
+  }else if(type==='never'){
+    const deliveredStatuses=new Set(['delivered','collected','assigned']);
+    const custStatus={};
+    S.orders.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!custStatus[n])custStatus[n]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'—',type:o.Customer_Type};custStatus[n].attempts++;if(deliveredStatuses.has((o.Status||'').toLowerCase()))custStatus[n].hasDelivered=true;if(o.Order_Date&&(!custStatus[n].lastAttempt||o.Order_Date>custStatus[n].lastAttempt))custStatus[n].lastAttempt=o.Order_Date;});
+    const custs=Object.entries(custStatus).filter(([,v])=>!v.hasDelivered&&v.attempts>0).map(([name,v])=>({Customer:name,Type:v.type,LastAttempt:v.lastAttempt,Attempts:v.attempts,Phone:v.phone})).sort((a,b)=>(b.LastAttempt||0)-(a.LastAttempt||0));
+    rows=[['Customer','Type','Phone','Last Attempt','Attempts'],
+      ...custs.map(c=>[c.Customer,c.Type,c.Phone,c.LastAttempt?fmtDate(c.LastAttempt):'—',c.Attempts])];
+    filename=`tezz_never_converted_${new Date().toISOString().slice(0,10)}.csv`;
   }else if(type==='lapsed'||type==='quiet'||type==='react'||type==='churn'){
     const minD=parseInt(document.getElementById('mkt-lapsed-min')?.value)||30;
     const maxD=parseInt(document.getElementById('mkt-lapsed-max')?.value)||60;
@@ -4743,6 +4843,26 @@ function plReadFile(input){
       if(!profitSheet&&!expSheet){notif('⚠ Could not find Profits 2025 or Expenses 2025 tabs');return;}
       const revenues={},expenses={};
       const allMonths=new Set();
+      // Parse FX rates from 2025 USD tab (row index 2, serial date headers in row 3)
+      const usdSheet=wb.Sheets['2025 USD'];
+      const fxRates={};
+      if(usdSheet){
+        const usdRows=XLSX.utils.sheet_to_json(usdSheet,{header:1,defval:null});
+        // Row 0=title, Row 1=blank, Row 2=rates, Row 3=month headers
+        if(usdRows.length>=4){
+          const rateRow=usdRows[2]; // rates row
+          const hdrRow=usdRows[3];  // month headers
+          hdrRow.forEach((h,i)=>{
+            if(h instanceof Date||(typeof h==='number'&&h>40000)){
+              const mk=plExcelSerialToMonthKey(typeof h==='number'?h:Math.round((h.getTime()/86400000)+25569));
+              const rate=rateRow[i];
+              if(rate&&typeof rate==='number'&&rate>100&&rate<1000)fxRates[mk]=rate;
+            }
+          });
+        }
+        console.log('[Tezz] FX rates extracted:',fxRates);
+      }
+
       // Parse Profits 2025
       if(profitSheet){
         const rows=XLSX.utils.sheet_to_json(profitSheet,{header:1,defval:null});
@@ -4802,7 +4922,7 @@ function plReadFile(input){
         }
       }
       const months=[...allMonths].sort();
-      _plParsed={months,revenues,expenses};
+      _plParsed={months,revenues,expenses,fxRates};
       plShowPreview();
     }catch(err){notif('❌ Failed to read file: '+err.message);console.error(err);}
   };
@@ -4869,6 +4989,7 @@ async function plSaveToSupabase(){
     }
     // Build insert rows
     const inserts=[];
+    const fxRates=_plParsed.fxRates||{};
     monthsToSave.forEach(mk=>{
       Object.entries(revenues[mk]||{}).forEach(([cat,amt])=>{
         if(amt>0)inserts.push({id:'r_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'revenue',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});
@@ -4876,6 +4997,7 @@ async function plSaveToSupabase(){
       Object.entries(expenses[mk]||{}).forEach(([cat,amt])=>{
         if(amt>0)inserts.push({id:'e_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'expense',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});
       });
+      if(fxRates[mk])inserts.push({id:'fx_'+mk+'_'+Date.now(),month:mk,category:'fx_rate',amount:fxRates[mk],type:'fx_rate',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});
     });
     // Insert in batches of 50
     for(let i=0;i<inserts.length;i+=50){
@@ -4901,6 +5023,10 @@ async function loadFinancials(){
     if(!rows.length){_financialsLoaded=true;return;}
     rows.forEach(r=>{
       const mk=r.month;
+      if(r.type==='fx_rate'){
+        EX_HISTORICAL.rates[mk]=r.amount;
+        return;
+      }
       if(!EX_HISTORICAL.pkr[mk])EX_HISTORICAL.pkr[mk]={revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
       const entry=EX_HISTORICAL.pkr[mk];
       if(r.type==='revenue'){entry.revCats[r.category]=(entry.revCats[r.category]||0)+r.amount;}
@@ -5503,15 +5629,26 @@ function grRender(){
   const colRet=v=>v===null?'—':v>=70?'gr-ret-high':v>=50?'gr-ret-mid':'gr-ret-low';
 
   // Build CAC input HTML
+  // Auto-populate from Advertising & Branding expense if available and no manual override
+  months.forEach(mk=>{
+    if(!spend[mk]){
+      const advBrand=EX_HISTORICAL.pkr[mk]?.expCats?.['Advertising & Branding'];
+      if(advBrand&&advBrand>0)spend[mk]=advBrand;
+    }
+  });
+  const cacDisplayRate=inUSD?rate:1;
+  const cacPrefix=inUSD?'$':'';
   const cacHtml=`
     <div class="gr-cac-box">
-      <div class="gr-cac-title">Monthly Marketing Spend (PKR) — used to calculate CAC ${curUser?.role!=='super'?'<span style="color:var(--acc);font-size:10px;"> · View only — Super Admin can edit</span>':''}</div>
+      <div class="gr-cac-title">Monthly Marketing Spend — used to calculate CAC ${inUSD?'(USD)':'(PKR)'} ${curUser?.role!=='super'?'<span style="color:var(--acc);font-size:10px;"> · View only — Super Admin can edit</span>':''}</div>
       <div class="gr-cac-grid">
         ${months.map(mk=>{
           const[,m]=mk.split('-').map(Number);
+          const pkrVal=spend[mk]||'';
+          const dispVal=pkrVal&&inUSD?Math.round(pkrVal/getKpiRate(mk)):'';
           return`<div class="gr-cac-month">
             <label>${MONTHS[m-1]}</label>
-            <input type="number" id="cac-${mk}" value="${spend[mk]||''}" placeholder="0" oninput="grUpdateCAC()" min="0">
+            <input type="number" id="cac-${mk}" value="${dispVal||pkrVal}" placeholder="0" oninput="grUpdateCAC()" min="0" ${curUser?.role!=='super'?'disabled':''} data-pkr="${pkrVal}" data-mk="${mk}">
           </div>`;
         }).join('')}
       </div>
@@ -5633,7 +5770,9 @@ async function grUpdateCAC(){
     const inp=document.getElementById('cac-'+mk);
     if(inp){
       if(!isSuper){inp.disabled=true;inp.title='Only Super Admin can edit';}
-      const v=parseFloat(inp.value)||0;
+      let v=parseFloat(inp.value)||0;
+      // Convert back to PKR if currently in USD display mode
+      if(v>0&&kpiCurrency==='USD')v=Math.round(v*getKpiRate(mk));
       if(v>0&&spend[mk]!==v){spend[mk]=v;changed=true;}
       else if(v===0&&spend[mk]){delete spend[mk];changed=true;}
     }
@@ -7201,13 +7340,19 @@ function rbRenderOutreach(){
 
   const cutoffW=new Date(today.getTime()-welcomeDays*86400000);
   // Welcome: use IsFirstOrder field
-  const firstOrderSet=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW).map(o=>resolveCustomerName(o.Customer)));
+  const _delStatuses=new Set(['delivered','collected','assigned']);
+  const firstOrderSet=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW&&_delStatuses.has((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
   const welcome=all.filter(c=>firstOrderSet.has(c.name)).sort((a,b)=>b.firstOrder-a.firstOrder);
   // Lapsed: replaces quiet + react
   const lapsedMin=_otFilters.lapsedMin||30;
   const lapsedMax=_otFilters.lapsedMax||60;
-  const lapsed=all.filter(c=>{if(!c.lastOrder)return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=lapsedMin&&d<=lapsedMax;}).sort((a,b)=>Math.floor((today-a.lastOrder)/86400000)-Math.floor((today-b.lastOrder)/86400000));
+  const _hasDelivered=new Set(S.orders.filter(o=>['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
+  const lapsed=all.filter(c=>{if(!c.lastOrder||!_hasDelivered.has(c.name))return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=lapsedMin&&d<=lapsedMax;}).sort((a,b)=>Math.floor((today-a.lastOrder)/86400000)-Math.floor((today-b.lastOrder)/86400000));
   const vip=all.filter(c=>c.orders>=2&&(c.sales/c.orders)>=vipMin).sort((a,b)=>(b.sales/b.orders)-(a.sales/a.orders));
+  // Never converted — in Raabta use S.orders directly
+  const _neverCustStatus={};
+  S.orders.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!_neverCustStatus[n])_neverCustStatus[n]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'',type:o.Customer_Type};_neverCustStatus[n].attempts++;if(['delivered','collected','assigned'].includes((o.Status||'').toLowerCase()))_neverCustStatus[n].hasDelivered=true;if(o.Order_Date&&(!_neverCustStatus[n].lastAttempt||o.Order_Date>_neverCustStatus[n].lastAttempt))_neverCustStatus[n].lastAttempt=o.Order_Date;});
+  const neverConverted=Object.entries(_neverCustStatus).filter(([,v])=>!v.hasDelivered&&v.attempts>0).map(([name,v])=>({name,type:v.type,phone:v.phone,lastAttempt:v.lastAttempt,attempts:v.attempts})).sort((a,b)=>(b.lastAttempt||0)-(a.lastAttempt||0));
 
   function actionTag(name){
     const logs=RB.alog.filter(l=>l.customerName?.toLowerCase()===name.toLowerCase()&&l.action.includes('Template'));
@@ -7328,6 +7473,15 @@ function rbRenderOutreach(){
      }),
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Avg Gap',align:'right'},{label:'Signal'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:'<span style="font-size:10px;color:var(--t3);">Inactive</span>'+filterInput('ot-lapsed-min','lapsedMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-lapsed-max','lapsedMax','','days')},
+        {id:'never',title:'✕ Never Converted',color:'var(--red)',
+     rows:neverConverted.map(c=>({name:c.name,cells:'<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'
+       +esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
+       +'<td><span class="bdg '+(c.type==='B2B'?'b-b2b':'b-b2c')+'">'+c.type+'</span></td>'
+       +'<td style="text-align:right;font-size:11px;">'+(c.lastAttempt?fmtDate(c.lastAttempt):'—')+'</td>'
+       +'<td style="text-align:right;font-family:\'DM Mono\',monospace;">'+c.attempts+'</td>'
+       +'<td style="font-size:11px;">'+esc(c.phone)+'</td>'})),
+     cols:[{label:'Customer'},{label:'Type'},{label:'Last Attempt',align:'right'},{label:'Attempts',align:'right'},{label:'Phone'}],
+     filterHtml:''},
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
