@@ -2010,15 +2010,13 @@ async function loadAllData(){
     // Phase 1: Current month only — fast
     const mk=getCurrentMonthKey();
     const [,mm]=mk.split('-').map(Number);
+    const curYear=new Date().getFullYear();
     showLoader('Loading current month…');
-    const [curOrders,curProds]=await Promise.all([
-      fetchAllRows('orders','year=eq.'+new Date().getFullYear()+'&month=eq.'+mm),
-      fetchAllRows('products','order_id=in.(select order_id from orders where year='+new Date().getFullYear()+' and month='+mm+')')
-        .catch(()=>[]) // products join may fail gracefully
-    ]);
+    // Fetch current month orders — products loaded in Phase 2
+    const curOrders=await fetchAllRows('orders','year=eq.'+curYear+'&month=eq.'+mm);
 
     S.orders=curOrders.map(parseOrder);
-    S.prods=curProds.map(parseProduct);
+    S.prods=[]; // products loaded in background Phase 2
     await loadLinks();
     hideLoader();
     launchApp();
