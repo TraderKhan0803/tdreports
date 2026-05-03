@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 28
+  Version  : 29
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -568,6 +568,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .b2b-row td{background:rgba(168,85,247,.04)!important;border-left:2px solid rgba(168,85,247,.25);}
 .b2b-row:hover td{background:rgba(168,85,247,.09)!important;}
 .b2b-row td:first-child{border-left:2px solid rgba(168,85,247,.5);}
+
+/* ── SCENARIO PLANNER ── */
+.sp-row{display:grid;grid-template-columns:160px 1fr 52px;align-items:center;gap:10px;margin-bottom:8px;}
+.sp-row label{font-size:11px;color:var(--t2);}
+.sp-row span{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--txt);text-align:right;}
+.sp-row input[type=range]{accent-color:var(--acc);}
+.sp-brow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;}
+.sp-brow:last-child{border-bottom:none;}
 
 /* ── SORTABLE HEADERS ── */
 .dt th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
@@ -1222,6 +1230,15 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
     <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
     <div class="gr-panel" id="tab-ec-growth">
+      <div style="border-bottom:1px solid var(--bdr);background:var(--sur2);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;">Segment:</span>
+        <div style="display:flex;gap:3px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;">
+          <button id="gr-seg-b2c" onclick="setGrSegment('B2C')" style="padding:4px 12px;border:none;background:var(--acc);color:#fff;font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2C</button>
+          <button id="gr-seg-all" onclick="setGrSegment('all')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">Combined</button>
+          <button id="gr-seg-b2b" onclick="setGrSegment('B2B')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2B</button>
+        </div>
+        <span style="font-size:10px;color:var(--t3);">Affects LTV, Avg Order Size, and operational metrics</span>
+      </div>
       <div id="gr-body">
         <div style="color:var(--t3);font-size:12px;padding:40px;text-align:center;">Loading metrics…</div>
       </div>
@@ -1560,6 +1577,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-growth" style="accent-color:var(--grn);"> 📊 Growth &amp; Retention</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-downloads" style="accent-color:var(--blu);"> ⬇ Download Reports</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-templates" style="accent-color:var(--acc);"> ✏ Edit Message Templates</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="acc-scenario" style="accent-color:var(--pur);"> 🎯 Scenario Planner</label>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">User will be forced to change their password on first login.</div>
         <div id="list-users"></div>
@@ -1577,6 +1595,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button id="ex-tab-upload"   onclick="switchExecTab('upload')"   class="dbtn on"  style="font-size:11px;">📤 Upload P&L</button>
         <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn"     style="font-size:11px;">✏ Data Entry</button>
         <button id="ex-tab-settings" onclick="switchExecTab('settings')" class="dbtn"     style="font-size:11px;">⚙ Settings</button>
+        <button id="ex-tab-scenario" onclick="switchExecTab('scenario')" class="dbtn"     style="font-size:11px;">🎯 Scenario Planner</button>
       </div>
 
       <!-- P&L UPLOAD -->
@@ -1601,6 +1620,66 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               <button onclick="plSaveToSupabase()" style="padding:8px 20px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;">✓ Confirm & Save to Supabase</button>
             </div>
             <div id="pl-save-status" style="margin-top:8px;font-size:11px;color:var(--t3);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENARIO PLANNER -->
+      <div id="ex-content-scenario" style="display:none;">
+        <div class="adm-card mb12">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div class="adm-title" style="color:var(--acc);">🎯 Scenario Planner</div>
+            <button onclick="document.getElementById('sp-guide').style.display=document.getElementById('sp-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:10px;cursor:pointer;">? How to use</button>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Model different scenarios to find your path to profitability. Adjust the sliders and watch the P&L update in real time.</div>
+          <div id="sp-guide" style="display:none;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--t2);line-height:1.8;">
+            <strong style="color:var(--acc);">How to use this tool:</strong><br>
+            1. Set your current numbers as the baseline using the sliders on the left.<br>
+            2. Adjust levers to model "what if" scenarios — e.g. what if avg order grows to PKR 8,000?<br>
+            3. The P&L breakdown on the right updates instantly showing contribution margin, break-even, and net profit.<br>
+            4. The advisory panel at the bottom gives context-aware recommendations based on your inputs.<br><br>
+            <strong style="color:var(--acc);">Margin rate tip:</strong> Set this to your actual commission rate. Currently on pure Dwatson B2C = 5%. With partial inventory on top SKUs = 8-11%. With full inventory model = 11-15%. Update this in Super Admin → Exec Finance → Settings.
+          </div>
+          <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;">
+            <!-- LEFT: Sliders -->
+            <div>
+              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Revenue levers</div>
+              <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spCalc()"><span id="spv-order">6,000</span></div>
+              <div class="sp-row"><label>Commission / margin rate</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spCalc()"><span id="spv-comm">5.0%</span></div>
+              <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spCalc()"><span id="spv-orders">620</span></div>
+              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Delivery capacity</div>
+              <div class="sp-row"><label>Number of riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spCalc()"><span id="spv-riders">3</span></div>
+              <div class="sp-row"><label>Deliveries / rider / day</label><input type="range" id="sp-dpd" min="8" max="25" step="1" value="15" oninput="spCalc()"><span id="spv-dpd">15</span></div>
+              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Cost inputs (PKR/month)</div>
+              <div class="sp-row"><label>Cost per rider (all-in)</label><input type="range" id="sp-rcost" min="30000" max="70000" step="1000" value="38000" oninput="spCalc()"><span id="spv-rcost">38K</span></div>
+              <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spCalc()"><span id="spv-store">62K</span></div>
+              <div class="sp-row"><label>Fixed costs / month</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spCalc()"><span id="spv-fixed">454K</span></div>
+            </div>
+            <!-- RIGHT: Results -->
+            <div>
+              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Results</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+                <div class="gr-kpi"><div class="gr-kpi-label">Monthly P&L</div><div class="gr-kpi-value" id="sp-pnl" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-pnl-sub">—</div></div>
+                <div class="gr-kpi"><div class="gr-kpi-label">Contribution / order</div><div class="gr-kpi-value" id="sp-contrib" style="font-size:16px;">—</div><div class="gr-kpi-sub">after variable costs</div></div>
+                <div class="gr-kpi"><div class="gr-kpi-label">Rider utilisation</div><div class="gr-kpi-value" id="sp-util" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-util-sub">—</div></div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+                <div class="gr-kpi"><div class="gr-kpi-label">Break-even orders</div><div class="gr-kpi-value" id="sp-be" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-be-sub">—</div></div>
+                <div class="gr-kpi"><div class="gr-kpi-label">Revenue / order</div><div class="gr-kpi-value" id="sp-rev" style="font-size:16px;">—</div><div class="gr-kpi-sub">commission earned</div></div>
+                <div class="gr-kpi"><div class="gr-kpi-label">Variable / order</div><div class="gr-kpi-value" id="sp-var" style="font-size:16px;">—</div><div class="gr-kpi-sub">riders+store÷orders</div></div>
+              </div>
+              <!-- P&L Breakdown -->
+              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Monthly P&L breakdown</div>
+              <div style="background:var(--sur2);border-radius:var(--r2);padding:10px 14px;font-size:12px;">
+                <div class="sp-brow"><span style="color:var(--t2);">Total revenue (commission)</span><span id="spb-rev" style="font-family:'DM Mono',monospace;">—</span></div>
+                <div class="sp-brow"><span style="color:var(--t2);">Variable costs (riders + store)</span><span id="spb-var" style="font-family:'DM Mono',monospace;">—</span></div>
+                <div class="sp-brow"><span style="color:var(--t2);">Contribution margin</span><span id="spb-contrib" style="font-family:'DM Mono',monospace;">—</span></div>
+                <div class="sp-brow"><span style="color:var(--t2);">Fixed costs</span><span id="spb-fixed" style="font-family:'DM Mono',monospace;">—</span></div>
+                <div class="sp-brow" style="border-top:1px solid var(--bdr);margin-top:4px;padding-top:8px;font-weight:700;"><span>Net profit / (loss)</span><span id="spb-net" style="font-family:'DM Mono',monospace;">—</span></div>
+              </div>
+              <!-- Advisory panel -->
+              <div id="sp-advisory" style="margin-top:10px;border-radius:var(--r2);padding:12px 14px;font-size:11px;line-height:1.8;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1739,7 +1818,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 28 | Updated: May 2026
+// Version: 29 | Updated: May 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -2538,6 +2617,20 @@ let custSortKey='Sales',custSortAsc=false;
 function sortCusts(key){if(custSortKey===key)custSortAsc=!custSortAsc;else{custSortKey=key;custSortAsc=false;}renderDashboard();}
 
 let kpiCurrency='PKR';
+let grSegment='B2C'; // B2C | all | B2B
+
+function setGrSegment(seg){
+  grSegment=seg;
+  ['b2c','all','b2b'].forEach(s=>{
+    const btn=document.getElementById('gr-seg-'+s);
+    if(btn){
+      const active=(s===seg||(s==='all'&&seg==='all'));
+      btn.style.background=active?'var(--acc)':'transparent';
+      btn.style.color=active?'#fff':'var(--t2)';
+    }
+  });
+  grRender();
+}
 const USD_RATE=280.46; // fallback rate
 let _liveRate=null; // cached live rate
 
@@ -3159,7 +3252,7 @@ function exFmtSign(v){
 // ── DATA ENTRY ────────────────────────────────────────────────────────────────
 function switchExecTab(tab){
   exCurTab=tab;
-  ['upload','input','settings'].forEach(t=>{
+  ['upload','input','settings','scenario'].forEach(t=>{
     const btn=document.getElementById('ex-tab-'+t);
     const cont=document.getElementById('ex-content-'+t);
     const isActive=t===tab;
@@ -3168,6 +3261,7 @@ function switchExecTab(tab){
   });
   if(tab==='upload')plRenderUploadPanel();
   if(tab==='input')exRenderInputForm();
+  if(tab==='scenario')spRender();
   if(tab==='settings')exRenderSettings();
 }
 function exRenderInputForm(){
@@ -3234,7 +3328,38 @@ function exSaveInputForm(mk){
   exSaveData();
   const[y,m]=mk.split('-').map(Number);
   notif(`✓ ${MONTHS[m-1]} ${y} saved`);
+  // Add effective margin rate field
+  const settingsEl=document.getElementById('ex-content-settings');
+  if(settingsEl){
+    const existingMr=document.getElementById('ex-mr-field');
+    if(!existingMr){
+      const cfgRate=S._rawConfig?.find(r=>r.type==='effective_margin_rate');
+      const currentRate=cfgRate?parseFloat(cfgRate.value1):11.8;
+      const mrDiv=document.createElement('div');
+      mrDiv.style.cssText='margin-top:14px;padding:12px 14px;background:var(--sur2);border-radius:var(--r2);border:1px solid var(--bdr);';
+      mrDiv.id='ex-mr-field';
+      mrDiv.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:6px;">Effective Margin Rate (%)</div>'
+        +'<div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Used for LTV and LTV:CAC calculations. Set to your current Dwatson commission + any inventory markup. Pure Dwatson B2C = 5%. With inventory = 8–15%.</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'
+        +'<input type="number" id="ex-mr-input" value="'+currentRate+'" min="1" max="50" step="0.1" class="adm-inp" style="width:100px;">'
+        +'<span style="font-size:12px;color:var(--t2);">%</span>'
+        +'<button onclick="exSaveMarginRate()" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save</button>'
+        +'</div>';
+      settingsEl.appendChild(mrDiv);
+    }
+  }
   exRenderAll();
+}
+
+async function exSaveMarginRate(){
+  const val=parseFloat(document.getElementById('ex-mr-input')?.value)||11.8;
+  if(val<1||val>50){notif('⚠ Rate must be between 1% and 50%');return;}
+  await sb('DELETE','admin_config?type=eq.effective_margin_rate').catch(()=>{});
+  await dbInsert('admin_config',[{type:'effective_margin_rate',value1:String(val),value2:'',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()}]);
+  S._rawConfig=S._rawConfig.filter(r=>r.type!=='effective_margin_rate');
+  S._rawConfig.push({type:'effective_margin_rate',value1:String(val)});
+  notif('✓ Margin rate saved: '+val+'%');
+  grRender();
 }
 
 function exDeleteManual(mk){
@@ -3755,6 +3880,7 @@ function editUserPerms(username){
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-growth" ${perms.growth?'checked':''} style="accent-color:var(--grn);width:15px;height:15px;"> 📊 Growth & Retention</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-downloads" ${perms.downloads?'checked':''} style="accent-color:var(--blu);width:15px;height:15px;"> ⬇ Download Reports</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-templates" ${perms.templates?'checked':''} style="accent-color:var(--acc);width:15px;height:15px;"> ✏ Edit Message Templates</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-scenario" ${perms.scenario?'checked':''} style="accent-color:var(--pur);width:15px;height:15px;"> 🎯 Scenario Planner</label>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button onclick="document.getElementById('edit-perms-overlay').remove()" style="padding:7px 16px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
@@ -3773,6 +3899,7 @@ async function saveEditedPerms(username){
     growth:!!document.getElementById('ep-growth')?.checked,
     downloads:!!document.getElementById('ep-downloads')?.checked,
     templates:!!document.getElementById('ep-templates')?.checked,
+    scenario:!!document.getElementById('ep-scenario')?.checked,
   };
   await saveUserPerms(username,perms);
   // Reload config so renderUserList shows updated perms
@@ -5096,6 +5223,165 @@ function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_poll
 })();
 
 // ═══════════════════════════════════════════════
+// SCENARIO PLANNER
+// ═══════════════════════════════════════════════
+function spRender(){
+  // Pre-fill sliders with actual data if available
+  const spend=grLoadSpend();
+  const months=Object.keys(spend).sort();
+  // Pre-fill fixed costs from financials if loaded
+  const fixedFromFinancials=Object.values(EX_HISTORICAL.pkr||{}).reduce((sum,mk)=>{
+    const exp=Object.entries(mk.expCats||{}).filter(([k])=>k!=='POL Riders'&&k!=='Salaries').reduce((s,[,v])=>s+v,0);
+    return sum+exp;
+  },0)/Math.max(1,Object.keys(EX_HISTORICAL.pkr||{}).length);
+  if(fixedFromFinancials>0){
+    const el=document.getElementById('sp-fixed');
+    if(el)el.value=Math.round(fixedFromFinancials/1000)*1000;
+  }
+  spCalc();
+}
+
+function spFmtK(n){
+  const a=Math.abs(Math.round(n));
+  return(n<0?'- ':'')+'PKR '+(a>=1000000?(a/1000000).toFixed(1)+'M':a>=1000?Math.round(a/1000)+'K':a.toLocaleString());
+}
+function spFmt(n){return(n<0?'- ':'')+'PKR '+Math.abs(Math.round(n)).toLocaleString();}
+
+function spCalc(){
+  const orderSize=+document.getElementById('sp-order')?.value||6000;
+  const comm=(+document.getElementById('sp-comm')?.value||5)/100;
+  const orders=+document.getElementById('sp-orders')?.value||620;
+  const riders=+document.getElementById('sp-riders')?.value||3;
+  const dpd=+document.getElementById('sp-dpd')?.value||15;
+  const riderCost=+document.getElementById('sp-rcost')?.value||38000;
+  const storeCost=+document.getElementById('sp-store')?.value||62000;
+  const fixedCost=+document.getElementById('sp-fixed')?.value||454000;
+
+  // Update display values
+  const sv=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  sv('spv-order',orderSize.toLocaleString());
+  sv('spv-comm',(comm*100).toFixed(1)+'%');
+  sv('spv-orders',orders.toLocaleString());
+  sv('spv-riders',riders);
+  sv('spv-dpd',dpd);
+  sv('spv-rcost',Math.round(riderCost/1000)+'K');
+  sv('spv-store',Math.round(storeCost/1000)+'K');
+  sv('spv-fixed',Math.round(fixedCost/1000)+'K');
+
+  const capacity=riders*dpd*30;
+  const varPool=riders*riderCost+storeCost;
+  const varPerOrder=orders>0?varPool/orders:0;
+  const revPerOrder=orderSize*comm;
+  const contribPerOrder=revPerOrder-varPerOrder;
+  const totalRev=revPerOrder*orders;
+  const totalContrib=contribPerOrder*orders;
+  const netPL=totalContrib-fixedCost;
+  const util=capacity>0?Math.round(orders/capacity*100):0;
+  const beOrders=contribPerOrder>0?Math.ceil(fixedCost/contribPerOrder):null;
+
+  const setVal=(id,text,color)=>{const el=document.getElementById(id);if(el){el.textContent=text;if(color)el.style.color=color;}};
+
+  setVal('sp-pnl',spFmtK(netPL),netPL>=0?'var(--grn)':'var(--red)');
+  setVal('sp-pnl-sub',netPL>=0?'profitable':'monthly loss');
+  setVal('sp-contrib',spFmt(contribPerOrder),contribPerOrder>=0?'var(--grn)':'var(--red)');
+  setVal('sp-util',util+'%',util>90?'var(--red)':util>60?'var(--acc)':'var(--grn)');
+  setVal('sp-util-sub',orders.toLocaleString()+' of '+capacity.toLocaleString()+' max');
+
+  if(beOrders){
+    const gap=beOrders-orders;
+    setVal('sp-be',beOrders.toLocaleString(),gap>0?'var(--acc)':'var(--grn)');
+    setVal('sp-be-sub',gap>0?'+'+gap.toLocaleString()+' needed':'✓ exceeded by '+(orders-beOrders).toLocaleString());
+  } else {
+    setVal('sp-be','∞','var(--red)');
+    setVal('sp-be-sub','contribution negative');
+  }
+  setVal('sp-rev',spFmt(revPerOrder));
+  setVal('sp-var',spFmt(varPerOrder));
+  setVal('spb-rev',spFmtK(totalRev));
+  setVal('spb-var','− '+spFmtK(varPool));
+  setVal('spb-contrib',spFmtK(totalContrib),totalContrib>=0?'var(--grn)':'var(--red)');
+  setVal('spb-fixed','− '+spFmtK(fixedCost));
+  setVal('spb-net',spFmtK(netPL),netPL>=0?'var(--grn)':'var(--red)');
+
+  // Advisory panel
+  spRenderAdvisory(netPL,contribPerOrder,beOrders,capacity,orders,comm,orderSize,riders);
+}
+
+function spRenderAdvisory(netPL,contribPerOrder,beOrders,capacity,orders,comm,orderSize,riders){
+  const el=document.getElementById('sp-advisory');if(!el)return;
+  let bg,color,html='';
+
+  if(netPL>=0){
+    bg='rgba(34,197,94,.08)';color='var(--grn)';
+    html='<strong style="color:var(--grn);">✓ Profitable at these settings</strong><br>'
+      +'You are '+(orders-(beOrders||orders)).toLocaleString()+' orders above break-even. Focus on maintaining quality and growing basket size to protect margins.';
+  } else if(contribPerOrder<0){
+    bg='rgba(239,68,68,.08)';color='var(--red)';
+    html='<strong style="color:var(--red);">⚠ Losing money on every delivery</strong><br>'
+      +'At '+Math.round(comm*100)+'% commission and PKR '+orderSize.toLocaleString()+' avg order, each delivery loses PKR '+Math.abs(Math.round(contribPerOrder)).toLocaleString()+' before fixed costs. '
+      +'You must either increase avg order size or commission rate before volume growth helps.';
+  } else if(beOrders&&beOrders>capacity){
+    bg='rgba(239,68,68,.08)';color='var(--red)';
+    html='<strong style="color:var(--red);">Break-even requires more riders</strong><br>'
+      +'Break-even at '+beOrders.toLocaleString()+' orders exceeds current '+riders+'-rider capacity of '+capacity.toLocaleString()+'. '
+      +'Increase commission rate or avg order size to bring break-even within capacity range.';
+  } else {
+    bg='rgba(249,115,22,.08)';color='var(--acc)';
+    const gap=beOrders?beOrders-orders:0;
+    html='<strong style="color:var(--acc);">'+gap.toLocaleString()+' more orders/month to break even</strong><br>';
+  }
+
+  // Strategic recommendations based on commission rate
+  html+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px;">';
+  html+='<strong style="font-size:10px;text-transform:uppercase;letter-spacing:.4px;">Strategic recommendations</strong><br>';
+  if(comm<=0.06){
+    html+='<br><strong>Short term (next 6 months):</strong> Focus on growing B2C order volume and average basket size. Target 900–1,000 orders/month. Each additional order at current contribution adds to fixed cost coverage without adding overhead.<br><br>'
+      +'<strong>Medium term (with funding):</strong> Reintroduce inventory for your top 20–30 B2C SKUs — milk, eggs, bread, cooking oil. This alone takes your effective margin from 5% to 9–11% on those items, dramatically improving P&L without changing anything else.<br><br>'
+      +'<strong>Longer term:</strong> B2B becomes a natural extension once you have the inventory infrastructure. A restaurant ordering 50kg of flour is just a large B2C order handled by the same warehouse.';
+  } else if(comm<=0.10){
+    html+='<br><strong>You are in the inventory transition zone.</strong> At '+Math.round(comm*100)+'% margin you are capturing more value from each order. Focus now on: (1) expanding the SKU range carrying inventory, (2) growing repeat purchase rate above 30%, (3) pushing average basket to PKR 7,000+.';
+  } else {
+    html+='<br><strong>Strong margin position.</strong> At '+Math.round(comm*100)+'% you have a healthy inventory model running. Priority is volume growth and operational efficiency — the unit economics support scale.';
+  }
+  html+='</div>';
+
+  el.style.background=bg;el.style.color=color;
+  el.innerHTML=html;
+}
+
+// G&R info modals
+function showGrModal(key){
+  const modals={
+    ltv:{
+      title:'Lifetime Value (LTV) — margin-adjusted',
+      body:'<p>LTV is the total value a customer generates over their relationship with Tezz Delivery, adjusted for your effective margin rate.</p>'
+        +'<p><strong>Why margin-adjusted?</strong> Most SaaS and e-commerce companies report LTV using gross GMV because their margins are 60–80%. For grocery delivery at ~5–12% effective margin, using GMV inflates LTV by 8–20×. A customer with PKR 45,000 lifetime spend has a true LTV of PKR 2,250–5,310 depending on your current commission rate — not PKR 45,000.</p>'
+        +'<p><strong>To update the margin rate:</strong> Go to Super Admin → Exec Finance → Settings → Effective Margin Rate. Set it to your current Dwatson commission + any inventory markup.</p>'
+        +'<p><strong>Why grocery customers are sticky:</strong> Once someone finds a reliable grocery delivery, switching costs are high — they have trained you on preferences, know your catalogue, and trust is established. Research shows churn drops dramatically after 3+ orders.</p>'
+    },
+    repeat1:{
+      title:'Repeat rate after first order',
+      body:'<p>This is the most important retention metric for Tezz at your current stage. It measures what % of new customers came back within 14, 30, or 60 days of their first order.</p>'
+        +'<p><strong>Why this beats overall repeat rate:</strong> Overall repeat rate (54%) includes customers who joined 2 years ago and ordered 50 times. It is a lagging historical stat. Repeat after first tells you whether your <em>current</em> onboarding is working.</p>'
+        +'<p><strong>Industry benchmarks for grocery delivery:</strong> 14-day: 20–30% healthy · 30-day: 35–50% healthy · 60-day: 50–65% healthy</p>'
+        +'<p><strong>How to improve it:</strong> Send a welcome message within 24hrs of first delivery. Follow up at day 7–10 with a personalised nudge. A small discount on second order has outsized impact on this metric.</p>'
+        +'<p>If you improve 30-day repeat rate from 18% to 30%, your monthly active customer base grows by ~66% without acquiring a single new customer.</p>'
+    }
+  };
+  const m=modals[key];if(!m)return;
+  const ol=document.createElement('div');
+  ol.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;align-items:center;justify-content:center;';
+  ol.onclick=e=>{if(e.target===ol)ol.remove();};
+  ol.innerHTML='<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:22px 24px;width:440px;max-width:95vw;max-height:80vh;overflow-y:auto;">'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:700;color:var(--acc);margin-bottom:14px;">'+m.title+'</div>'
+    +m.body
+    +'<div style="margin-top:14px;text-align:right;"><button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="padding:6px 16px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Close</button></div>'
+    +'</div>';
+  document.body.appendChild(ol);
+  document.addEventListener('keydown',function esc(e){if(e.key==='Escape'){ol.remove();document.removeEventListener('keydown',esc);}});
+}
+
+// ═══════════════════════════════════════════════
 // TD ASSISTANT — STATE
 // ═══════════════════════════════════════════════
 const AI_WORKER='https://tezz-ai.atif-k-bashir.workers.dev';
@@ -5466,7 +5752,7 @@ function grRender(){
     :grPeriod==='custom'&&grFromDate&&grToDate
       ?S.orders.filter(o=>o.Order_Date&&o.Order_Date>=grFromDate&&o.Order_Date<=grToDate)
       :S.orders;
-  const grOrders=grCtype==='all'?periodSrc:periodSrc.filter(o=>grCtype==='B2B'?o.Customer_Type==='B2B':o.Customer_Type!=='B2B');
+  const grOrders=grSegment==='B2C'?periodSrc.filter(o=>o.Customer_Type!=='B2B'):grSegment==='B2B'?periodSrc.filter(o=>o.Customer_Type==='B2B'):periodSrc;
 
   // Build per-customer data
   const custMap={};
@@ -5597,7 +5883,8 @@ function grRender(){
   const cohortData=cohortMonths.map(cohortMk=>{
     const[cy,cm]=cohortMk.split('-').map(Number);
     const cohortCusts=new Set();
-    grOrders.forEach(o=>{if(o.Year===cy&&o.Month===cm&&o.IsFirstOrder==='New Customer')cohortCusts.add(resolveCustomerName(o.Customer));});
+    const _cd=new Set(['delivered','collected','assigned']);
+    grOrders.forEach(o=>{if(o.Year===cy&&o.Month===cm&&o.IsFirstOrder==='New Customer'&&_cd.has((o.Status||'').toLowerCase()))cohortCusts.add(resolveCustomerName(o.Customer));});
     if(!cohortCusts.size)return null;
     const retention=[100];
     for(let offset=1;offset<=6;offset++){
@@ -5625,6 +5912,35 @@ function grRender(){
     return prefix+Math.round(val).toLocaleString();
   };
   const colRet=v=>v===null?'—':v>=70?'gr-ret-high':v>=50?'gr-ret-mid':'gr-ret-low';
+
+  // Get effective margin rate from admin_config (configurable)
+  const marginRateCfg=S._rawConfig?.find(r=>r.type==='effective_margin_rate');
+  const effectiveMarginRate=marginRateCfg?parseFloat(marginRateCfg.value1)/100:0.118; // default 11.8%
+
+  // Repeat rate after first order — 14, 30, 60 days
+  const deliveredStatuses=new Set(['delivered','collected','assigned']);
+  const firstOrderers=S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&deliveredStatuses.has((o.Status||'').toLowerCase()));
+  const allCustomerOrders={};
+  S.orders.filter(o=>deliveredStatuses.has((o.Status||'').toLowerCase())).forEach(o=>{
+    const n=resolveCustomerName(o.Customer);
+    if(!allCustomerOrders[n])allCustomerOrders[n]=[];
+    if(o.Order_Date)allCustomerOrders[n].push(o.Order_Date);
+  });
+  let repeat14=0,repeat30=0,repeat60=0,firstCount=0;
+  firstOrderers.forEach(o=>{
+    const n=resolveCustomerName(o.Customer);
+    if(!o.Order_Date)return;
+    firstCount++;
+    const otherOrders=(allCustomerOrders[n]||[]).filter(d=>d>o.Order_Date);
+    if(!otherOrders.length)return;
+    const minGap=Math.min(...otherOrders.map(d=>Math.floor((d-o.Order_Date)/86400000)));
+    if(minGap<=14)repeat14++;
+    if(minGap<=30)repeat30++;
+    if(minGap<=60)repeat60++;
+  });
+  const rr14=firstCount?Math.round(repeat14/firstCount*100):0;
+  const rr30=firstCount?Math.round(repeat30/firstCount*100):0;
+  const rr60=firstCount?Math.round(repeat60/firstCount*100):0;
 
   // Build CAC input HTML
   // Auto-populate from Advertising & Branding expense if available and no manual override
@@ -5703,9 +6019,7 @@ function grRender(){
     <div class="gr-section">
       <div class="gr-section-title">Customer Lifetime Value</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — All</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvAll)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total Revenue ÷ Unique Customers</div><div class="gr-kpi-tdesc">Sum of all orders per customer averaged across all customers. Higher = stickier customer base.</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2C</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2C)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">B2C Revenue ÷ Unique B2C Customers</div><div class="gr-kpi-tdesc">Retail customer lifetime value only.</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — B2B</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(ltvB2B)}</div><div class="gr-kpi-sub">avg total spend per customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">B2B Revenue ÷ Unique B2B Customers</div><div class="gr-kpi-tdesc">Business account lifetime value. Typically 3–5× higher than B2C.</div><div class="gr-kpi-bench">Healthy: B2B LTV should be 3–5× B2C LTV</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
       </div>
     </div>
 
@@ -5717,8 +6031,10 @@ function grRender(){
         <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Sum of (days between consecutive orders) ÷ Total gaps</div><div class="gr-kpi-tdesc">How frequently customers reorder. Lower = more habitual buyers.</div></div></div>
       </div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — B2C</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(avgOrdB2C)}</div><div class="gr-kpi-sub">avg per B2C order</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total B2C Sales ÷ Total B2C Orders</div><div class="gr-kpi-tdesc">Average basket size for retail customers.</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — B2B</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(avgOrdB2B)}</div><div class="gr-kpi-sub">avg per B2B order</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total B2B Sales ÷ Total B2B Orders</div><div class="gr-kpi-tdesc">Average basket size for business accounts.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'Combined'}</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(grSegment==='B2C'?avgOrdB2C:grSegment==='B2B'?avgOrdB2B:(avgOrdB2C+avgOrdB2B)/2)}</div><div class="gr-kpi-sub">avg per order</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 14d <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('repeat1')">ⓘ</span></div><div class="gr-kpi-value" style="color:${rr14>=30?'var(--grn)':rr14>=15?'var(--acc)':'var(--red)'};">${rr14}%</div><div class="gr-kpi-sub">${firstCount} new customers sampled</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 30d</div><div class="gr-kpi-value" style="color:${rr30>=40?'var(--grn)':rr30>=20?'var(--acc)':'var(--red)'};">${rr30}%</div><div class="gr-kpi-sub">within 30 days</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 60d</div><div class="gr-kpi-value" style="color:${rr60>=50?'var(--grn)':rr60>=30?'var(--acc)':'var(--red)'};">${rr60}%</div><div class="gr-kpi-sub">within 60 days</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration</div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Top 10% customers' spend ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">Revenue concentration risk. High % means you depend heavily on a few customers.</div><div class="gr-kpi-bench">Below 50% is healthier for resilience</div></div></div>
       </div>
     </div>
@@ -5754,7 +6070,7 @@ function grRender(){
     </div>`;
 
   // Store data for download functions
-  window._grData={yr,ltvAll,ltvB2C,ltvB2B,repeatRate,freq,avgGap,concPct,avgRevPerCust,avgRet,avgChurn,avgReact,avgMoM,newRevPct,retRevPct,months,newCustsPerMonth,cohortData,spend};
+  window._grData={yr,ltvAll,ltvB2C,ltvB2B,repeatRate,freq,avgGap,concPct,avgRevPerCust,avgRet,avgChurn,avgReact,avgMoM,newRevPct,retRevPct,months,newCustsPerMonth,cohortData,spend,avgOrdB2C,avgOrdB2B,ordersPerCustPerMonth:grOrders.length/(Math.max(1,new Set(grOrders.map(o=>resolveCustomerName(o.Customer))).size)*Math.max(1,months.length))};
   grUpdateCAC();
 }
 
@@ -5787,11 +6103,16 @@ async function grUpdateCAC(){
   }
   const cacValues=cacMonths.map(mk=>spend[mk]/data.newCustsPerMonth[mk]);
   const avgCAC=cacValues.reduce((s,v)=>s+v,0)/cacValues.length;
-  const ltvCac=data.ltvAll/avgCAC;
-  // Payback: months until avg revenue per cust covers CAC
-  const monthlyRevPerCust=data.avgRevPerCust||1;
-  const raw=avgCAC/monthlyRevPerCust;
-  const payback=raw<0.1?'<0.1':raw<1?raw.toFixed(2):raw.toFixed(1);
+  // LTV:CAC — margin-adjusted, segment-aware
+  const _marginCfg=S._rawConfig?.find(r=>r.type==='effective_margin_rate');
+  const _effRate=_marginCfg?parseFloat(_marginCfg.value1)/100:0.118;
+  const _segLtv=grSegment==='B2C'?data.ltvB2C:grSegment==='B2B'?data.ltvB2B:data.ltvAll;
+  const ltvCac=(_segLtv*_effRate)/avgCAC;
+  // Payback: CAC ÷ (avg monthly order value × margin rate × orders per customer per month)
+  const _avgOrdSeg=grSegment==='B2C'?data.avgOrdB2C:grSegment==='B2B'?data.avgOrdB2B:(data.avgOrdB2C+data.avgOrdB2B)/2;
+  const _ordPerCustMo=data.ordersPerCustPerMonth||0.8;
+  const raw=avgCAC>0&&_avgOrdSeg>0&&_ordPerCustMo>0?avgCAC/(_avgOrdSeg*_effRate*_ordPerCustMo):0;
+  const payback=raw===0?'—':raw<0.1?'<0.1':raw<1?raw.toFixed(2):raw.toFixed(1);
   document.getElementById('cac-val').textContent='PKR '+(avgCAC>=1000?Math.round(avgCAC/1000)+'K':Math.round(avgCAC).toLocaleString());
   document.getElementById('cac-ltvcac').textContent=ltvCac.toFixed(1)+'×';
   document.getElementById('cac-ltvcac').style.color=ltvCac>=5?'var(--grn)':ltvCac>=3?'var(--acc)':'var(--red)';
@@ -5979,8 +6300,8 @@ function toggleViewerAccess(){
 
 function getUserAccess(user){
   if(!user)return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};
-  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true,templates:true};
-  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true,templates:true};
+  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true,templates:true,scenario:true};
+  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true,templates:true,scenario:false};
   try{
     const cfg=S._rawConfig||[];
     const row=cfg.find(c=>c.type==='user_perms_'+user.u);
@@ -5992,6 +6313,7 @@ function getUserAccess(user){
       growth:!!perms.growth,
       downloads:!!perms.downloads,
       templates:!!perms.templates,
+      scenario:!!perms.scenario,
     };
   }catch(e){return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};}
 }
