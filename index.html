@@ -2,7 +2,7 @@
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
   Version  : 31
-  Updated  : 4th April 2026
+  Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
 -->
@@ -6075,9 +6075,9 @@ function grRender(){
         }).join('')}
       </div>
       <div class="gr-kpi-grid" id="cac-results">
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg CAC</div><div class="gr-kpi-value" id="cac-val" style="color:var(--acc);">—</div><div class="gr-kpi-sub">spend ÷ new customers</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg CAC <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('cac')">ⓘ</span></div><div class="gr-kpi-value" id="cac-val" style="color:var(--acc);">—</div><div class="gr-kpi-sub">spend ÷ new customers</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">LTV : CAC <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltvcac')">ⓘ</span></div><div class="gr-kpi-value" id="cac-ltvcac" style="color:var(--grn);">—</div><div class="gr-kpi-sub">above 3× is healthy</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Payback Period</div><div class="gr-kpi-value" id="cac-payback">—</div><div class="gr-kpi-sub">months to recover CAC</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Payback Period <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('payback')">ⓘ</span></div><div class="gr-kpi-value" id="cac-payback">—</div><div class="gr-kpi-sub">months to recover CAC</div></div>
       </div>
     </div>`;
 
@@ -6122,32 +6122,32 @@ function grRender(){
     <div class="gr-section">
       <div class="gr-section-title">Customer Lifetime Value</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${inUSD?'$':'PKR '}${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
       </div>
     </div>
 
     <div class="gr-section">
       <div class="gr-section-title">Purchase Behaviour</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Repeat purchase rate</div><div class="gr-kpi-value" style="color:var(--blu);">${repeatRate}%</div><div class="gr-kpi-sub">customers with 2+ orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Customers with ≥2 orders ÷ Total Customers × 100</div><div class="gr-kpi-tdesc">What % of your customers came back at least once.</div><div class="gr-kpi-bench">Above 50% is healthy for grocery delivery</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg purchase frequency</div><div class="gr-kpi-value" style="color:var(--blu);">${freq.toFixed(1)}×</div><div class="gr-kpi-sub">orders per repeat customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total Orders (repeat customers) ÷ Repeat Customer Count</div><div class="gr-kpi-tdesc">How many times a loyal customer typically orders.</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Sum of (days between consecutive orders) ÷ Total gaps</div><div class="gr-kpi-tdesc">How frequently customers reorder. Lower = more habitual buyers.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Repeat purchase rate <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('repeat_overall')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--blu);">${repeatRate}%</div><div class="gr-kpi-sub">customers with 2+ orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Customers with ≥2 orders ÷ Total Customers × 100</div><div class="gr-kpi-tdesc">What % of your customers came back at least once.</div><div class="gr-kpi-bench">Above 50% is healthy for grocery delivery</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg purchase frequency <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('freq')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--blu);">${freq.toFixed(1)}×</div><div class="gr-kpi-sub">orders per repeat customer</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Total Orders (repeat customers) ÷ Repeat Customer Count</div><div class="gr-kpi-tdesc">How many times a loyal customer typically orders.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('gap')">ⓘ</span></div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Sum of (days between consecutive orders) ÷ Total gaps</div><div class="gr-kpi-tdesc">How frequently customers reorder. Lower = more habitual buyers.</div></div></div>
       </div>
       <div class="gr-kpi-grid">
         <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'Combined'}</div><div class="gr-kpi-value" style="color:var(--t2);">${fmtPKR(grSegment==='B2C'?avgOrdB2C:grSegment==='B2B'?avgOrdB2B:(avgOrdB2C+avgOrdB2B)/2)}</div><div class="gr-kpi-sub">avg per order</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 14d <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('repeat1')">ⓘ</span></div><div class="gr-kpi-value" style="color:${rr14>=30?'var(--grn)':rr14>=15?'var(--acc)':'var(--red)'};">${rr14}%</div><div class="gr-kpi-sub">${firstCount} new customers sampled</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 30d</div><div class="gr-kpi-value" style="color:${rr30>=40?'var(--grn)':rr30>=20?'var(--acc)':'var(--red)'};">${rr30}%</div><div class="gr-kpi-sub">within 30 days</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 60d</div><div class="gr-kpi-value" style="color:${rr60>=50?'var(--grn)':rr60>=30?'var(--acc)':'var(--red)'};">${rr60}%</div><div class="gr-kpi-sub">within 60 days</div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration</div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Top 10% customers' spend ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">Revenue concentration risk. High % means you depend heavily on a few customers.</div><div class="gr-kpi-bench">Below 50% is healthier for resilience</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue concentration <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('conc')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--acc);">${concPct}%</div><div class="gr-kpi-sub">top 10% customers → this % of revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Top 10% customers' spend ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">Revenue concentration risk. High % means you depend heavily on a few customers.</div><div class="gr-kpi-bench">Below 50% is healthier for resilience</div></div></div>
       </div>
     </div>
 
     <div class="gr-section">
       <div class="gr-section-title">Retention &amp; Churn (${yr} monthly avg)</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Retention rate</div><div class="gr-kpi-value" style="color:var(--grn);">${avgRet}%</div><div class="gr-kpi-sub">active last month who reordered</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">(Customers in M who ordered in M+1) ÷ Customers in M × 100</div><div class="gr-kpi-tdesc">Of customers who ordered this month, what % ordered again next month.</div><div class="gr-kpi-bench">Above 60% is strong for grocery delivery</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Churn rate</div><div class="gr-kpi-value" style="color:var(--red);">${avgChurn}%</div><div class="gr-kpi-sub">customers lost each month</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">100% − Retention Rate</div><div class="gr-kpi-tdesc">% of last month's customers who did not order again.</div><div class="gr-kpi-bench">Below 30% monthly churn is acceptable early stage</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Reactivation rate</div><div class="gr-kpi-value" style="color:var(--pur);">${avgReact}%</div><div class="gr-kpi-sub">churned customers who returned</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Returning churned customers ÷ Active customers × 100</div><div class="gr-kpi-tdesc">Shows how effective your win-back outreach (Raabta) is.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Retention rate <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('retention')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${avgRet}%</div><div class="gr-kpi-sub">active last month who reordered</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">(Customers in M who ordered in M+1) ÷ Customers in M × 100</div><div class="gr-kpi-tdesc">Of customers who ordered this month, what % ordered again next month.</div><div class="gr-kpi-bench">Above 60% is strong for grocery delivery</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Churn rate <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('churn')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--red);">${avgChurn}%</div><div class="gr-kpi-sub">customers lost each month</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">100% − Retention Rate</div><div class="gr-kpi-tdesc">% of last month's customers who did not order again.</div><div class="gr-kpi-bench">Below 30% monthly churn is acceptable early stage</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Reactivation rate <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('reactivation')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--pur);">${avgReact}%</div><div class="gr-kpi-sub">churned customers who returned</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Returning churned customers ÷ Active customers × 100</div><div class="gr-kpi-tdesc">Shows how effective your win-back outreach (Raabta) is.</div></div></div>
       </div>
     </div>
 
@@ -6156,7 +6156,7 @@ function grRender(){
       <div class="gr-kpi-grid">
         <div class="gr-kpi"><div class="gr-kpi-label">Avg MoM growth</div><div class="gr-kpi-value" style="color:${parseFloat(avgMoM)>=0?'var(--grn)':'var(--red)'};">${avgMoM>=0?'+':''}${avgMoM}%</div><div class="gr-kpi-sub">month over month revenue</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">(Revenue M − Revenue M-1) ÷ Revenue M-1 × 100</div><div class="gr-kpi-tdesc">Average monthly revenue growth rate across the selected year.</div></div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">New vs returning revenue</div><div class="gr-kpi-value">${newRevPct}% / ${retRevPct}%</div><div class="gr-kpi-sub">new customer revenue share</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">First-order revenue ÷ Total Revenue × 100</div><div class="gr-kpi-tdesc">How much revenue comes from new vs existing customers. High returning % = strong retention.</div></div></div>
-        <div class="gr-kpi"><div class="gr-kpi-label">Revenue per active customer/mo</div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(avgRevPerCust)}</div><div class="gr-kpi-sub">avg monthly</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Monthly Revenue ÷ Active Customers that Month (averaged)</div><div class="gr-kpi-tdesc">How much each active customer spends per month on average. Used to calculate CAC payback period.</div></div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Revenue per active customer/mo <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('freq')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(avgRevPerCust)}</div><div class="gr-kpi-sub">avg monthly</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Monthly Revenue ÷ Active Customers that Month (averaged)</div><div class="gr-kpi-tdesc">How much each active customer spends per month on average. Used to calculate CAC payback period.</div></div></div>
       </div>
     </div>
 
