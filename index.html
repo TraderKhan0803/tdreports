@@ -721,6 +721,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div id="exec-tabs" style="display:none;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;">
       <div class="tab active" onclick="ecSwitchTab('report',this)" id="nav-ec-report">📊 Report</div>
       <div class="tab" onclick="ecSwitchTab('growth',this)" id="nav-ec-growth" style="display:none;">📈 Growth &amp; Retention</div>
+      <div class="tab" onclick="ecSwitchTab('scenario',this)" id="nav-ec-scenario" style="display:none;">🎯 Scenario Planner</div>
     </div>
     <div class="topbar-right">
       <span class="meta" id="hdr-meta" style="display:none">No data</span>
@@ -1238,6 +1239,58 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     </div>
 
     <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
+    <!-- ═══ EXEC: SCENARIO PLANNER ═══ -->
+    <div class="ec-panel" id="tab-ec-scenario" style="display:none;">
+      <div style="font-size:11px;color:var(--t2);margin-bottom:14px;">Model different scenarios to find your path to profitability. Adjust the sliders and the P&amp;L updates in real time.</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button onclick="document.getElementById('sp-guide2').style.display=document.getElementById('sp-guide2').style.display==='none'?'block':'none'" style="padding:4px 12px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;">? How to use</button>
+      </div>
+      <div id="sp-guide2" style="display:none;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:11px;color:var(--t2);line-height:1.8;">
+        <strong style="color:var(--acc);">How to use:</strong> Set your current numbers as the baseline. Adjust levers to model what-if scenarios. The P&amp;L breakdown updates instantly.<br>
+        <strong style="color:var(--acc);">Commission rate tip:</strong> Pure Dwatson B2C = 5%. With partial inventory on top SKUs = 8-11%. Full inventory model = 11-15%.<br>
+        <strong style="color:var(--acc);">Rider capacity:</strong> 3 riders × 15 deliveries × 30 days = 1,350 orders/month max before needing a 4th rider.
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;flex:1;">
+        <!-- Sliders -->
+        <div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Revenue levers</div>
+          <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spCalc()"><span id="spv-order">6,000</span></div>
+          <div class="sp-row"><label>Commission / margin %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spCalc()"><span id="spv-comm">5.0%</span></div>
+          <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spCalc()"><span id="spv-orders">620</span></div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Delivery capacity</div>
+          <div class="sp-row"><label>Number of riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spCalc()"><span id="spv-riders">3</span></div>
+          <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="8" max="25" step="1" value="15" oninput="spCalc()"><span id="spv-dpd">15</span></div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Cost inputs (PKR/month)</div>
+          <div class="sp-row"><label>Cost per rider (all-in)</label><input type="range" id="sp-rcost" min="30000" max="70000" step="1000" value="38000" oninput="spCalc()"><span id="spv-rcost">38K</span></div>
+          <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spCalc()"><span id="spv-store">62K</span></div>
+          <div class="sp-row"><label>Fixed costs/month</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spCalc()"><span id="spv-fixed">454K</span></div>
+        </div>
+        <!-- Results -->
+        <div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Results</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+            <div class="gr-kpi"><div class="gr-kpi-label">Monthly P&amp;L</div><div class="gr-kpi-value" id="sp-pnl" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-pnl-sub">—</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Contribution/order</div><div class="gr-kpi-value" id="sp-contrib" style="font-size:16px;">—</div><div class="gr-kpi-sub">after variable costs</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Rider utilisation</div><div class="gr-kpi-value" id="sp-util" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-util-sub">—</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+            <div class="gr-kpi"><div class="gr-kpi-label">Break-even orders</div><div class="gr-kpi-value" id="sp-be" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-be-sub">—</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Revenue/order</div><div class="gr-kpi-value" id="sp-rev" style="font-size:16px;">—</div><div class="gr-kpi-sub">commission earned</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Variable/order</div><div class="gr-kpi-value" id="sp-var" style="font-size:16px;">—</div><div class="gr-kpi-sub">riders+store÷orders</div></div>
+          </div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Monthly P&amp;L breakdown</div>
+          <div style="background:var(--sur2);border-radius:var(--r2);padding:10px 14px;font-size:12px;margin-bottom:10px;">
+            <div class="sp-brow"><span style="color:var(--t2);">Total revenue (commission)</span><span id="spb-rev" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow"><span style="color:var(--t2);">Variable costs (riders+store)</span><span id="spb-var" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow"><span style="color:var(--t2);">Contribution margin</span><span id="spb-contrib" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow"><span style="color:var(--t2);">Fixed costs</span><span id="spb-fixed" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow" style="border-top:1px solid var(--bdr);margin-top:4px;padding-top:8px;font-weight:700;"><span>Net profit / (loss)</span><span id="spb-net" style="font-family:'DM Mono',monospace;">—</span></div>
+          </div>
+          <div id="sp-advisory" style="border-radius:var(--r2);padding:12px 14px;font-size:11px;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="gr-panel" id="tab-ec-growth">
       <div id="gr-body">
         <div style="color:var(--t3);font-size:12px;padding:40px;text-align:center;">Loading metrics…</div>
@@ -1595,7 +1648,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button id="ex-tab-upload"   onclick="switchExecTab('upload')"   class="dbtn on"  style="font-size:11px;">📤 Upload P&L</button>
         <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn"     style="font-size:11px;">✏ Data Entry</button>
         <button id="ex-tab-settings" onclick="switchExecTab('settings')" class="dbtn"     style="font-size:11px;">⚙ Settings</button>
-        <button id="ex-tab-scenario" onclick="switchExecTab('scenario')" class="dbtn" style="font-size:11px;display:none;">🎯 Scenario Planner</button>
+
       </div>
 
       <!-- P&L UPLOAD -->
@@ -1620,66 +1673,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               <button onclick="plSaveToSupabase()" style="padding:8px 20px;background:var(--grn);border:none;border-radius:var(--r2);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;">✓ Confirm & Save to Supabase</button>
             </div>
             <div id="pl-save-status" style="margin-top:8px;font-size:11px;color:var(--t3);"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SCENARIO PLANNER -->
-      <div id="ex-content-scenario" style="display:none;">
-        <div class="adm-card mb12">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-            <div class="adm-title" style="color:var(--acc);">🎯 Scenario Planner</div>
-            <button onclick="document.getElementById('sp-guide').style.display=document.getElementById('sp-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:10px;cursor:pointer;">? How to use</button>
-          </div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Model different scenarios to find your path to profitability. Adjust the sliders and watch the P&L update in real time.</div>
-          <div id="sp-guide" style="display:none;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--t2);line-height:1.8;">
-            <strong style="color:var(--acc);">How to use this tool:</strong><br>
-            1. Set your current numbers as the baseline using the sliders on the left.<br>
-            2. Adjust levers to model "what if" scenarios — e.g. what if avg order grows to PKR 8,000?<br>
-            3. The P&L breakdown on the right updates instantly showing contribution margin, break-even, and net profit.<br>
-            4. The advisory panel at the bottom gives context-aware recommendations based on your inputs.<br><br>
-            <strong style="color:var(--acc);">Margin rate tip:</strong> Set this to your actual commission rate. Currently on pure Dwatson B2C = 5%. With partial inventory on top SKUs = 8-11%. With full inventory model = 11-15%. Update this in Super Admin → Exec Finance → Settings.
-          </div>
-          <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;">
-            <!-- LEFT: Sliders -->
-            <div>
-              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Revenue levers</div>
-              <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spCalc()"><span id="spv-order">6,000</span></div>
-              <div class="sp-row"><label>Commission / margin rate</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spCalc()"><span id="spv-comm">5.0%</span></div>
-              <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spCalc()"><span id="spv-orders">620</span></div>
-              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Delivery capacity</div>
-              <div class="sp-row"><label>Number of riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spCalc()"><span id="spv-riders">3</span></div>
-              <div class="sp-row"><label>Deliveries / rider / day</label><input type="range" id="sp-dpd" min="8" max="25" step="1" value="15" oninput="spCalc()"><span id="spv-dpd">15</span></div>
-              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Cost inputs (PKR/month)</div>
-              <div class="sp-row"><label>Cost per rider (all-in)</label><input type="range" id="sp-rcost" min="30000" max="70000" step="1000" value="38000" oninput="spCalc()"><span id="spv-rcost">38K</span></div>
-              <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spCalc()"><span id="spv-store">62K</span></div>
-              <div class="sp-row"><label>Fixed costs / month</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spCalc()"><span id="spv-fixed">454K</span></div>
-            </div>
-            <!-- RIGHT: Results -->
-            <div>
-              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Results</div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
-                <div class="gr-kpi"><div class="gr-kpi-label">Monthly P&L</div><div class="gr-kpi-value" id="sp-pnl" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-pnl-sub">—</div></div>
-                <div class="gr-kpi"><div class="gr-kpi-label">Contribution / order</div><div class="gr-kpi-value" id="sp-contrib" style="font-size:16px;">—</div><div class="gr-kpi-sub">after variable costs</div></div>
-                <div class="gr-kpi"><div class="gr-kpi-label">Rider utilisation</div><div class="gr-kpi-value" id="sp-util" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-util-sub">—</div></div>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
-                <div class="gr-kpi"><div class="gr-kpi-label">Break-even orders</div><div class="gr-kpi-value" id="sp-be" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-be-sub">—</div></div>
-                <div class="gr-kpi"><div class="gr-kpi-label">Revenue / order</div><div class="gr-kpi-value" id="sp-rev" style="font-size:16px;">—</div><div class="gr-kpi-sub">commission earned</div></div>
-                <div class="gr-kpi"><div class="gr-kpi-label">Variable / order</div><div class="gr-kpi-value" id="sp-var" style="font-size:16px;">—</div><div class="gr-kpi-sub">riders+store÷orders</div></div>
-              </div>
-              <!-- P&L Breakdown -->
-              <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Monthly P&L breakdown</div>
-              <div style="background:var(--sur2);border-radius:var(--r2);padding:10px 14px;font-size:12px;">
-                <div class="sp-brow"><span style="color:var(--t2);">Total revenue (commission)</span><span id="spb-rev" style="font-family:'DM Mono',monospace;">—</span></div>
-                <div class="sp-brow"><span style="color:var(--t2);">Variable costs (riders + store)</span><span id="spb-var" style="font-family:'DM Mono',monospace;">—</span></div>
-                <div class="sp-brow"><span style="color:var(--t2);">Contribution margin</span><span id="spb-contrib" style="font-family:'DM Mono',monospace;">—</span></div>
-                <div class="sp-brow"><span style="color:var(--t2);">Fixed costs</span><span id="spb-fixed" style="font-family:'DM Mono',monospace;">—</span></div>
-                <div class="sp-brow" style="border-top:1px solid var(--bdr);margin-top:4px;padding-top:8px;font-weight:700;"><span>Net profit / (loss)</span><span id="spb-net" style="font-family:'DM Mono',monospace;">—</span></div>
-              </div>
-              <!-- Advisory panel -->
-              <div id="sp-advisory" style="margin-top:10px;border-radius:var(--r2);padding:12px 14px;font-size:11px;line-height:1.8;"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -1979,6 +1972,9 @@ function onLoginSuccess(){
   document.getElementById('hdr-user').textContent=curUser.u;
   if(curUser.role==='admin'||curUser.role==='super')document.getElementById('btn-admin').style.display='';
   if(curUser.role==='super')document.getElementById('btn-super').style.display='';
+  // Show/hide scenario tab based on access
+  const _scBtnInit=document.getElementById('ex-tab-scenario');
+  if(_scBtnInit){const _accInit=getUserAccess(curUser);_scBtnInit.style.display=_accInit.scenario?'':'none';}
   loadAllData().then(()=>{
     startAlertPolling();
     loadFinancials();
@@ -3268,7 +3264,7 @@ function switchExecTab(tab){
   exCurTab=tab;
   // Show scenario tab only for users with access
   const _acc=getUserAccess(curUser);
-  ['upload','input','settings','scenario'].forEach(t=>{
+  ['upload','input','settings'].forEach(t=>{
     const btn=document.getElementById('ex-tab-'+t);
     const cont=document.getElementById('ex-content-'+t);
     const isActive=t===tab;
@@ -3281,7 +3277,7 @@ function switchExecTab(tab){
   });
   if(tab==='upload')plRenderUploadPanel();
   if(tab==='input')exRenderInputForm();
-  if(tab==='scenario')spRender();
+
   if(tab==='settings')exRenderSettings();
 }
 function exRenderInputForm(){
@@ -3369,17 +3365,6 @@ function exSaveInputForm(mk){
     }
   }
   exRenderAll();
-}
-
-async function exSaveMarginRate(){
-  const val=parseFloat(document.getElementById('ex-mr-input')?.value)||11.8;
-  if(val<1||val>50){notif('⚠ Rate must be between 1% and 50%');return;}
-  await sb('DELETE','admin_config?type=eq.effective_margin_rate').catch(()=>{});
-  await dbInsert('admin_config',[{type:'effective_margin_rate',value1:String(val),value2:'',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()}]);
-  S._rawConfig=S._rawConfig.filter(r=>r.type!=='effective_margin_rate');
-  S._rawConfig.push({type:'effective_margin_rate',value1:String(val)});
-  notif('✓ Margin rate saved: '+val+'%');
-  grRender();
 }
 
 function exDeleteManual(mk){
@@ -5768,6 +5753,9 @@ function ecSwitchTab(tab,el){
   if(tab==='growth'){
     const p=document.getElementById('tab-ec-growth');
     if(p){p.classList.add('active');p.style.display='flex';}
+  } else if(tab==='scenario'){
+    const p=document.getElementById('tab-ec-scenario');
+    if(p){p.classList.add('active');p.style.display='flex';}
   } else {
     const p=document.getElementById('tab-ec-main');
     if(p){p.classList.add('active');p.style.display='';}
@@ -5775,6 +5763,7 @@ function ecSwitchTab(tab,el){
   if(el)el.classList.add('active');
   else{const nav=document.getElementById('nav-ec-'+tab);if(nav)nav.classList.add('active');}
   if(tab==='growth')grRender();
+  else if(tab==='scenario')spCalc();
   else ecRenderUnified();
 }
 
@@ -5782,6 +5771,11 @@ function ecShowGrowthTabIfAllowed(){
   const access=getUserAccess(curUser);
   const growthTab=document.getElementById('nav-ec-growth');
   if(growthTab)growthTab.style.display=access.growth?'':'none';
+  const scenarioTab=document.getElementById('nav-ec-scenario');
+  if(scenarioTab)scenarioTab.style.display=access.scenario?'':'none';
+  // Also update mobile sub-tab for growth
+  const bnGrowth=document.getElementById('bn-sub-ec-growth');
+  if(bnGrowth)bnGrowth.style.display=access.growth?'':'none';
 }
 
 // ── GROWTH & RETENTION ───────────────────────────────────────────────────────
@@ -6117,7 +6111,7 @@ function grRender(){
     <div class="gr-section">
       <div class="gr-section-title">Customer Lifetime Value</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${fmtPKR(grSegment==='B2C'?ltvB2C:grSegment==='B2B'?ltvB2B:ltvAll)}</div><div class="gr-kpi-sub">avg lifetime spend</div></div>
       </div>
     </div>
 
@@ -6309,7 +6303,9 @@ function bnUpdateSubTabs(mode){
     ],
     exec:[
       {id:'ec-report',label:'Report',fn:()=>ecSwitchTab('report')},
-      {id:'ec-growth',label:'Growth',fn:()=>ecSwitchTab('growth')},    ],
+      ...(getUserAccess(curUser).growth?[{id:'ec-growth',label:'Growth & Retention',fn:()=>ecSwitchTab('growth')}]:[]),
+      ...(getUserAccess(curUser).scenario?[{id:'ec-scenario',label:'Scenario Planner',fn:()=>ecSwitchTab('scenario')}]:[]),
+    ],
   };
   const tabs=tabDefs[mode]||[];
   sub.innerHTML=tabs.map(t=>`<div class="tab" id="bn-sub-${t.id}" onclick="bnSubClick('${mode}','${t.id}')">${t.label}</div>`).join('');
@@ -6328,7 +6324,7 @@ function bnSubClick(mode,tabId){
   // Execute the tab switch
   if(mode==='analytics')switchTab(tabId,null);
   else if(mode==='raabta')rbSwitchTab(tabId);
-  // exec has no sub-tabs
+  else if(mode==='exec')ecSwitchTab(tabId.replace('ec-',''));
 }
 
 function setMode(mode){
