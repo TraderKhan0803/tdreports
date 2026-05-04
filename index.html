@@ -579,7 +579,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .b2b-row td:first-child{border-left:2px solid rgba(168,85,247,.5);}
 
 /* ── SCENARIO PLANNER ── */
-.sp-row{display:grid;grid-template-columns:1fr 80px 36px;align-items:center;gap:6px;margin-bottom:7px;}
+.sp-row{display:grid;grid-template-columns:1fr 80px 52px;align-items:center;gap:6px;margin-bottom:7px;}
+.sp-val{width:52px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--txt);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:2px 5px;text-align:right;}
+.sp-val:focus{outline:none;border-color:var(--acc);}
 .sp-row label{font-size:11px;color:var(--t2);}
 .sp-row span{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--txt);text-align:right;}
 .sp-row input[type=range]{accent-color:var(--acc);}
@@ -1241,37 +1243,49 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
     <!-- ═══ EXEC: SCENARIO PLANNER ═══ -->
     <div class="ec-panel" id="tab-ec-scenario" style="display:none;">
-      <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;">
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:20px;">
         <div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Revenue levers</div>
-          <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spCalc()"><span id="spv-order">6K</span></div>
-          <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spCalc()"><span id="spv-comm">5%</span></div>
-          <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spCalc()"><span id="spv-orders">620</span></div>
+          <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spSS('sp-order','spv-order');spCalc()"><input class="sp-val" id="spv-order" value="6000" oninput="spSI('sp-order',this,3000,15000)"></div>
+          <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spSS('sp-comm','spv-comm');spCalc()"><input class="sp-val" id="spv-comm" value="5" oninput="spSI('sp-comm',this,3,20)"></div>
+          <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spSS('sp-orders','spv-orders');spCalc()"><input class="sp-val" id="spv-orders" value="620" oninput="spSI('sp-orders',this,200,2000)"></div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Delivery capacity</div>
-          <div class="sp-row"><label>Riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spCalc()"><span id="spv-riders">3</span></div>
-          <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="8" max="25" step="1" value="15" oninput="spCalc()"><span id="spv-dpd">15</span></div>
-          <div class="sp-row"><label>Working days/month</label><input type="range" id="sp-wd" min="25" max="31" step="1" value="30" oninput="spCalc()"><span id="spv-wd">30</span></div>
+          <div class="sp-row"><label>Riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spSS('sp-riders','spv-riders');spCalc()"><input class="sp-val" id="spv-riders" value="3" oninput="spSI('sp-riders',this,1,8)"></div>
+          <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="8" max="20" step="1" value="15" oninput="spSS('sp-dpd','spv-dpd');spCalc()"><input class="sp-val" id="spv-dpd" value="15" oninput="spSI('sp-dpd',this,8,20)"></div>
+          <div class="sp-row"><label>Working days/month</label><input type="range" id="sp-wd" min="25" max="31" step="1" value="30" oninput="spSS('sp-wd','spv-wd');spCalc()"><input class="sp-val" id="spv-wd" value="30" oninput="spSI('sp-wd',this,25,31)"></div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Costs (PKR/month)</div>
-          <div class="sp-row"><label>Cost per rider</label><input type="range" id="sp-rcost" min="30000" max="70000" step="1000" value="38000" oninput="spCalc()"><span id="spv-rcost">38K</span></div>
-          <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spCalc()"><span id="spv-store">62K</span></div>
-          <div class="sp-row"><label>Fixed costs</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spCalc()"><span id="spv-fixed">454K</span></div>
+          <div class="sp-row"><label>Rider salary/rider</label><input type="range" id="sp-rsal" min="20000" max="50000" step="500" value="28000" oninput="spSS('sp-rsal','spv-rsal');spCalc()"><input class="sp-val" id="spv-rsal" value="28000" oninput="spSI('sp-rsal',this,20000,50000)"></div>
+          <div class="sp-row"><label>Fuel/rider/month</label><input type="range" id="sp-fuel" min="3000" max="20000" step="500" value="8000" oninput="spSS('sp-fuel','spv-fuel');spCalc()"><input class="sp-val" id="spv-fuel" value="8000" oninput="spSI('sp-fuel',this,3000,20000)"></div>
+          <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spSS('sp-store','spv-store');spCalc()"><input class="sp-val" id="spv-store" value="62000" oninput="spSI('sp-store',this,30000,120000)"></div>
+          <div class="sp-row"><label>Fixed costs</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spSS('sp-fixed','spv-fixed');spCalc()"><input class="sp-val" id="spv-fixed" value="454000" oninput="spSI('sp-fixed',this,200000,800000)"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:8px 10px;background:var(--sur2);border-radius:var(--r2);border:1px solid var(--bdr);">
+            <input type="checkbox" id="sp-fee-on" onchange="document.getElementById('sp-fee-amt').disabled=!this.checked;spCalc()" style="accent-color:var(--acc);width:14px;height:14px;cursor:pointer;flex-shrink:0;">
+            <label for="sp-fee-on" style="font-size:12px;color:var(--t2);flex:1;cursor:pointer;">Charge delivery fee?</label>
+            <input id="sp-fee-amt" type="number" value="50" min="0" max="500" disabled onchange="spCalc()" style="width:60px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--txt);font-family:'DM Mono',monospace;font-size:11px;padding:3px 6px;text-align:right;">
+            <span style="font-size:11px;color:var(--t3);">PKR</span>
+          </div>
         </div>
         <div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Cost per order breakdown</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
-            <div class="gr-kpi"><div class="gr-kpi-label">Revenue/order <span onclick="showSpModal('rev')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-rev" style="font-size:16px;">—</div><div class="gr-kpi-sub">order × commission</div></div>
-            <div class="gr-kpi"><div class="gr-kpi-label">Variable cost/order <span onclick="showSpModal('var')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-var" style="font-size:16px;">—</div><div class="gr-kpi-sub">riders+store÷orders</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Revenue/order <span onclick="showSpModal('rev')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-rev" style="font-size:16px;">—</div><div class="gr-kpi-sub">commission + fee</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Variable cost/order <span onclick="showSpModal('var')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-var" style="font-size:16px;">—</div><div class="gr-kpi-sub">riders+fuel+store÷orders</div></div>
             <div class="gr-kpi"><div class="gr-kpi-label">Fixed cost/order <span onclick="showSpModal('fix')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-fixper" style="font-size:16px;">—</div><div class="gr-kpi-sub">fixed costs÷orders</div></div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
             <div class="gr-kpi"><div class="gr-kpi-label">Contribution/order <span onclick="showSpModal('con')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-contrib" style="font-size:16px;">—</div><div class="gr-kpi-sub">revenue − variable</div></div>
             <div class="gr-kpi" style="border-left:2px solid var(--acc);"><div class="gr-kpi-label">Break-even order size <span onclick="showSpModal('besize')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-besize" style="font-size:16px;">—</div><div class="gr-kpi-sub">needed at current volume</div></div>
             <div class="gr-kpi" style="border-left:2px solid var(--acc);"><div class="gr-kpi-label">Break-even volume <span onclick="showSpModal('bevol')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-bevol" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-bevol-s">—</div></div>
           </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">
+            <div class="gr-kpi"><div class="gr-kpi-label">Actual deliveries/rider/day <span onclick="showSpModal('dpd')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-dpd-act" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-dpd-sub">—</div></div>
+            <div class="gr-kpi"><div class="gr-kpi-label">Rider utilisation <span onclick="showSpModal('util')" style="font-size:9px;color:var(--acc);cursor:pointer;">ⓘ</span></div><div class="gr-kpi-value" id="sp-util" style="font-size:16px;">—</div><div class="gr-kpi-sub" id="sp-util-sub">—</div></div>
+          </div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Monthly P&amp;L</div>
           <div style="background:var(--sur2);border-radius:var(--r2);padding:10px 14px;font-size:12px;margin-bottom:10px;">
-            <div class="sp-brow"><span style="color:var(--t2);">Total revenue (commission)</span><span id="spb-rev" style="font-family:'DM Mono',monospace;">—</span></div>
-            <div class="sp-brow"><span style="color:var(--t2);">Variable costs (riders+store)</span><span id="spb-var" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow"><span style="color:var(--t2);">Commission revenue</span><span id="spb-comm" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow" id="spb-fee-row" style="display:none;"><span style="color:var(--t2);">Delivery fee revenue</span><span id="spb-fee" style="font-family:'DM Mono',monospace;">—</span></div>
+            <div class="sp-brow"><span style="color:var(--t2);">Variable costs (riders+fuel+store)</span><span id="spb-var" style="font-family:'DM Mono',monospace;">—</span></div>
             <div class="sp-brow"><span style="color:var(--t2);">Contribution margin</span><span id="spb-contrib" style="font-family:'DM Mono',monospace;">—</span></div>
             <div class="sp-brow"><span style="color:var(--t2);">Fixed costs</span><span id="spb-fixed" style="font-family:'DM Mono',monospace;">—</span></div>
             <div class="sp-brow" style="border-top:1px solid var(--bdr);margin-top:4px;padding-top:8px;font-weight:700;"><span>Net profit / (loss)</span><span id="spb-net" style="font-family:'DM Mono',monospace;">—</span></div>
@@ -5239,38 +5253,48 @@ function spRender(){
 function spFmtK(n){const a=Math.abs(Math.round(n));return(n<0?'- ':'')+'PKR '+(a>=1000000?(a/1000000).toFixed(1)+'M':a>=1000?Math.round(a/1000)+'K':a.toLocaleString());}
 function spFmt(n){return(n<0?'- ':'')+'PKR '+Math.abs(Math.round(n)).toLocaleString();}
 
-function spCalc(){
-  const ord=+document.getElementById('sp-order')?.value||6000;
-  const com=(+document.getElementById('sp-comm')?.value||5)/100;
-  const mo=+document.getElementById('sp-orders')?.value||620;
-  const ri=+document.getElementById('sp-riders')?.value||3;
-  const dpd=+document.getElementById('sp-dpd')?.value||15;
-  const wd=+document.getElementById('sp-wd')?.value||30;
-  const rc=+document.getElementById('sp-rcost')?.value||38000;
-  const sc=+document.getElementById('sp-store')?.value||62000;
-  const fc=+document.getElementById('sp-fixed')?.value||454000;
+// Sync slider → input
+function spSS(sid,vid){const s=document.getElementById(sid),v=document.getElementById(vid);if(s&&v)v.value=s.value;}
+// Sync input → slider then recalc
+function spSI(sid,inp,min,max){const v=Math.max(min,Math.min(max,parseFloat(inp.value)||min));const s=document.getElementById(sid);if(s)s.value=v;spCalc();}
 
-  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  sv('spv-order',ord>=1000?Math.round(ord/1000)+'K':ord);
-  sv('spv-comm',(com*100).toFixed(1)+'%');
-  sv('spv-orders',mo.toLocaleString());
-  sv('spv-riders',ri);sv('spv-dpd',dpd);sv('spv-wd',wd);
-  sv('spv-rcost',Math.round(rc/1000)+'K');
-  sv('spv-store',Math.round(sc/1000)+'K');
-  sv('spv-fixed',Math.round(fc/1000)+'K');
+function spCalc(){
+  const g=(id,def)=>+(document.getElementById(id)?.value)||def;
+  const ord=Math.max(3000,Math.min(15000,g('spv-order',6000)));
+  const com=Math.max(0.03,Math.min(0.20,g('spv-comm',5)/100));
+  const mo=Math.max(200,Math.min(2000,g('spv-orders',620)));
+  const ri=Math.max(1,Math.min(8,g('spv-riders',3)));
+  const dpd=Math.max(8,Math.min(20,g('spv-dpd',15)));
+  const wd=Math.max(25,Math.min(31,g('spv-wd',30)));
+  const rsal=Math.max(20000,Math.min(50000,g('spv-rsal',28000)));
+  const fuel=Math.max(3000,Math.min(20000,g('spv-fuel',8000)));
+  const sc=Math.max(30000,Math.min(120000,g('spv-store',62000)));
+  const fc=Math.max(200000,Math.min(800000,g('spv-fixed',454000)));
+  const feeOn=document.getElementById('sp-fee-on')?.checked||false;
+  const fee=feeOn?Math.max(0,g('sp-fee-amt',0)):0;
+
+  // Sync sliders to input values
+  const ss=(sid,val)=>{const s=document.getElementById(sid);if(s)s.value=val;};
+  ss('sp-order',ord);ss('sp-comm',com*100);ss('sp-orders',mo);
+  ss('sp-riders',ri);ss('sp-dpd',dpd);ss('sp-wd',wd);
+  ss('sp-rsal',rsal);ss('sp-fuel',fuel);ss('sp-store',sc);ss('sp-fixed',fc);
 
   const cap=ri*dpd*wd;
-  const varPool=ri*rc+sc;
+  const varPool=ri*(rsal+fuel)+sc;
   const varPer=mo>0?varPool/mo:0;
   const fixPer=mo>0?fc/mo:0;
-  const revPer=ord*com;
+  const commPer=ord*com;
+  const revPer=commPer+fee;
   const conPer=revPer-varPer;
-  const totalRev=revPer*mo;
+  const totalCom=commPer*mo;
+  const totalFee=fee*mo;
   const totalCon=conPer*mo;
   const net=totalCon-fc;
   const util=cap>0?Math.round(mo/cap*100):0;
+  const actualDpd=ri>0&&wd>0?Math.round(mo/ri/wd*10)/10:0;
+  const freqMins=actualDpd>0?Math.round(12*60/actualDpd):0;
   const be=conPer>0?Math.ceil(fc/conPer):null;
-  const beSize=com>0?Math.ceil((varPer+fixPer)/com):null;
+  const beSize=com>0?Math.ceil((varPer+fixPer-fee)/com):null;
 
   const set=(id,t,c)=>{const e=document.getElementById(id);if(e){e.textContent=t;if(c)e.style.color=c;}};
   const G='var(--grn)',R='var(--red)',A='var(--acc)';
@@ -5280,19 +5304,27 @@ function spCalc(){
   set('sp-fixper',spFmt(fixPer));
   set('sp-contrib',spFmt(conPer),conPer>=0?G:R);
 
-  if(beSize)set('sp-besize','PKR '+Math.round(beSize).toLocaleString(),beSize<=ord?G:beSize<=10000?A:R);
-  else set('sp-besize','—',R);
+  if(beSize&&beSize>0)set('sp-besize','PKR '+Math.round(beSize).toLocaleString(),beSize<=ord?G:beSize<=10000?A:R);
+  else set('sp-besize',feeOn?'Fee covers it':'—',feeOn?G:R);
 
-  if(be){set('sp-bevol',be.toLocaleString(),be<=mo?G:be<=cap?A:R);set('sp-bevol-s',be<=mo?'✓ you are above this':be<=cap?'+'+(be-mo)+' needed':'exceeds capacity');}
+  if(be){set('sp-bevol',be.toLocaleString(),be<=mo?G:be<=cap?A:R);set('sp-bevol-s',be<=mo?'✓ exceeded by '+(mo-be):'+'+(be-mo)+' needed');}
   else{set('sp-bevol','—',R);set('sp-bevol-s','fix unit economics first');}
 
-  set('spb-rev',spFmtK(totalRev));
+  set('sp-dpd-act',actualDpd.toFixed(1)+'/day',actualDpd>16?R:actualDpd>12?A:G);
+  set('sp-dpd-sub','1 every '+freqMins+' min (12hr shift)');
+  set('sp-util',util+'%',util>90?R:util>70?A:G);
+  set('sp-util-sub',mo.toLocaleString()+' of '+cap.toLocaleString()+' capacity');
+
+  set('spb-comm',spFmtK(totalCom));
+  set('spb-fee',spFmtK(totalFee));
+  const feeRow=document.getElementById('spb-fee-row');
+  if(feeRow)feeRow.style.display=feeOn&&fee>0?'flex':'none';
   set('spb-var','− '+spFmtK(varPool));
   set('spb-contrib',spFmtK(totalCon),totalCon>=0?G:R);
   set('spb-fixed','− '+spFmtK(fc));
   set('spb-net',spFmtK(net),net>=0?G:R);
 
-  spRenderAdvisory(net,conPer,be,beSize,cap,mo,com,ord,ri,varPer,fixPer);
+  spRenderAdvisory(net,conPer,be,beSize,cap,mo,com,ord,ri,varPer,fixPer,fee);
 }
 
 function showSpModal(key){
@@ -5303,6 +5335,8 @@ function showSpModal(key){
     con:{title:'Contribution per order',body:'Revenue per order minus variable cost per order. A positive number means each order covers its own delivery cost and contributes something toward fixed costs. Break-even on contribution (not overall) is the first milestone — you need this positive before volume growth helps.'},
     besize:{title:'Break-even order size',body:'The average order value needed so that commission earned covers both variable AND fixed costs per order, at current order volume. Slide monthly orders up and watch this drop — higher volume spreads fixed costs thinner, lowering the required basket size.'},
     bevol:{title:'Break-even volume',body:'Monthly orders needed so that total contribution covers all fixed costs. At current avg order size. Slide avg order size up and watch this drop — larger baskets earn more commission per order, so fewer orders are needed to cover fixed costs.'},
+    dpd:{title:'Actual deliveries per rider per day',body:'Current monthly orders divided by number of riders divided by working days. Shows the real workload each rider carries today. Colour coded: green under 12/day (comfortable), amber 12–16/day (busy), red above 16/day (at risk of delays). Also shows how frequently each rider leaves — e.g. 1 every 50 minutes in a 12-hour shift.'},
+    util:{title:'Rider utilisation',body:'How much of your theoretical maximum rider capacity you are using. At 15 deliveries per rider per day with 3 riders and 30 working days, capacity is 1,350 orders/month. Above 90% means you are close to the ceiling and service quality may suffer. Below 50% means you are paying for rider capacity you are not using.'},
   };
   const m=modals[key];if(!m)return;
   const ol=document.createElement('div');
@@ -5317,7 +5351,7 @@ function showSpModal(key){
   document.addEventListener('keydown',function esc(e){if(e.key==='Escape'){ol.remove();document.removeEventListener('keydown',esc);}});
 }
 
-function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,comm,orderSize,riders,varPer,fixPer){
+function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,comm,orderSize,riders,varPer,fixPer,fee=0){
   const el=document.getElementById('sp-advisory');if(!el)return;
   let bg,color,html='';
 
