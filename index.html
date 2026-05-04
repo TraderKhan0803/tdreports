@@ -502,8 +502,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .ec-unified{border-collapse:collapse;width:100%;min-width:600px;}
 .ec-unified th,.ec-unified td{padding:7px 10px;border-bottom:1px solid var(--bdr);white-space:nowrap;font-size:12px;}
 .ec-unified thead th{background:var(--sur2);color:var(--t3);font-family:\'DM Mono\',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.5px;text-align:left;position:sticky;top:0;z-index:3;}
-.ec-unified thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:5;background:var(--sur2);}
-.ec-unified td:first-child{position:sticky;left:0;background:var(--sur);z-index:2;border-right:1px solid var(--bdr);min-width:180px;max-width:210px;}
+.ec-unified thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:5;background:var(--sur2);min-width:80px;max-width:250px;width:150px;resize:horizontal;overflow:hidden;cursor:col-resize;}
+.ec-unified td:first-child{position:sticky;left:0;background:var(--sur);z-index:2;border-right:1px solid var(--bdr);min-width:80px;max-width:250px;width:150px;resize:horizontal;overflow:hidden;}
 .ec-unified tr:hover td{background:var(--sur2);}
 .ec-unified tr:hover td:first-child{background:var(--sur3);}
 .ec-section-hd td{background:var(--sur2) !important;cursor:pointer;font-weight:700;}
@@ -1239,15 +1239,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
     <!-- ═══ EXEC: GROWTH & RETENTION ═══ -->
     <div class="gr-panel" id="tab-ec-growth">
-      <div style="border-bottom:1px solid var(--bdr);background:var(--sur2);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;">Segment:</span>
-        <div style="display:flex;gap:3px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;">
-          <button id="gr-seg-b2c" onclick="setGrSegment('B2C')" style="padding:4px 12px;border:none;background:var(--acc);color:#fff;font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2C</button>
-          <button id="gr-seg-all" onclick="setGrSegment('all')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">Combined</button>
-          <button id="gr-seg-b2b" onclick="setGrSegment('B2B')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2B</button>
-        </div>
-        <span style="font-size:10px;color:var(--t3);display:none;" class="gr-seg-hint">Affects LTV, Avg Order Size, and operational metrics</span>
-      </div>
       <div id="gr-body">
         <div style="color:var(--t3);font-size:12px;padding:40px;text-align:center;">Loading metrics…</div>
       </div>
@@ -1604,7 +1595,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button id="ex-tab-upload"   onclick="switchExecTab('upload')"   class="dbtn on"  style="font-size:11px;">📤 Upload P&L</button>
         <button id="ex-tab-input"    onclick="switchExecTab('input')"    class="dbtn"     style="font-size:11px;">✏ Data Entry</button>
         <button id="ex-tab-settings" onclick="switchExecTab('settings')" class="dbtn"     style="font-size:11px;">⚙ Settings</button>
-        <button id="ex-tab-scenario" onclick="switchExecTab('scenario')" class="dbtn"     style="font-size:11px;">🎯 Scenario Planner</button>
+        <button id="ex-tab-scenario" onclick="switchExecTab('scenario')" class="dbtn" style="font-size:11px;display:none;">🎯 Scenario Planner</button>
       </div>
 
       <!-- P&L UPLOAD -->
@@ -3140,11 +3131,8 @@ function switchSuperTab(tab){
     if(cont)cont.style.display=isActive?'':'none';
   });
   if(tab==='exec'){exRenderAll();
-    // Init scenario tab visibility
-    setTimeout(()=>{
-      const _scBtn=document.getElementById('ex-tab-scenario');
-      if(_scBtn&&curUser){const _a=getUserAccess(curUser);_scBtn.style.display=_a.scenario?'':'none';}
-    },50);
+    const _ss=()=>{const b=document.getElementById('ex-tab-scenario');if(b&&curUser){const a=getUserAccess(curUser);b.style.display=a.scenario?'':'none';}};
+    _ss();setTimeout(_ss,300);
   }
   if(tab==='ai')aiRenderSuperPanel();
 }
@@ -3286,7 +3274,8 @@ function switchExecTab(tab){
     const isActive=t===tab;
     if(btn){
       btn.className='dbtn'+(isActive?' on':'');
-      if(t==='scenario')btn.style.display=_acc.scenario?'':'none';
+      // Scenario tab visibility controlled separately — don't override here
+      if(t!=='scenario')btn.style.display='';
     }
     if(cont)cont.style.display=isActive?'':'none';
   });
@@ -6112,6 +6101,12 @@ function grRender(){
         <button onclick="grApplyCustomRange()" style="padding:3px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">Apply</button>
       </div>
       <div style="width:1px;background:var(--bdr);flex-shrink:0;"></div>
+      <div style="display:flex;gap:3px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;">
+        <button id="gr-seg-b2c" onclick="setGrSegment('B2C')" style="padding:3px 10px;border:none;background:${grSegment==='B2C'?'var(--acc)':'transparent'};color:${grSegment==='B2C'?'#fff':'var(--t2)'};font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2C</button>
+        <button id="gr-seg-all" onclick="setGrSegment('all')" style="padding:3px 10px;border:none;background:${grSegment==='all'?'var(--acc)':'transparent'};color:${grSegment==='all'?'#fff':'var(--t2)'};font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">All</button>
+        <button id="gr-seg-b2b" onclick="setGrSegment('B2B')" style="padding:3px 10px;border:none;background:${grSegment==='B2B'?'var(--acc)':'transparent'};color:${grSegment==='B2B'?'#fff':'var(--t2)'};font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2B</button>
+      </div>
+      <div style="width:1px;background:var(--bdr);flex-shrink:0;"></div>
       <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
       <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
       <span style="font-size:10px;color:var(--t3);align-self:center;font-family:\'DM Mono\',monospace;">${grPeriod==='t12m'?'Last 12 months':'All time'} · ${allCusts.length} customers · ${grOrders.length} orders</span>
@@ -6388,11 +6383,14 @@ function setMode(mode){
     exLoadData();
     ecShowGrowthTabIfAllowed();
     ecSwitchTab('report');
-    // Show scenario tab for users with access
-    setTimeout(()=>{
+    // Show scenario tab for users with access — multiple attempts for reliability
+    const _showScenario=()=>{
       const _scBtn=document.getElementById('ex-tab-scenario');
       if(_scBtn&&curUser){const _a=getUserAccess(curUser);_scBtn.style.display=_a.scenario?'':'none';}
-    },100);
+    };
+    _showScenario();
+    setTimeout(_showScenario,200);
+    setTimeout(_showScenario,500);
   }
   // Update bottom nav on mobile
   bnUpdateActive(mode);
