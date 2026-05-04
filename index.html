@@ -1,7 +1,7 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 29
+  Version  : 30
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -562,6 +562,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   .gr-kpi-grid{grid-template-columns:1fr 1fr;}
   .gr-kpi-grid-2{grid-template-columns:1fr 1fr;}
   .gr-kpi-value{font-size:16px;}
+}
+
+/* ── EXEC REPORT TABLE RESPONSIVE ── */
+.ec-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ec-col-cat{min-width:80px;max-width:250px;width:150px;resize:horizontal;overflow:hidden;}
+@media(max-width:768px){
+  .ec-col-cat{width:90px;min-width:70px;}
+  .ec-table td,.ec-table th{padding:4px 6px;font-size:10px;}
+  .ec-table .ec-expand-cell{display:none;}
 }
 
 /* ── B2B ROW TINTING ── */
@@ -1237,7 +1246,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button id="gr-seg-all" onclick="setGrSegment('all')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">Combined</button>
           <button id="gr-seg-b2b" onclick="setGrSegment('B2B')" style="padding:4px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2B</button>
         </div>
-        <span style="font-size:10px;color:var(--t3);">Affects LTV, Avg Order Size, and operational metrics</span>
+        <span style="font-size:10px;color:var(--t3);display:none;" class="gr-seg-hint">Affects LTV, Avg Order Size, and operational metrics</span>
       </div>
       <div id="gr-body">
         <div style="color:var(--t3);font-size:12px;padding:40px;text-align:center;">Loading metrics…</div>
@@ -1818,7 +1827,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 'use strict';
 // ═══════════════════════════════════════════════
 // TEZZ DELIVERY ANALYTICS DASHBOARD
-// Version: 29 | Updated: May 2026
+// Version: 30 | Updated: May 2026
 // GitHub: TraderKhan0803/tdreports
 // ═══════════════════════════════════════════════
 // SUPABASE CONFIG
@@ -2087,12 +2096,23 @@ async function loadAllData(){
     if(layoutCfg&&layoutCfg.value1){try{panelLayout=JSON.parse(layoutCfg.value1);}catch(e){panelLayout={};}}
 
     // Phase 1: Current month only — fast
-    const mk=getCurrentMonthKey();
-    const [,mm]=mk.split('-').map(Number);
-    const curYear=new Date().getFullYear();
+    let mk=getCurrentMonthKey();
+    let [curYearStr,curMonStr]=mk.split('-');
+    let curYear=parseInt(curYearStr),mm=parseInt(curMonStr);
     showLoader('Loading current month…');
-    // Fetch current month orders — products loaded in Phase 2
-    const curOrders=await fetchAllRows('orders','year=eq.'+curYear+'&month=eq.'+mm);
+    let curOrders=await fetchAllRows('orders','year=eq.'+curYear+'&month=eq.'+mm);
+
+    // Fallback: if no data for current month, use most recent month with data
+    if(!curOrders.length){
+      showLoader('No data for current month — finding latest…');
+      // Try last 6 months
+      for(let i=1;i<=6;i++){
+        let d=new Date(curYear,mm-1-i,1);
+        let fy=d.getFullYear(),fm=d.getMonth()+1;
+        const tryOrders=await fetchAllRows('orders','year=eq.'+fy+'&month=eq.'+fm);
+        if(tryOrders.length){curOrders=tryOrders;curYear=fy;mm=fm;mk=fy+'-'+String(fm).padStart(2,'0');break;}
+      }
+    }
 
     S.orders=curOrders.map(parseOrder);
     S.prods=[]; // products loaded in background Phase 2
@@ -3196,7 +3216,7 @@ const EX_DEFAULT_EXP_CATS=['Warehouse Rent','POL Van','POL Riders','Salaries','M
 
 let exData={manual:{},settings:{defaultRate:EX_DEFAULT_RATE,revCats:[...EX_DEFAULT_REV_CATS],expCats:[...EX_DEFAULT_EXP_CATS]}};
 let exCurrency='PKR';
-let exCurTab='pl';
+let exCurTab='upload';
 let exCharts={};
 
 function exLoadData(){
@@ -3252,11 +3272,16 @@ function exFmtSign(v){
 // ── DATA ENTRY ────────────────────────────────────────────────────────────────
 function switchExecTab(tab){
   exCurTab=tab;
+  // Show scenario tab only for users with access
+  const _acc=getUserAccess(curUser);
   ['upload','input','settings','scenario'].forEach(t=>{
     const btn=document.getElementById('ex-tab-'+t);
     const cont=document.getElementById('ex-content-'+t);
     const isActive=t===tab;
-    if(btn)btn.className='dbtn'+(isActive?' on':'');
+    if(btn){
+      btn.className='dbtn'+(isActive?' on':'');
+      if(t==='scenario')btn.style.display=_acc.scenario?'':'none';
+    }
     if(cont)cont.style.display=isActive?'':'none';
   });
   if(tab==='upload')plRenderUploadPanel();
@@ -6004,11 +6029,6 @@ function grRender(){
         <button onclick="grApplyCustomRange()" style="padding:3px 10px;background:var(--acc);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;">Apply</button>
       </div>
       <div style="width:1px;background:var(--bdr);flex-shrink:0;"></div>
-      <div class="ec-cur-toggle">
-        <button class="ec-cur-btn${grCtype==='all'?' active':''}" id="gr-ct-all" onclick="grSetCtype('all')">All</button>
-        <button class="ec-cur-btn${grCtype==='B2C'?' active':''}" id="gr-ct-b2c" onclick="grSetCtype('B2C')">B2C</button>
-        <button class="ec-cur-btn${grCtype==='B2B'?' active':''}" id="gr-ct-b2b" onclick="grSetCtype('B2B')">B2B</button>
-      </div>
       <button onclick="grDownloadExcel()" style="padding:5px 13px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
       <button onclick="grDownloadImage()" style="padding:5px 13px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Image</button>
       <span style="font-size:10px;color:var(--t3);align-self:center;font-family:\'DM Mono\',monospace;">${grPeriod==='t12m'?'Last 12 months':'All time'} · ${allCusts.length} customers · ${grOrders.length} orders</span>
@@ -6019,7 +6039,7 @@ function grRender(){
     <div class="gr-section">
       <div class="gr-section-title">Customer Lifetime Value</div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">PKR ${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">LTV — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'All'} <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('ltv')">ⓘ</span></div><div class="gr-kpi-value" style="color:var(--grn);">${inUSD?'$':'PKR '}${fmtPKR(grSegment==='B2C'?ltvB2C*effectiveMarginRate:grSegment==='B2B'?ltvB2B*effectiveMarginRate:ltvAll*effectiveMarginRate)}</div><div class="gr-kpi-sub">margin-adjusted (${Math.round(effectiveMarginRate*100)}%)</div></div>
       </div>
     </div>
 
@@ -6031,7 +6051,7 @@ function grRender(){
         <div class="gr-kpi"><div class="gr-kpi-label">Avg order gap</div><div class="gr-kpi-value">${avgGap} days</div><div class="gr-kpi-sub">avg days between orders</div><div class="gr-kpi-tooltip"><div class="gr-kpi-formula">Sum of (days between consecutive orders) ÷ Total gaps</div><div class="gr-kpi-tdesc">How frequently customers reorder. Lower = more habitual buyers.</div></div></div>
       </div>
       <div class="gr-kpi-grid">
-        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'Combined'}</div><div class="gr-kpi-value" style="color:var(--t2);">PKR ${fmtPKR(grSegment==='B2C'?avgOrdB2C:grSegment==='B2B'?avgOrdB2B:(avgOrdB2C+avgOrdB2B)/2)}</div><div class="gr-kpi-sub">avg per order</div></div>
+        <div class="gr-kpi"><div class="gr-kpi-label">Avg Order Size — ${grSegment==='B2C'?'B2C':grSegment==='B2B'?'B2B':'Combined'}</div><div class="gr-kpi-value" style="color:var(--t2);">${fmtPKR(grSegment==='B2C'?avgOrdB2C:grSegment==='B2B'?avgOrdB2B:(avgOrdB2C+avgOrdB2B)/2)}</div><div class="gr-kpi-sub">avg per order</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 14d <span style="font-size:9px;color:var(--acc);cursor:pointer;" onclick="showGrModal('repeat1')">ⓘ</span></div><div class="gr-kpi-value" style="color:${rr14>=30?'var(--grn)':rr14>=15?'var(--acc)':'var(--red)'};">${rr14}%</div><div class="gr-kpi-sub">${firstCount} new customers sampled</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 30d</div><div class="gr-kpi-value" style="color:${rr30>=40?'var(--grn)':rr30>=20?'var(--acc)':'var(--red)'};">${rr30}%</div><div class="gr-kpi-sub">within 30 days</div></div>
         <div class="gr-kpi"><div class="gr-kpi-label">Repeat after 1st — 60d</div><div class="gr-kpi-value" style="color:${rr60>=50?'var(--grn)':rr60>=30?'var(--acc)':'var(--red)'};">${rr60}%</div><div class="gr-kpi-sub">within 60 days</div></div>
