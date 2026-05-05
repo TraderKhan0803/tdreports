@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 32
+  Version  : 33
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -1160,7 +1160,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <!-- ═══ RAABTA: OUTREACH ═══ -->
     <div class="rb-panel" id="tab-rb-outreach" style="overflow-y:auto;padding:14px 18px;">
       <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
-        <button class="filter-toggle" id="rb-filter-toggle-btn" onclick="toggleFilterDrawer()" style="margin-left:0;">
+        <button class="filter-toggle" id="rb-filter-toggle-btn" onclick="rbToggleFilterModal()" style="margin-left:0;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           Filters <span class="fbadge" id="rb-fbadge" style="display:none">0</span>
         </button>
@@ -6668,7 +6668,7 @@ function rbOpenC(id){
             +'</button>';
         }
         const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
-        return '<button class="rb-tpl-btn" onclick="rbSTpl(\''+c.id+'\',\''+t.id+'\',\''+lnk+'\')"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
+        return '<button class="rb-tpl-btn" data-cid="'+c.id+'" data-tid="'+t.id+'" data-lnk="'+lnk.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" onclick="rbSTplBtn(this)"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
       }).join('');
     }
   }
@@ -6678,6 +6678,62 @@ function rbOpenC(id){
   const note=document.getElementById('rb-mnote');if(note)note.value='';
   const mo=document.getElementById('rb-mo');if(mo)mo.value='';
   const cm=document.getElementById('rb-cm');if(cm)cm.classList.add('open');
+}
+
+function rbToggleFilterModal(){
+  let modal=document.getElementById('rb-filter-modal');
+  if(modal){modal.remove();return;}
+  // Build same filter options as analytics drawer
+  modal=document.createElement('div');
+  modal.id='rb-filter-modal';
+  modal.style.cssText='position:fixed;top:60px;right:16px;z-index:500;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;min-width:280px;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,.25);';
+
+  // Build city tags from current data
+  const cityTags=_availCities.length
+    ?_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${c.replace(/'/g,"\'")}')">${c}</button>`).join('')
+    :'<span style="font-size:11px;color:var(--t3);">Load data first</span>';
+
+  // Type buttons
+  const allOn=fSt.ctype==='all',b2bOn=fSt.ctype==='B2B',b2cOn=fSt.ctype==='B2C';
+
+  modal.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:600;color:var(--txt);">Filters</span>
+      <button onclick="document.getElementById('rb-filter-modal').remove()" style="background:transparent;border:none;color:var(--t3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+    </div>
+    <div class="frow" style="margin-bottom:10px;">
+      <span class="flbl">Type</span>
+      <button class="ftag ${allOn?'on':''}" onclick="setCtype('all');rbRefreshFilterModal()">All</button>
+      <button class="ftag ${b2bOn?'on':''}" onclick="setCtype('B2B');rbRefreshFilterModal()">B2B</button>
+      <button class="ftag ${b2cOn?'on':''}" onclick="setCtype('B2C');rbRefreshFilterModal()">B2C</button>
+    </div>
+    <div class="frow" style="margin-bottom:10px;">
+      <span class="flbl">City</span>
+      <div id="rb-flt-cities" style="display:flex;gap:4px;flex-wrap:wrap;">${cityTags}</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+      <button onclick="clearDrawerFilters();rbRefreshFilterModal()" style="padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;">Clear all</button>
+      <button onclick="document.getElementById('rb-filter-modal').remove()" style="padding:5px 12px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Done</button>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  // Close on outside click
+  setTimeout(()=>{
+    document.addEventListener('click',function handler(e){
+      const m=document.getElementById('rb-filter-modal');
+      if(m&&!m.contains(e.target)&&e.target.id!=='rb-filter-toggle-btn'&&!e.target.closest('#rb-filter-toggle-btn')){
+        m.remove();document.removeEventListener('click',handler);
+      }
+    });
+  },100);
+}
+
+function rbRefreshFilterModal(){
+  // Re-render the open filter modal to reflect updated state
+  const modal=document.getElementById('rb-filter-modal');
+  if(modal){rbToggleFilterModal();rbToggleFilterModal();}
+  rbRenderOutreach();
 }
 
 function rbToggleHistory(){
@@ -6837,6 +6893,7 @@ function rbTplSendFilled(cid,tid,custPhone,placeholders){
   document.getElementById('ph-overlay')?.remove();
   const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
   window.open(lnk,'_blank');
+  // rbSTpl logs but does NOT open WA again
   rbSTpl(cid,tid,lnk);
 }
 
@@ -7979,44 +8036,22 @@ function rbRenderOutreach(){
       </div>
     </div>`;
 
-  // Outreach sort state
-  const _otSort={};
   function outreachSection(id, title, color, rows, cols, filterHtml){
     const tbId='ot-tbody-'+id;
-    // Store rows for re-sort
-    _otSort[id]={rows:[...rows],cols,dir:null,col:null};
+    // Store rows in global map so onclick can reach them
+    window._rbOtData=window._rbOtData||{};
+    window._rbOtData[id]={rows:[...rows],dir:null,col:null};
+
     function buildRows(rs){
-      return rs.map((r,i)=>`<tr class="r" style="cursor:pointer;">
+      return rs.map(r=>`<tr class="r" style="cursor:pointer;">
         ${r.cells}
         <td style="text-align:right;padding:4px 8px;">${custBell(r.name)}</td>
       </tr>`).join('');
     }
-    function sortOt(colIdx,thEl){
-      const s=_otSort[id];
-      const dir=(s.col===colIdx&&s.dir==='asc')?'desc':'asc';
-      s.col=colIdx;s.dir=dir;
-      // Sort by text content of cell at colIdx
-      const sorted=[...s.rows].sort((a,b)=>{
-        const getCell=(cells,idx)=>{const d=document.createElement('div');d.innerHTML=cells;const tds=[...d.querySelectorAll('td')];return tds[idx]?tds[idx].textContent.trim():'';};
-        const av=getCell(a.cells,colIdx),bv=getCell(b.cells,colIdx);
-        const an=parseFloat(av.replace(/[^0-9.-]/g,'')),bn=parseFloat(bv.replace(/[^0-9.-]/g,''));
-        const cmp=isNaN(an)||isNaN(bn)?av.localeCompare(bv):an-bn;
-        return dir==='asc'?cmp:-cmp;
-      });
-      const tbody=document.getElementById(tbId);if(!tbody)return;
-      tbody.innerHTML=buildRows(sorted);
-      // re-wire clicks
-      [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
-        const name=sorted[i]?.name;if(!name)return;
-        tr.onclick=(e)=>{if(e.target.classList.contains('alert-bell')||e.target.tagName==='SPAN'&&e.target.style.textDecoration==='underline')return;rbOpenOutreachCust(name);};
-      });
-      // update header styles
-      const tbl=document.getElementById('ot-tbl-'+id);
-      if(tbl)[...tbl.querySelectorAll('thead th.sortable')].forEach((h,i)=>{h.classList.remove('asc','desc');if(i===colIdx)h.classList.add(dir);});
-    }
-    const hdrCells=cols.map((c,i)=>`<th class="sortable" style="${c.align==='right'?'text-align:right;':''}" onclick="(function(){var s=document.getElementById('ot-tbl-${id}');if(s)s._sortFn&&s._sortFn(${i});})()">${c.label}</th>`).join('');
+
+    const hdrCells=cols.map((c,i)=>`<th class="sortable" style="${c.align==='right'?'text-align:right;':''}" onclick="rbOtSort('${id}',${i})">${c.label}</th>`).join('');
     const bodyRows=buildRows(rows);
-    const html=`<div class="rb-card" style="margin-bottom:12px;">
+    return`<div class="rb-card" style="margin-bottom:12px;">
       <div class="rb-card-hd">
         <div>
           <div class="rb-card-title" style="color:${color}">${title}</div>
@@ -8031,12 +8066,6 @@ function rbRenderOutreach(){
         </table>
       </div>
     </div>`;
-    // Wire sort function after render
-    setTimeout(()=>{
-      const tbl=document.getElementById('ot-tbl-'+id);
-      if(tbl)tbl._sortFn=sortOt;
-    },0);
-    return html;
   }
 
   const filterInput=(id,key,label,suffix)=>`<span style="font-size:10px;color:var(--t3);">${label}</span><input type="number" id="${id}" value="${_otFilters[key]}" min="1" style="width:52px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;" onchange="otSetFilter('${key}',this.value)">${suffix?`<span style="font-size:10px;color:var(--t3);">${suffix}</span>`:''}`;
@@ -8092,6 +8121,52 @@ function rbRenderOutreach(){
       if(!name)return;
       tr.onclick=(e)=>{if(e.target.classList.contains('alert-bell')||e.target.tagName==='SPAN'&&e.target.style.textDecoration==='underline')return;rbOpenOutreachCust(name);};
     });
+  });
+}
+
+// Global sort handler for outreach tables — called from th onclick
+function rbOtSort(id, colIdx){
+  const data=window._rbOtData&&window._rbOtData[id];
+  if(!data)return;
+  const dir=(data.col===colIdx&&data.dir==='asc')?'desc':'asc';
+  data.col=colIdx;data.dir=dir;
+
+  const sorted=[...data.rows].sort((a,b)=>{
+    // Parse cell text at colIdx
+    const tmp=document.createElement('div');
+    tmp.innerHTML='<table><tbody><tr>'+a.cells+'</tr></tbody></table>';
+    const aTds=[...tmp.querySelectorAll('td')];
+    tmp.innerHTML='<table><tbody><tr>'+b.cells+'</tr></tbody></table>';
+    const bTds=[...tmp.querySelectorAll('td')];
+    const av=aTds[colIdx]?aTds[colIdx].textContent.trim():'';
+    const bv=bTds[colIdx]?bTds[colIdx].textContent.trim():'';
+    const an=parseFloat(av.replace(/[^0-9.-]/g,'')),bn=parseFloat(bv.replace(/[^0-9.-]/g,''));
+    const cmp=isNaN(an)||isNaN(bn)?av.localeCompare(bv,undefined,{numeric:true}):an-bn;
+    return dir==='asc'?cmp:-cmp;
+  });
+
+  const tbody=document.getElementById('ot-tbody-'+id);
+  if(!tbody)return;
+
+  // Rebuild rows
+  function custBell(name){return getBellHtml('customer',name);}
+  tbody.innerHTML=sorted.map(r=>`<tr class="r" style="cursor:pointer;">${r.cells}<td style="text-align:right;padding:4px 8px;">${custBell(r.name)}</td></tr>`).join('');
+
+  // Re-wire row clicks
+  [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+    const name=sorted[i]?.name;if(!name)return;
+    tr.onclick=(e)=>{
+      if(e.target.classList.contains('alert-bell'))return;
+      if(e.target.tagName==='SPAN'&&e.target.style.textDecoration==='underline')return;
+      rbOpenOutreachCust(name);
+    };
+  });
+
+  // Update header sort indicators
+  const tbl=document.getElementById('ot-tbl-'+id);
+  if(tbl)[...tbl.querySelectorAll('thead th.sortable')].forEach((h,i)=>{
+    h.classList.remove('asc','desc');
+    if(i===colIdx)h.classList.add(dir);
   });
 }
 
