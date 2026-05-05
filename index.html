@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 34
-  Updated  : April 2026
+  Version  : 36
+  Updated  : 5th April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
 -->
@@ -1171,7 +1171,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <!-- ═══ RAABTA: TEMPLATES ═══ -->
     <div class="rb-panel" id="tab-rb-templates">
       <div class="rb-card">
-        <div class="rb-card-hd"><div class="rb-card-title">Message Templates</div></div>
+        <div class="rb-card-hd" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="rb-card-title">Message Templates</div>
+          <button onclick="rbShowTemplateGuide()" style="background:transparent;border:1px solid var(--bdr);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--t3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;" title="Template Guide">? Template Guide</button>
+        </div>
         <div class="rb-card-body" id="rb-tpl-list"></div>
       </div>
     </div>
@@ -1346,7 +1349,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </select>
       </div>
       <div class="rb-dvd"></div>
-      <div class="rb-sec">Send via WhatsApp — tap to open pre-filled message</div>
+      <div class="rb-sec" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <span>Send via WhatsApp — tap to open pre-filled message</span>
+        <button onclick="rbShowTemplateGuide()" style="background:transparent;border:1px solid var(--bdr);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--t3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;" title="Template Guide">? Template Guide</button>
+      </div>
       <div class="rb-tpl-grid" id="rb-mt"></div>
       <div class="rb-dvd"></div>
       <div class="rb-sec">Log This Interaction</div>
@@ -1582,7 +1588,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       </div>
       <!-- Template Editor -->
       <div class="adm-card mb12">
-        <div class="adm-title">💬 Message Templates</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+          <div class="adm-title" style="margin-bottom:0;">💬 Message Templates</div>
+          <button onclick="rbShowTemplateGuide()" style="background:transparent;border:1px solid var(--bdr);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--t3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;" title="Template Guide">? Template Guide</button>
+        </div>
         <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Edit template text and timing. Changes save instantly and reflect everywhere in Raabta.</div>
         <div id="tpl-editor-list"></div>
         <div class="tpl-add-form">
@@ -6648,7 +6657,7 @@ function rbOpenC(id){
   const tpls=rbGetTemplates();
   const mt=document.getElementById('rb-mt');
   // Use customer's phone for outbound messaging
-  const custPhone=(c.phone||'').replace(/\D/g,'');
+  const custPhone=rbNormalizePhone(c.phone||'');
   const phoneValid=custPhone.length>=7;
   if(mt){
     if(!phoneValid){
@@ -6667,7 +6676,8 @@ function rbOpenC(id){
             +'<span style="display:block;font-size:9px;color:var(--acc);margin-top:2px;">⚠ Needs: '+esc(placeholder)+'</span>'
             +'</button>';
         }
-        const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
+        const normPhone=rbNormalizePhone(custPhone);
+        const lnk=normPhone?'https://wa.me/'+normPhone+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
         return '<button class="rb-tpl-btn" data-cid="'+c.id+'" data-tid="'+t.id+'" data-lnk="'+lnk.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" onclick="rbSTplBtn(this)"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
       }).join('');
     }
@@ -6720,6 +6730,61 @@ function rbToggleFilterModal(){
     // Rebuild city/status tags for current data
     buildDynamicFilters();
   }
+}
+
+function rbShowTemplateGuide(){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:800;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML=`
+    <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);width:100%;max-width:560px;padding:24px 24px 20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--acc);">WhatsApp Template Guide</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px;">How to use, edit, and create Raabta message templates</div>
+        </div>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0;">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.7;">
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">What is a template?</div>
+        <p style="margin:0 0 14px;">A pre-written WhatsApp message. Click a button in Raabta → dashboard fills in the customer name → WhatsApp opens pre-typed → CSR hits Send.</p>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">Two types of templates</div>
+        <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 12px;margin-bottom:14px;">
+          <div style="margin-bottom:6px;"><span style="color:var(--txt);font-weight:600;">Instant (one click)</span> — No placeholders to fill. Opens WhatsApp immediately. e.g. Welcome, Delivery Check-In, Eid Greetings.</div>
+          <div><span style="color:var(--acc);font-weight:600;">Fill-in (shows ⚠)</span> — Has fields to complete first. A pop-up appears, CSR fills in values, then clicks Send. e.g. Order On the Way → needs [Time].</div>
+        </div>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">Placeholders</div>
+        <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 12px;margin-bottom:6px;font-family:'DM Mono',monospace;font-size:11px;">
+          <div style="margin-bottom:5px;"><span style="color:var(--grn);">[Name]</span> &nbsp;→&nbsp; <span style="color:var(--t2);">auto-filled with customer name — no input needed</span></div>
+          <div style="margin-bottom:5px;"><span style="color:var(--acc);">[Time]</span> &nbsp;→&nbsp; <span style="color:var(--t2);">CSR types the delivery time</span></div>
+          <div style="margin-bottom:5px;"><span style="color:var(--acc);">[Item]</span> &nbsp;→&nbsp; <span style="color:var(--t2);">CSR types the item name</span></div>
+          <div><span style="color:var(--acc);">[Deals]</span> &nbsp;→&nbsp; <span style="color:var(--t2);">CSR types or pastes the full deals list</span></div>
+        </div>
+        <p style="font-size:11px;color:var(--t3);margin:0 0 14px;">Rules: placeholder must start with a capital letter. [Name] is always auto-filled and never shown as an input field.</p>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">How to edit a template</div>
+        <p style="margin:0 0 14px;">Go to <strong>Admin Panel → Tezz Raabta → Message Templates</strong>. Click any template to expand it, edit the text, and save. Changes apply immediately across all of Raabta.</p>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">How to add a template</div>
+        <p style="margin:0 0 14px;">Scroll to the bottom of Message Templates in Admin Panel and use the <strong>+ Add New Template</strong> form. Give it a name, timing note, and message body.</p>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">Language toggle</div>
+        <p style="margin:0 0 14px;">When a customer's language is set to <strong>Urdu</strong>, the Urdu version of the template is used. If no Urdu version exists, English is sent regardless of language setting.</p>
+
+        <div style="font-weight:700;color:var(--txt);margin:0 0 6px;">Tips</div>
+        <ul style="padding-left:16px;margin:4px 0 0;color:var(--t2);">
+          <li style="margin-bottom:4px;">Use two blank lines in your message for paragraph spacing in WhatsApp</li>
+          <li style="margin-bottom:4px;">Paste emojis directly into template text — they work fine</li>
+          <li style="margin-bottom:4px;">Keep messages under ~300 characters to avoid feeling like spam</li>
+          <li>Test every new template on a known customer before using it on others</li>
+        </ul>
+
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 function rbToggleHistory(){
@@ -6859,10 +6924,18 @@ function rbTplFillPlaceholder(cid,tid,custName,custPhone){
     +inputsHtml
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">'
     +'<button onclick="document.getElementById(\'ph-overlay\').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>'
-    +'<button onclick="rbTplSendFilled(\''+cid+'\',\''+tid+'\',\''+custPhone+'\','+JSON.stringify(placeholders)+')" style="padding:7px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Send on WhatsApp</button>'
+    +'<button id="ph-send-btn" style="padding:7px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Send on WhatsApp</button>'
     +'</div></div>';
+  // Wire Send button via JS (not onclick attr) to avoid JSON encoding issues
+  overlay._meta={cid,tid,custPhone,placeholders};
   overlay.id='ph-overlay';
   document.body.appendChild(overlay);
+  // Wire Send button safely via JS — avoids JSON/bracket encoding in onclick attr
+  const sendBtn=document.getElementById('ph-send-btn');
+  if(sendBtn&&overlay._meta){
+    const {cid:_cid,tid:_tid,custPhone:_cp,placeholders:_ph}=overlay._meta;
+    sendBtn.onclick=function(){rbTplSendFilled(_cid,_tid,_cp,_ph);};
+  }
   setTimeout(()=>document.getElementById('ph-inp-0')?.focus(),100);
 }
 
@@ -6877,14 +6950,25 @@ function rbTplSendFilled(cid,tid,custPhone,placeholders){
     msg=msg.replace(p,val);
   });
   document.getElementById('ph-overlay')?.remove();
-  const lnk='https://wa.me/'+custPhone+'?text='+encodeURIComponent(msg);
+  const normPhone2=rbNormalizePhone(custPhone);
+  const lnk=normPhone2?'https://wa.me/'+normPhone2+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
   window.open(lnk,'_blank');
-  // rbSTpl logs but does NOT open WA again
   rbSTpl(cid,tid,lnk);
 }
 
+function rbNormalizePhone(raw){
+  // Strip all non-digits
+  let p=(raw||'').replace(/\D/g,'');
+  if(!p||p.length<7)return '';
+  // Already has country code 92
+  if(p.startsWith('92')&&p.length>=11)return p;
+  // Starts with 0 (local format) — replace with 92
+  if(p.startsWith('0'))p='92'+p.slice(1);
+  else if(p.length===10)p='92'+p; // 10-digit without leading zero
+  return p;
+}
+
 function rbSTplBtn(btn){
-  // Reads link safely from data attribute — avoids & encoding issues in onclick
   const cid=btn.dataset.cid;
   const tid=btn.dataset.tid;
   const lnk=btn.dataset.lnk;
@@ -8200,7 +8284,7 @@ const RB_TEMPLATES=[
   {id:'02',name:'Order On the Way',tim:'When rider dispatched',en:`Hi [Name] 🛵\n\nGreat news — your Tezz order is on its way!\nEstimated arrival: [Time]\n\nIf you have any last-minute requests, let us know now.`,ur:`[نام]، خوشخبری! 🛵\n\nآپ کا Tezz آرڈر راستے میں ہے!\nمتوقع وقت: [وقت]\n\nکوئی آخری لمحے کی فرمائش ہو تو ابھی بتائیں۔`},
   {id:'03',name:'Delivery Check-In',tim:'30–60 min after delivery',en:`Hi [Name] 😊\n\nYour Tezz order has been delivered — we hope everything looks perfect!\n\nIf anything is missing or not right, just reply here and we'll sort it out right away.\n\nWe'd love to serve you again soon! 🛒`,ur:`[نام]، السلام علیکم 😊\n\nآپ کا Tezz آرڈر پہنچ گیا — امید ہے سب کچھ بالکل ٹھیک ہے!\n\nاگر کوئی چیز کم ہو تو فوری بتائیں۔ جلد دوبارہ ملیں! 🛒`},
   {id:'04',name:'Delay Apology',tim:'As soon as delay known',en:`Hi [Name],\n\nWe want to let you know your order is running slightly late — we're sorry for the wait! ⏳\n\nNew estimated arrival: [Time]\n\nThank you for your patience.`,ur:`[نام]، السلام علیکم،\n\nآپ کا آرڈر تھوڑی دیر سے پہنچے گا — معذرت! ⏳\n\nنیا متوقع وقت: [وقت]\n\nآپ کے صبر کا شکریہ۔`},
-  {id:'05',name:'Weekly Deals',tim:'Every Monday morning',en:`🛒 Tezz Weekly Deals are here!\n\n🥛 [Item 1] — Rs. [Price]\n🍅 [Item 2] — Rs. [Price]\n🧼 [Item 3] — Rs. [Price]\n\n🚚 Free delivery on orders above Rs. [Amount]\n\nReady to order? Just reply with your list! 📦`,ur:`🛒 Tezz کی ہفتہ وار خاص آفرز!\n\n🥛 [آئٹم 1] — روپے [قیمت]\n🍅 [آئٹم 2] — روپے [قیمت]\n\n🚚 [رقم] سے اوپر آرڈر پر فری ڈیلیوری\n\nبس اپنی لسٹ بھیجیں! 📦`},
+  {id:'05',name:'Weekly Deals',tim:'Every Monday morning',en:`🛒 Tezz Weekly Deals are here!\n\n[Deals]\n\nReady to order? Just reply with your list! 📦`,ur:`🛒 Tezz کی ہفتہ وار خاص آفرز!\n\n[ڈیلز]\n\nبس اپنی لسٹ بھیجیں! 📦`},
   {id:'06',name:'Re-engagement (2 wks)',tim:'Day 14 no new order',en:`Hi [Name] 👋\n\nIt's been a while — we miss you at Tezz! 😊\n\nWe've restocked a few things and have fresh deals on. Want us to send today's list?\n\nJust reply Yes 🛒`,ur:`[نام]، السلام علیکم 👋\n\nکافی وقت ہو گیا — آپ کی کمی محسوس ہوئی! 😊\n\nاس ہفتے کچھ نئی آفرز ہیں۔ کیا آج کی لسٹ بھیجیں؟\n\nبس ہاں لکھیں 🛒`},
   {id:'07',name:'Win-Back (3+ wks)',tim:'Day 21–30 silent',en:`Hi [Name],\n\nWe haven't heard from you in a while 🙂\n\nAs a thank you:\n✅ Free delivery on your next order\n\nJust send us your grocery list!\nOffer valid this week only ⏰`,ur:`[نام]، السلام علیکم،\n\nکافی عرصے سے آپ سے بات نہیں ہوئی 🙂\n\nخاص آفر:\n✅ اگلے آرڈر پر فری ڈیلیوری\n\nبس اپنی لسٹ بھیجیں۔ صرف اس ہفتے! ⏰`},
   {id:'08',name:'Complaint Response',tim:'Within 15 min',en:`Hi [Name],\n\nWe're really sorry to hear about this.\n\nWe're looking into it right now and will get back to you within [X] minutes.\n\nThank you for letting us know. 🙏`,ur:`[نام]، السلام علیکم،\n\nہمیں بہت افسوس ہے۔\n\nہم ابھی اس مسئلے کو دیکھ رہے ہیں اور [X] منٹ میں رابطہ کریں گے۔ 🙏`},
