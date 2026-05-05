@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 33
+  Version  : 34
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -6681,59 +6681,45 @@ function rbOpenC(id){
 }
 
 function rbToggleFilterModal(){
-  let modal=document.getElementById('rb-filter-modal');
-  if(modal){modal.remove();return;}
-  // Build same filter options as analytics drawer
-  modal=document.createElement('div');
-  modal.id='rb-filter-modal';
-  modal.style.cssText='position:fixed;top:60px;right:16px;z-index:500;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;min-width:280px;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,.25);';
+  const drawer=document.getElementById('filter-drawer');
+  const timebar=document.querySelector('.timebar');
+  const drPill=document.getElementById('dr-pill-btn');
+  if(!drawer)return;
 
-  // Build city tags from current data
-  const cityTags=_availCities.length
-    ?_availCities.map(c=>`<button class="ftag ${fSt.cities.has(c)?'on':''}" onclick="toggleCity('${c.replace(/'/g,"\'")}')">${c}</button>`).join('')
-    :'<span style="font-size:11px;color:var(--t3);">Load data first</span>';
-
-  // Type buttons
-  const allOn=fSt.ctype==='all',b2bOn=fSt.ctype==='B2B',b2cOn=fSt.ctype==='B2C';
-
-  modal.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <span style="font-size:12px;font-weight:600;color:var(--txt);">Filters</span>
-      <button onclick="document.getElementById('rb-filter-modal').remove()" style="background:transparent;border:none;color:var(--t3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
-    </div>
-    <div class="frow" style="margin-bottom:10px;">
-      <span class="flbl">Type</span>
-      <button class="ftag ${allOn?'on':''}" onclick="setCtype('all');rbRefreshFilterModal()">All</button>
-      <button class="ftag ${b2bOn?'on':''}" onclick="setCtype('B2B');rbRefreshFilterModal()">B2B</button>
-      <button class="ftag ${b2cOn?'on':''}" onclick="setCtype('B2C');rbRefreshFilterModal()">B2C</button>
-    </div>
-    <div class="frow" style="margin-bottom:10px;">
-      <span class="flbl">City</span>
-      <div id="rb-flt-cities" style="display:flex;gap:4px;flex-wrap:wrap;">${cityTags}</div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
-      <button onclick="clearDrawerFilters();rbRefreshFilterModal()" style="padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;">Clear all</button>
-      <button onclick="document.getElementById('rb-filter-modal').remove()" style="padding:5px 12px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Done</button>
-    </div>`;
-
-  document.body.appendChild(modal);
-
-  // Close on outside click
-  setTimeout(()=>{
-    document.addEventListener('click',function handler(e){
-      const m=document.getElementById('rb-filter-modal');
-      if(m&&!m.contains(e.target)&&e.target.id!=='rb-filter-toggle-btn'&&!e.target.closest('#rb-filter-toggle-btn')){
-        m.remove();document.removeEventListener('click',handler);
-      }
-    });
-  },100);
-}
-
-function rbRefreshFilterModal(){
-  // Re-render the open filter modal to reflect updated state
-  const modal=document.getElementById('rb-filter-modal');
-  if(modal){rbToggleFilterModal();rbToggleFilterModal();}
-  rbRenderOutreach();
+  const isOpen=drawer.classList.contains('open');
+  if(isOpen){
+    // Close: re-hide drawer (raabta mode keeps it hidden via inline style)
+    drawer.classList.remove('open');
+    drawer.style.display='none';
+    if(timebar)timebar.style.display='none';
+    if(drPill)drPill.style.display='none';
+  } else {
+    // Open: remove inline display:none so CSS class takes over, then open
+    drawer.style.removeProperty('display');
+    if(timebar){timebar.style.removeProperty('display');}
+    if(drPill){drPill.style.removeProperty('display');}
+    drawer.classList.add('open');
+    // Patch Done and Clear buttons to also hide drawer on close in Raabta mode
+    const doneBtn=drawer.querySelector('.btn-done');
+    const clearBtn=drawer.querySelector('.btn-clear');
+    if(doneBtn)doneBtn.onclick=function(){
+      drawer.classList.remove('open');
+      drawer.style.display='none';
+      if(timebar)timebar.style.display='none';
+      if(drPill)drPill.style.display='none';
+      rbRenderOutreach();
+    };
+    if(clearBtn)clearBtn.onclick=function(){
+      clearDrawerFilters();
+      drawer.classList.remove('open');
+      drawer.style.display='none';
+      if(timebar)timebar.style.display='none';
+      if(drPill)drPill.style.display='none';
+      rbRenderOutreach();
+    };
+    // Rebuild city/status tags for current data
+    buildDynamicFilters();
+  }
 }
 
 function rbToggleHistory(){
@@ -6897,9 +6883,18 @@ function rbTplSendFilled(cid,tid,custPhone,placeholders){
   rbSTpl(cid,tid,lnk);
 }
 
+function rbSTplBtn(btn){
+  // Reads link safely from data attribute — avoids & encoding issues in onclick
+  const cid=btn.dataset.cid;
+  const tid=btn.dataset.tid;
+  const lnk=btn.dataset.lnk;
+  if(!cid||!tid||!lnk)return;
+  window.open(lnk,'_blank');
+  rbSTpl(cid,tid,lnk);
+}
+
 function rbSTpl(cid,tid,lnk){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
-  // window.open is called by the button/caller — do NOT open again here
   rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','');
   rbRenderMH(c);
 }
