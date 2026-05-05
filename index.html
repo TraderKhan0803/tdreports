@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   TEZZ DELIVERY ANALYTICS DASHBOARD
-  Version  : 31
+  Version  : 32
   Updated  : April 2026
   Repo     : github.com/TraderKhan0803/tdreports
   Stack    : HTML/CSS/JS · Supabase · Chart.js · SheetJS
@@ -1159,6 +1159,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <!-- ═══ RAABTA: QUEUE ═══ -->
     <!-- ═══ RAABTA: OUTREACH ═══ -->
     <div class="rb-panel" id="tab-rb-outreach" style="overflow-y:auto;padding:14px 18px;">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
+        <button class="filter-toggle" id="rb-filter-toggle-btn" onclick="toggleFilterDrawer()" style="margin-left:0;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters <span class="fbadge" id="rb-fbadge" style="display:none">0</span>
+        </button>
+      </div>
       <div id="rb-outreach-body"></div>
     </div>
 
@@ -6587,7 +6593,7 @@ function rbRenderCusts(){
       <div class="rb-av" style="${isB2B?'background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4);color:var(--pur);':''}">${c.name[0].toUpperCase()}</div>
       <div style="flex:1;min-width:100px;">
         <div class="rb-cname">${esc(c.name)}</div>
-        <div class="rb-cmeta">${c.phone||'—'} · ${c.city||'—'} · last order: ${c.lastOrder||'?'}</div>
+        <div class="rb-cmeta">${c.phone||'—'} · ${(c.city||'—').split(',')[0].trim()} · last order: ${c.lastOrder||'?'}</div>
       </div>
       <div class="rb-tags">
         <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
@@ -6629,12 +6635,13 @@ function rbOpenC(id){
   const intCount=RB.alog.filter(l=>l.customerId===id).length;
   const mig=document.getElementById('rb-mig');
   if(mig)mig.innerHTML=
-    '<div class="rb-ii"><div class="rb-il">City</div><div class="rb-iv">📍 '+esc(c.city||'—')+'</div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Location</div><div class="rb-iv">📍 '+esc((c.city||'—').split(',')[0].trim())+'</div></div>'+
     '<div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">'+(c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown')+'</div></div>'+
     '<div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg '+rbBc(c.status)+'">'+c.status+'</span></div></div>'+
     '<div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">'+(c.lastOrder||'?')+'</div></div>'+
     '<div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:'+dc+'">'+d+'d</div></div>'+
-    '<div class="rb-ii" onclick="rbToggleHistory()" style="cursor:pointer;border-color:rgba(59,130,246,.3);"><div class="rb-il">Interactions</div><div class="rb-iv" style="color:var(--blu);text-decoration:underline;">'+intCount+' logged ↓</div></div>';
+    '<div class="rb-ii" onclick="rbToggleHistory()" style="cursor:pointer;border-color:rgba(59,130,246,.3);"><div class="rb-il">Interactions</div><div class="rb-iv" style="color:var(--blu);text-decoration:underline;">'+intCount+' logged ↓</div></div>'+
+    '<div class="rb-ii" onclick="rbOpenCommHistory(\'' + c.id + '\',\'' + esc(c.name) + '\')" style="cursor:pointer;border-color:rgba(249,115,22,.3);"><div class="rb-il">Communication History</div><div class="rb-iv" style="color:var(--acc);text-decoration:underline;">View full history →</div></div>';
   const mss=document.getElementById('rb-mss');if(mss)mss.value=c.status;
   const mls=document.getElementById('rb-mls');if(mls)mls.value=c.lang||'?';
   const lang=c.lang==='ur'?'ur':'en';
@@ -6678,6 +6685,95 @@ function rbToggleHistory(){
   const open=p.style.maxHeight!=='0px'&&p.style.maxHeight!=='';
   p.style.maxHeight=open?'0':'600px';
   p.style.overflow=open?'hidden':'auto';
+}
+
+async function rbOpenCommHistory(cid, cname){
+  // Load all logs for this customer
+  let allLogs=[];
+  try{
+    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&order=timestamp.desc&limit=500');
+    const remoteIds=new Set(rows.map(l=>l.id));
+    const localOnly=RB.alog.filter(l=>l.customerId===cid&&!remoteIds.has(l.id));
+    allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  }catch(e){allLogs=RB.alog.filter(l=>l.customerId===cid);}
+
+  const overlay=document.createElement('div');
+  overlay.id='rb-comm-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+
+  function renderLogs(logs){
+    if(!logs.length)return'<div style="color:var(--t3);font-size:12px;padding:20px;text-align:center;font-family:\'DM Mono\',monospace;">No interactions found.</div>';
+    return logs.map(l=>`
+      <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+          <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
+          <span style="font-weight:600;font-size:11px;color:var(--acc);">${esc(l.user)}</span>
+          <span style="font-size:11px;color:var(--txt);">${esc(l.action)}</span>
+        </div>
+        ${l.outcome?`<div style="font-size:11px;color:var(--grn);margin-bottom:2px;">${esc(l.outcome)}</div>`:''}
+        ${l.note?`<div style="font-size:11px;color:var(--t2);font-style:italic;">${esc(l.note)}</div>`:''}
+      </div>`).join('');
+  }
+
+  overlay.innerHTML=`
+    <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);width:100%;max-width:560px;min-height:200px;">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--acc);">Communication History</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px;">${esc(cname)}</div>
+        </div>
+        <button onclick="document.getElementById('rb-comm-overlay').remove()" style="background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;">✕</button>
+      </div>
+      <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;">
+        <input type="text" id="comm-search" placeholder="Search by content, action, date…" oninput="rbFilterCommHistory()" style="flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+        <input type="date" id="comm-date" oninput="rbFilterCommHistory()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+      </div>
+      <div id="comm-log-body" style="max-height:60vh;overflow-y:auto;">
+        ${renderLogs(allLogs)}
+      </div>
+      <div style="padding:12px 18px;border-top:1px solid var(--bdr);">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Log a reply from customer (paste from WhatsApp):</div>
+        <textarea id="comm-reply-text" placeholder="Paste customer reply here…" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:7px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:vertical;min-height:60px;box-sizing:border-box;"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+          <button onclick="rbSaveCommReply('${cid}','${esc(cname)}')" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save Reply</button>
+        </div>
+      </div>
+    </div>`;
+
+  // Store logs for search
+  overlay._allLogs=allLogs;
+  overlay._renderLogs=renderLogs;
+  document.body.appendChild(overlay);
+}
+
+function rbFilterCommHistory(){
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  const q=(document.getElementById('comm-search')?.value||'').toLowerCase();
+  const d=document.getElementById('comm-date')?.value||'';
+  let logs=overlay._allLogs||[];
+  if(q)logs=logs.filter(l=>(l.action||'').toLowerCase().includes(q)||(l.note||'').toLowerCase().includes(q)||(l.outcome||'').toLowerCase().includes(q)||(l.user||'').toLowerCase().includes(q));
+  if(d)logs=logs.filter(l=>l.ts&&l.ts.startsWith(d));
+  const body=document.getElementById('comm-log-body');
+  if(body)body.innerHTML=overlay._renderLogs(logs);
+}
+
+async function rbSaveCommReply(cid,cname){
+  const txt=document.getElementById('comm-reply-text')?.value.trim();
+  if(!txt){notif('⚠ Enter reply text');return;}
+  await rbLogA(cid,cname,'Customer reply logged','',txt);
+  document.getElementById('comm-reply-text').value='';
+  // Reload logs
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  try{
+    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&order=timestamp.desc&limit=500');
+    const remoteIds=new Set(rows.map(l=>l.id));
+    const localOnly=RB.alog.filter(l=>l.customerId===cid&&!remoteIds.has(l.id));
+    overlay._allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  }catch(e){}
+  rbFilterCommHistory();
+  notif('Reply saved');
 }
 
 function rbGoToDash(name){
@@ -6746,7 +6842,7 @@ function rbTplSendFilled(cid,tid,custPhone,placeholders){
 
 function rbSTpl(cid,tid,lnk){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
-  window.open(lnk,'_blank');
+  // window.open is called by the button/caller — do NOT open again here
   rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','');
   rbRenderMH(c);
 }
@@ -7883,14 +7979,44 @@ function rbRenderOutreach(){
       </div>
     </div>`;
 
+  // Outreach sort state
+  const _otSort={};
   function outreachSection(id, title, color, rows, cols, filterHtml){
     const tbId='ot-tbody-'+id;
-    const bodyRows=rows.map((r,i)=>`<tr class="r" style="cursor:pointer;">
-      ${r.cells}
-      <td style="text-align:right;padding:4px 8px;">${custBell(r.name)}</td>
-    </tr>`).join('');
-    const hdrCells=cols.map(c=>`<th style="${c.align==='right'?'text-align:right;':''}">${c.label}</th>`).join('');
-    return`<div class="rb-card" style="margin-bottom:12px;">
+    // Store rows for re-sort
+    _otSort[id]={rows:[...rows],cols,dir:null,col:null};
+    function buildRows(rs){
+      return rs.map((r,i)=>`<tr class="r" style="cursor:pointer;">
+        ${r.cells}
+        <td style="text-align:right;padding:4px 8px;">${custBell(r.name)}</td>
+      </tr>`).join('');
+    }
+    function sortOt(colIdx,thEl){
+      const s=_otSort[id];
+      const dir=(s.col===colIdx&&s.dir==='asc')?'desc':'asc';
+      s.col=colIdx;s.dir=dir;
+      // Sort by text content of cell at colIdx
+      const sorted=[...s.rows].sort((a,b)=>{
+        const getCell=(cells,idx)=>{const d=document.createElement('div');d.innerHTML=cells;const tds=[...d.querySelectorAll('td')];return tds[idx]?tds[idx].textContent.trim():'';};
+        const av=getCell(a.cells,colIdx),bv=getCell(b.cells,colIdx);
+        const an=parseFloat(av.replace(/[^0-9.-]/g,'')),bn=parseFloat(bv.replace(/[^0-9.-]/g,''));
+        const cmp=isNaN(an)||isNaN(bn)?av.localeCompare(bv):an-bn;
+        return dir==='asc'?cmp:-cmp;
+      });
+      const tbody=document.getElementById(tbId);if(!tbody)return;
+      tbody.innerHTML=buildRows(sorted);
+      // re-wire clicks
+      [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+        const name=sorted[i]?.name;if(!name)return;
+        tr.onclick=(e)=>{if(e.target.classList.contains('alert-bell')||e.target.tagName==='SPAN'&&e.target.style.textDecoration==='underline')return;rbOpenOutreachCust(name);};
+      });
+      // update header styles
+      const tbl=document.getElementById('ot-tbl-'+id);
+      if(tbl)[...tbl.querySelectorAll('thead th.sortable')].forEach((h,i)=>{h.classList.remove('asc','desc');if(i===colIdx)h.classList.add(dir);});
+    }
+    const hdrCells=cols.map((c,i)=>`<th class="sortable" style="${c.align==='right'?'text-align:right;':''}" onclick="(function(){var s=document.getElementById('ot-tbl-${id}');if(s)s._sortFn&&s._sortFn(${i});})()">${c.label}</th>`).join('');
+    const bodyRows=buildRows(rows);
+    const html=`<div class="rb-card" style="margin-bottom:12px;">
       <div class="rb-card-hd">
         <div>
           <div class="rb-card-title" style="color:${color}">${title}</div>
@@ -7905,6 +8031,12 @@ function rbRenderOutreach(){
         </table>
       </div>
     </div>`;
+    // Wire sort function after render
+    setTimeout(()=>{
+      const tbl=document.getElementById('ot-tbl-'+id);
+      if(tbl)tbl._sortFn=sortOt;
+    },0);
+    return html;
   }
 
   const filterInput=(id,key,label,suffix)=>`<span style="font-size:10px;color:var(--t3);">${label}</span><input type="number" id="${id}" value="${_otFilters[key]}" min="1" style="width:52px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;" onchange="otSetFilter('${key}',this.value)">${suffix?`<span style="font-size:10px;color:var(--t3);">${suffix}</span>`:''}`;
