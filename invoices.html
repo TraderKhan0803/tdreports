@@ -465,14 +465,17 @@ async function init(){
   const usr=sessionStorage.getItem('tezz_user');
   if(tok&&usr){
     try{
-      const s=await dbGet('sessions','token=eq.'+encodeURIComponent(tok)+'&select=username,role,expires_at');
-      if(s.length&&new Date(s[0].expires_at)>new Date()){
-        const u=JSON.parse(usr);
-        if(ADMIN_ROLES.includes(u.role)){authToken=tok;curUser=u;showApp();return;}
-        else{showDenied();return;}
+      const u=JSON.parse(usr);
+      // Only attempt auto-login if role is already admin
+      if(ADMIN_ROLES.includes(u.role)){
+        const s=await dbGet('sessions','token=eq.'+encodeURIComponent(tok)+'&select=username,role,expires_at');
+        if(s.length&&new Date(s[0].expires_at)>new Date()){
+          authToken=tok;curUser=u;showApp();return;
+        }
       }
     }catch(e){}
   }
+  // Always default to login screen — never auto-show denied
   showLogin();
 }
 
