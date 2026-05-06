@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tezz · Invoice Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+
+:root {
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--surface3:#21262d;
+  --border:#30363d;--border2:#444c56;
+  --text:#e6edf3;--t2:#8b949e;--t3:#6e7681;
+  --accent:#f97316;--accent2:#fb923c;
+  --green:#3fb950;--blue:#58a6ff;--yellow:#d29922;--red:#f85149;--purple:#a371f7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh;}
+
+/* AUTH */
+.auth-screen{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;z-index:200;}
+.auth-screen.show{display:flex;}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:340px;text-align:center;}
+.auth-logo{font-size:28px;font-weight:800;letter-spacing:0.12em;color:var(--accent);margin-bottom:2px;}
+.auth-sub{font-size:10px;letter-spacing:0.18em;color:var(--t2);margin-bottom:28px;text-transform:uppercase;}
+.auth-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:10px 12px;outline:none;margin-bottom:10px;transition:border-color .15s;}
+.auth-inp:focus{border-color:var(--accent);}
+.auth-btn{width:100%;background:var(--accent);border:none;border-radius:7px;color:white;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:11px;cursor:pointer;margin-top:4px;transition:background .15s;}
+.auth-btn:hover{background:var(--accent2);}
+.auth-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px;}
+.auth-link{font-size:12px;color:var(--blue);cursor:pointer;display:block;margin-top:14px;}
+.auth-link:hover{text-decoration:underline;}
+.auth-denied{color:var(--red);font-size:13px;margin-top:12px;padding:10px;background:rgba(248,81,73,0.1);border-radius:6px;border:1px solid rgba(248,81,73,0.3);}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.logo-box{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#c2410c);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:white;}
+.logo-text{font-size:14px;font-weight:700;}
+.logo-sub{font-size:11px;color:var(--t2);}
+.h-sep{width:1px;height:24px;background:var(--border);}
+.h-nav a{color:var(--t2);text-decoration:none;font-size:12px;padding:4px 10px;border-radius:5px;transition:all .15s;}
+.h-nav a:hover{color:var(--text);background:var(--surface2);}
+.header-right{display:flex;align-items:center;gap:8px;}
+.user-chip{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 8px;font-size:12px;}
+.user-avatar{width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;}
+.h-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--t2);font-family:'Inter',sans-serif;font-size:12px;padding:5px 10px;cursor:pointer;transition:all .15s;}
+.h-btn:hover{border-color:var(--border2);color:var(--text);}
+.h-btn.active{background:var(--surface2);color:var(--text);border-color:var(--border2);}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 52px);}
+
+/* SIDEBAR */
+.sidebar{width:300px;min-width:300px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.section{border-bottom:1px solid var(--border);padding:13px 14px;}
+.sec-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);margin-bottom:11px;display:flex;align-items:center;gap:6px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.field{margin-bottom:8px;}
+.field label{display:block;font-size:11px;color:var(--t2);margin-bottom:3px;font-weight:500;}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:7px 9px;outline:none;transition:border-color .15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{resize:vertical;min-height:50px;line-height:1.5;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+
+.ac-wrap{position:relative;}
+.ac-dd{position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--surface2);border:1px solid var(--border2);border-top:none;border-radius:0 0 6px 6px;max-height:190px;overflow-y:auto;display:none;}
+.ac-dd.show{display:block;}
+.ac-item{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover{background:var(--surface3);}
+.ac-name{font-size:12px;font-weight:500;}
+.ac-detail{font-size:11px;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-msg{padding:9px 10px;font-size:12px;color:var(--t2);text-align:center;}
+
+.ghost-btn{width:100%;margin-top:5px;background:transparent;border:1px dashed var(--border2);border-radius:5px;color:var(--t2);font-size:11px;padding:5px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.upload-zone{border:1.5px dashed var(--border2);border-radius:7px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(249,115,22,.05);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:24px;margin-bottom:5px;}
+.upload-text{font-size:12px;color:var(--t2);}
+.upload-hint{font-size:10px;color:var(--t3);margin-top:2px;}
+
+.receipts-list{margin-top:7px;display:flex;flex-direction:column;gap:4px;}
+.receipt-chip{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;}
+.receipt-thumb{width:26px;height:26px;border-radius:3px;object-fit:cover;flex-shrink:0;}
+.receipt-name{flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.receipt-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.receipt-rm{background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;padding:2px;}
+.receipt-rm:hover{color:var(--red);}
+
+.scan-btn{width:100%;margin-top:9px;background:var(--accent);border:none;border-radius:7px;color:white;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.scan-btn:hover{background:var(--accent2);}
+.scan-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.load-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--t2);font-family:'Inter',sans-serif;font-size:12px;padding:8px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.load-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* MAIN */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.tbtn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;padding:6px 11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.tbtn:hover{border-color:var(--border2);background:var(--surface3);}
+.tbtn.blue{background:var(--blue);border-color:var(--blue);color:#000;font-weight:600;}
+.tbtn.blue:hover{opacity:.9;}
+.tbtn.green{background:var(--green);border-color:var(--green);color:#000;font-weight:600;}
+.tbtn.green:hover{opacity:.9;}
+.tbtn.yellow{background:var(--yellow);border-color:var(--yellow);color:#000;font-weight:600;}
+.tbtn.yellow:hover{opacity:.9;}
+.tbtn.red{background:transparent;border-color:var(--red);color:var(--red);}
+.tbtn.red:hover{background:var(--red);color:white;}
+.tbtn:disabled{opacity:.35;cursor:not-allowed;}
+.t-sep{width:1px;height:20px;background:var(--border);margin:0 2px;}
+
+.items-area{flex:1;overflow-y:auto;padding:13px 14px;}
+.items-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.items-title{font-size:13px;font-weight:600;}
+.items-meta{font-size:11px;color:var(--t2);font-family:monospace;}
+.add-row-btn{background:transparent;border:1px dashed var(--border2);border-radius:5px;color:var(--t2);font-size:11px;padding:4px 10px;cursor:pointer;transition:all .15s;}
+.add-row-btn:hover{border-color:var(--green);color:var(--green);}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--surface2);}
+thead th{padding:8px 9px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t2);text-align:left;border-bottom:1px solid var(--border);}
+thead th.r{text-align:right;}
+thead th.c{text-align:center;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(249,115,22,.03);}
+tbody td{padding:3px 5px;}
+.ci{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:5px 6px;width:100%;outline:none;transition:all .15s;}
+.ci:focus{border-color:var(--accent);background:var(--surface2);}
+.ci.r{text-align:right;font-family:monospace;}
+.del-row{background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;padding:4px 5px;border-radius:4px;transition:all .15s;}
+.del-row:hover{color:var(--red);background:rgba(248,81,73,.1);}
+
+.totals-bar{background:var(--surface);border-top:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:flex-end;gap:26px;}
+.total-item{text-align:right;}
+.total-label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;}
+.total-value{font-size:17px;font-weight:700;font-family:monospace;color:var(--accent);margin-top:1px;}
+
+.statusbar{background:var(--surface2);border-top:1px solid var(--border);padding:5px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--t2);font-family:monospace;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--t2);flex-shrink:0;}
+.sdot.ok{background:var(--green);}
+.sdot.busy{background:var(--yellow);animation:blink 1s infinite;}
+.sdot.err{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:55px 20px;color:var(--t2);text-align:center;}
+.empty-icon{font-size:42px;margin-bottom:13px;opacity:.3;}
+.empty-title{font-size:15px;font-weight:600;margin-bottom:5px;color:var(--text);opacity:.45;}
+.empty-sub{font-size:12px;}
+
+/* ADMIN */
+.admin-wrap{height:calc(100vh - 52px);overflow-y:auto;padding:16px;display:none;}
+.admin-wrap.show{display:block;}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.stat-label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+.stat-val{font-size:22px;font-weight:700;font-family:monospace;color:var(--accent);}
+.stat-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+
+.admin-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+.admin-card-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.admin-card-title{font-size:12px;font-weight:600;}
+.admin-search{background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:5px 9px;outline:none;}
+.admin-search:focus{border-color:var(--accent);}
+
+.log-table{width:100%;border-collapse:collapse;}
+.log-table th{padding:7px 12px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t2);text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+.log-table td{padding:8px 12px;font-size:12px;border-bottom:1px solid var(--border);}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table tr:hover td{background:rgba(249,115,22,.03);}
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.badge.session{background:rgba(88,166,255,.15);color:var(--blue);}
+.badge.invoice{background:rgba(63,185,80,.15);color:var(--green);}
+.badge.pdf{background:rgba(249,115,22,.15);color:var(--accent);}
+.badge.admin{background:rgba(163,113,247,.15);color:var(--purple);}
+.badge.error{background:rgba(248,81,73,.15);color:var(--red);}
+.load-more{width:100%;background:transparent;border:none;border-top:1px solid var(--border);padding:10px;color:var(--t2);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;}
+.load-more:hover{background:var(--surface2);color:var(--text);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:1000;}
+.overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px;max-width:400px;width:90%;text-align:center;}
+.modal-icon{font-size:36px;margin-bottom:10px;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:7px;}
+.modal-sub{font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:10px;}
+.progress-bar{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+.modal-close{margin-top:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:7px 18px;cursor:pointer;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth-screen" id="login-screen">
+  <div class="auth-box">
+    <div class="auth-logo">TEZZ</div>
+    <div class="auth-sub">Invoice Generator</div>
+    <input class="auth-inp" type="text" id="li-user" placeholder="Username" autofocus onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="auth-inp" type="password" id="li-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="auth-btn" onclick="doLogin()">Sign In</button>
+    <div class="auth-err" id="li-err"></div>
+  </div>
+</div>
+
+<!-- ACCESS DENIED -->
+<div class="auth-screen" id="denied-screen">
+  <div class="auth-box">
+    <div class="auth-logo">TEZZ</div>
+    <div class="auth-sub">Invoice Generator</div>
+    <div class="auth-denied">⛔ Access denied.<br>This tool is for admins only.<br>Contact your Super Admin.</div>
+    <span class="auth-link" onclick="doLogout()">← Back to Login</span>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+  <div class="header">
+    <div class="header-left">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="logo-box">T</div>
+        <div><div class="logo-text">Tezz Delivery</div><div class="logo-sub">Invoice Generator</div></div>
+      </div>
+      <div class="h-sep"></div>
+      <div class="h-nav"><a href="https://tdreports.matwagroup.com" target="_blank">← Dashboard</a></div>
+    </div>
+    <div class="header-right">
+      <button class="h-btn active" id="tab-invoice" onclick="switchTab('invoice')">🧾 New Invoice</button>
+      <button class="h-btn" id="tab-admin" onclick="switchTab('admin')" style="display:none">📊 Activity Log</button>
+      <div class="h-sep"></div>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userLabel">—</span>
+      </div>
+      <button class="h-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- INVOICE VIEW -->
+  <div id="invoice-view">
+    <div class="layout">
+      <div class="sidebar">
+
+        <div class="section">
+          <div class="sec-title">Order Info</div>
+          <div class="field-row">
+            <div class="field"><label>Order ID</label><input type="text" id="orderId" placeholder="TD18430"></div>
+            <div class="field"><label>Payment</label>
+              <select id="paymentMethod">
+                <option>Cash on Delivery</option>
+                <option>Bank Transfer</option>
+                <option>Card</option>
+                <option>Online Payment</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Carrier / Rider Name</label><input type="text" id="carrierName" placeholder="Internal A4 copy only"></div>
+        </div>
+
+        <div class="section">
+          <div class="sec-title">Customer</div>
+          <div class="field">
+            <label>Customer Name</label>
+            <div class="ac-wrap">
+              <input type="text" id="customerName" placeholder="Type to search…" autocomplete="off" oninput="searchCustomer(this.value)">
+              <div class="ac-dd" id="acDd"></div>
+            </div>
+          </div>
+          <div class="field"><label>Phone</label><input type="text" id="customerPhone" placeholder="03xxxxxxxxx"></div>
+          <div class="field"><label>Delivery Address</label><textarea id="deliveryAddress" placeholder="Street, Area, City"></textarea></div>
+          <div class="field">
+            <label>Billing Address</label>
+            <textarea id="billingAddress" placeholder="Same as delivery or different"></textarea>
+            <button class="ghost-btn" onclick="copyDelivery()">↑ Same as Delivery Address</button>
+          </div>
+          <div class="field">
+            <label>Billing Phone</label>
+            <input type="text" id="billingPhone" placeholder="If different">
+            <button class="ghost-btn" onclick="copyPhone()">↑ Same as Customer Phone</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sec-title">Store Receipts</div>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="receiptUpload" accept="image/*" multiple onchange="handleUpload(this.files)">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Upload receipt photos</div>
+            <div class="upload-hint">JPG · PNG · Multiple allowed</div>
+          </div>
+          <div class="receipts-list" id="receiptsList"></div>
+          <button class="scan-btn" id="scanBtn" onclick="scanReceipts()" disabled>
+            🔍 Scan Receipts with AI
+          </button>
+        </div>
+
+        <div class="section">
+          <div class="sec-title">Load Existing</div>
+          <label class="load-btn" style="cursor:pointer">
+            <input type="file" accept=".json" style="display:none" onchange="loadJSON(this)">
+            📂 Load Saved Invoice to Edit
+          </label>
+        </div>
+
+      </div>
+
+      <div class="main-content">
+        <div class="toolbar">
+          <span style="font-size:11px;color:var(--t2);margin-right:3px">Save as:</span>
+          <button class="tbtn blue" onclick="genPDF('a4_carrier')">📄 A4 + Carrier</button>
+          <button class="tbtn green" onclick="genPDF('a4_customer')">📄 A4 Customer</button>
+          <button class="tbtn yellow" onclick="genPDF('compact')">🧾 Compact</button>
+          <div class="t-sep"></div>
+          <button class="tbtn" onclick="saveJSON()">💾 Save JSON</button>
+          <button class="tbtn" onclick="addRow()">➕ Add Row</button>
+          <div class="t-sep"></div>
+          <button class="tbtn red" onclick="clearAll()">🗑 Clear</button>
+        </div>
+
+        <div class="items-area">
+          <div id="emptyState" class="empty">
+            <div class="empty-icon">🧾</div>
+            <div class="empty-title">No items yet</div>
+            <div class="empty-sub">Upload receipts and click Scan, or add rows manually</div>
+          </div>
+          <div id="tableWrap" style="display:none">
+            <div class="items-header">
+              <span class="items-title">Order Items</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="items-meta" id="itemsMeta">0 items</span>
+                <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:105px">Ref #</th>
+                    <th>Product</th>
+                    <th class="r" style="width:85px">Unit Price</th>
+                    <th class="c" style="width:55px">Qty</th>
+                    <th class="r" style="width:85px">Total</th>
+                    <th class="c" style="width:36px"></th>
+                  </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="totals-bar">
+          <div class="total-item">
+            <div class="total-label">Items</div>
+            <div class="total-value" id="totalItems" style="font-size:13px;color:var(--t2)">0</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">Grand Total</div>
+            <div class="total-value" id="grandTotal">RS. 0</div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <div class="sdot" id="sdot"></div>
+          <span id="statusText">Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div class="admin-wrap" id="admin-view">
+    <div class="admin-grid">
+      <div class="stat-card"><div class="stat-label">Total Logins</div><div class="stat-val" id="statLogins">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Invoices Scanned</div><div class="stat-val" id="statInvoices">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">PDFs Generated</div><div class="stat-val" id="statPDFs">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="statUsers">—</div><div class="stat-sub">Unique accounts</div></div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-head">
+        <span class="admin-card-title">Activity Log</span>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <input class="admin-search" id="logSearch" placeholder="Search user or action…" oninput="filterLogs()" style="width:180px">
+          <select class="admin-search" id="logTypeFilter" onchange="filterLogs()" style="width:120px">
+            <option value="">All types</option>
+            <option value="session">Session</option>
+            <option value="invoice">Invoice</option>
+            <option value="pdf">PDF</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="tbtn" onclick="loadLogs()">↺ Refresh</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th style="width:140px">Time</th>
+              <th style="width:120px">User</th>
+              <th style="width:90px">Type</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t2)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="load-more" id="loadMoreBtn" onclick="loadMoreLogs()" style="display:none">Load more…</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-icon" id="mIcon">🔍</div>
+    <div class="modal-title" id="mTitle">Processing…</div>
+    <div class="modal-sub" id="mSub">Please wait.</div>
+    <div class="progress-bar"><div class="progress-fill" id="mProg" style="width:0%"></div></div>
+    <button class="modal-close" id="mClose" onclick="closeModal()" style="display:none">Close</button>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://wtagesqnpaakyrlebpuv.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0YWdlc3FucGFha3lybGVicHV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1Nzg0MzAsImV4cCI6MjA5MTE1NDQzMH0._AvBKau3tEV6TSzdKITOeBNI2XI2qZ5767_u6Pg97-4';
+const WORKER='https://tezz-ai.atif-k-bashir.workers.dev';
+const ADMIN_ROLES=['super_admin','admin'];
+
+let curUser=null,authToken=null;
+let receipts=[],items=[];
+let allLogs=[],filteredLogs=[],logPage=0;
+const PAGE=50;
+let acTimer=null;
+
+// ── SUPABASE ──
+async function sb(method,path,body){
+  const h={'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=representation'};
+  const r=await fetch(SB_URL+'/rest/v1/'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+  if(!r.ok){const t=await r.text();throw new Error(t);}
+  return r.json().catch(()=>[]);
+}
+const dbGet=(t,q)=>sb('GET',t+'?'+q);
+const dbInsert=(t,rows)=>sb('POST',t,rows);
+
+// ── AUTH ──
+async function init(){
+  const tok=sessionStorage.getItem('tezz_token');
+  const usr=sessionStorage.getItem('tezz_user');
+  if(tok&&usr){
+    try{
+      const s=await dbGet('sessions','token=eq.'+encodeURIComponent(tok)+'&select=username,role,expires_at');
+      if(s.length&&new Date(s[0].expires_at)>new Date()){
+        const u=JSON.parse(usr);
+        if(ADMIN_ROLES.includes(u.role)){authToken=tok;curUser=u;showApp();return;}
+        else{showDenied();return;}
+      }
+    }catch(e){}
+  }
+  showLogin();
+}
+
+async function doLogin(){
+  const u=document.getElementById('li-user').value.trim();
+  const p=document.getElementById('li-pass').value;
+  const err=document.getElementById('li-err');
+  err.textContent='Signing in…';
+  try{
+    const users=await dbGet('users','username=eq.'+encodeURIComponent(u)+'&select=username,password,role,email');
+    if(!users.length||users[0].password!==p){err.textContent='Invalid username or password';return;}
+    const usr=users[0];
+    if(!ADMIN_ROLES.includes(usr.role)){err.textContent='';showDenied();return;}
+    const token=btoa(u+':'+Date.now()+':'+Math.random());
+    const expires=new Date(Date.now()+12*60*60*1000).toISOString();
+    await dbInsert('sessions',[{token,username:usr.username,role:usr.role,expires_at:expires}]);
+    authToken=token;curUser={u:usr.username,role:usr.role,email:usr.email||''};
+    sessionStorage.setItem('tezz_token',token);
+    sessionStorage.setItem('tezz_user',JSON.stringify(curUser));
+    logAct('session','Logged in to Invoice Generator');
+    err.textContent='';showApp();
+  }catch(e){err.textContent='Connection error: '+e.message;}
+}
+
+function doLogout(){
+  if(authToken)sb('DELETE','sessions?token=eq.'+encodeURIComponent(authToken)).catch(()=>{});
+  sessionStorage.removeItem('tezz_token');sessionStorage.removeItem('tezz_user');
+  authToken=null;curUser=null;showLogin();
+}
+
+function showLogin(){
+  document.getElementById('login-screen').classList.add('show');
+  document.getElementById('denied-screen').classList.remove('show');
+  document.getElementById('app').style.display='none';
+}
+function showDenied(){
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('denied-screen').classList.add('show');
+  document.getElementById('app').style.display='none';
+}
+function showApp(){
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('denied-screen').classList.remove('show');
+  document.getElementById('app').style.display='block';
+  document.getElementById('userLabel').textContent=curUser.u;
+  document.getElementById('userAvatar').textContent=curUser.u[0].toUpperCase();
+  if(curUser.role==='super_admin')document.getElementById('tab-admin').style.display='inline-flex';
+  setStatus('ok','Signed in as '+curUser.u);
+}
+
+function logAct(type,msg){
+  if(!curUser)return;
+  dbInsert('activity_log',[{username:curUser.u,type,message:msg,timestamp:new Date().toISOString()}]).catch(()=>{});
+}
+
+// ── TABS ──
+function switchTab(tab){
+  const inv=tab==='invoice';
+  document.getElementById('invoice-view').style.display=inv?'block':'none';
+  document.getElementById('admin-view').classList.toggle('show',!inv);
+  document.getElementById('tab-invoice').classList.toggle('active',inv);
+  document.getElementById('tab-admin').classList.toggle('active',!inv);
+  if(!inv)loadLogs();
+}
+
+// ── ADMIN LOGS ──
+async function loadLogs(){
+  document.getElementById('logBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t2)">Loading…</td></tr>';
+  try{
+    const logs=await dbGet('activity_log','order=timestamp.desc&limit=500&select=username,type,message,timestamp');
+    allLogs=logs;filteredLogs=[...logs];logPage=0;renderLogs();
+    document.getElementById('statLogins').textContent=logs.filter(l=>l.type==='session').length;
+    document.getElementById('statInvoices').textContent=logs.filter(l=>l.type==='invoice').length;
+    document.getElementById('statPDFs').textContent=logs.filter(l=>l.type==='pdf').length;
+    document.getElementById('statUsers').textContent=new Set(logs.map(l=>l.username)).size;
+  }catch(e){
+    document.getElementById('logBody').innerHTML=`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--red)">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function filterLogs(){
+  const q=document.getElementById('logSearch').value.toLowerCase();
+  const t=document.getElementById('logTypeFilter').value;
+  filteredLogs=allLogs.filter(l=>(!q||l.username?.toLowerCase().includes(q)||l.message?.toLowerCase().includes(q))&&(!t||l.type===t));
+  logPage=0;renderLogs();
+}
+
+function renderLogs(){
+  const slice=filteredLogs.slice(0,(logPage+1)*PAGE);
+  const body=document.getElementById('logBody');
+  if(!slice.length){body.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--t2)">No results</td></tr>';document.getElementById('loadMoreBtn').style.display='none';return;}
+  body.innerHTML=slice.map(l=>`
+    <tr>
+      <td style="color:var(--t2);white-space:nowrap;font-family:monospace;font-size:11px">${fmtTime(l.timestamp)}</td>
+      <td style="font-weight:500">${l.username||'—'}</td>
+      <td><span class="badge ${l.type||''}">${l.type||'—'}</span></td>
+      <td style="color:var(--t2)">${l.message||''}</td>
+    </tr>`).join('');
+  document.getElementById('loadMoreBtn').style.display=filteredLogs.length>(logPage+1)*PAGE?'block':'none';
+}
+
+function loadMoreLogs(){logPage++;renderLogs();}
+function fmtTime(ts){if(!ts)return'—';const d=new Date(ts);return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+
+// ── AUTOCOMPLETE ──
+async function searchCustomer(val){
+  clearTimeout(acTimer);
+  const dd=document.getElementById('acDd');
+  if(val.length<2){dd.classList.remove('show');return;}
+  acTimer=setTimeout(async()=>{
+    dd.innerHTML='<div class="ac-msg">Searching…</div>';dd.classList.add('show');
+    try{
+      const rows=await dbGet('orders','customer=ilike.*'+encodeURIComponent(val)+'*&select=customer,address,phone&limit=10');
+      const seen=new Set();
+      const uniq=rows.filter(r=>{if(seen.has(r.customer))return false;seen.add(r.customer);return true;});
+      if(!uniq.length){dd.innerHTML='<div class="ac-msg">No customers found</div>';return;}
+      dd.innerHTML=uniq.map(r=>`
+        <div class="ac-item" onclick='selCustomer(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+          <div class="ac-name">${r.customer}</div>
+          <div class="ac-detail">${r.phone||''} · ${r.address||''}</div>
+        </div>`).join('');
+    }catch(e){dd.innerHTML='<div class="ac-msg">Error searching</div>';}
+  },300);
+}
+function selCustomer(r){
+  document.getElementById('customerName').value=r.customer||'';
+  document.getElementById('customerPhone').value=r.phone||'';
+  document.getElementById('deliveryAddress').value=r.address||'';
+  document.getElementById('billingAddress').value=r.address||'';
+  document.getElementById('billingPhone').value=r.phone||'';
+  document.getElementById('acDd').classList.remove('show');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))document.getElementById('acDd').classList.remove('show');});
+const copyDelivery=()=>{document.getElementById('billingAddress').value=document.getElementById('deliveryAddress').value;};
+const copyPhone=()=>{document.getElementById('billingPhone').value=document.getElementById('customerPhone').value;};
+
+// ── UPLOAD ──
+function handleUpload(files){
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{receipts.push({file,dataUrl:e.target.result,name:file.name});renderReceipts();};
+    reader.readAsDataURL(file);
+  });
+}
+function renderReceipts(){
+  document.getElementById('receiptsList').innerHTML=receipts.map((r,i)=>`
+    <div class="receipt-chip">
+      <img class="receipt-thumb" src="${r.dataUrl}">
+      <span class="receipt-name">${r.name}</span>
+      <div class="receipt-dot" style="background:var(--green)"></div>
+      <button class="receipt-rm" onclick="removeReceipt(${i})">✕</button>
+    </div>`).join('');
+  document.getElementById('scanBtn').disabled=receipts.length===0;
+  document.getElementById('receiptUpload').value='';
+}
+function removeReceipt(i){receipts.splice(i,1);renderReceipts();}
+const zone=document.getElementById('uploadZone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');handleUpload(e.dataTransfer.files);});
+
+// ── SCAN ──
+async function scanReceipts(){
+  if(!receipts.length)return;
+  showModal('🔍','Scanning Receipts…','Reading receipt photos with AI. Please wait.',10);
+  const prompt=`You are reading store receipt images from a pharmacy/supermarket in Pakistan.
+Extract ALL line items from ALL receipts provided.
+For each item return: ref (reference/barcode number if visible, else empty string), product (full product name), price (unit price as number, no currency symbols), qty (quantity as integer), total (line total as number).
+Extract the Net Amount (final amount paid) from each receipt and sum them all for grandTotal.
+Return ONLY valid JSON with no markdown, no extra text:
+{"items":[{"ref":"","product":"","price":0,"qty":1,"total":0}],"grandTotal":0}
+Merge all items from all receipts. Sum all Net Amounts for grandTotal.`;
+  const content=[{type:'text',text:prompt}];
+  for(const r of receipts){
+    content.push({type:'image',source:{type:'base64',media_type:r.dataUrl.split(';')[0].split(':')[1],data:r.dataUrl.split(',')[1]}});
+  }
+  try{
+    setProgress(30);
+    const res=await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:2000,messages:[{role:'user',content}]})});
+    setProgress(65);
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message||'API error');
+    const text=data.content?.[0]?.text||'';
+    let parsed;
+    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim());}
+    catch(e){throw new Error('Receipt not readable. Please try a clearer photo.');}
+    if(!parsed.items?.length)throw new Error('No items found. Please try a clearer photo.');
+    items=parsed.items.map(it=>({ref:String(it.ref||''),product:String(it.product||''),price:+it.price||0,qty:+it.qty||1,total:+it.total||0}));
+    renderItems();
+    setProgress(100);
+    logAct('invoice','Scanned '+items.length+' items for order '+(document.getElementById('orderId').value||'(no ID)'));
+    setStatus('ok','✓ Scanned '+items.length+' items from '+receipts.length+' receipt(s)');
+    setTimeout(closeModal,500);
+  }catch(e){
+    showModal('⚠️','Scan Failed',e.message||'Could not read receipt.',100,true);
+    setStatus('err','✗ '+e.message);
+  }
+}
+
+// ── ITEMS ──
+function renderItems(){
+  const empty=document.getElementById('emptyState'),wrap=document.getElementById('tableWrap');
+  if(!items.length){empty.style.display='flex';wrap.style.display='none';document.getElementById('totalItems').textContent='0';document.getElementById('grandTotal').textContent='RS. 0';return;}
+  empty.style.display='none';wrap.style.display='block';
+  document.getElementById('itemsBody').innerHTML=items.map((it,i)=>`
+    <tr>
+      <td><input class="ci" value="${esc(it.ref)}" onchange="upd(${i},'ref',this.value)" placeholder="—"></td>
+      <td><input class="ci" value="${esc(it.product)}" onchange="upd(${i},'product',this.value)"></td>
+      <td><input class="ci r" type="number" value="${it.price}" onchange="upd(${i},'price',this.value)"></td>
+      <td><input class="ci r" type="number" value="${it.qty}" onchange="upd(${i},'qty',this.value)" style="text-align:center"></td>
+      <td><input class="ci r" type="number" value="${it.total}" onchange="upd(${i},'total',this.value)"></td>
+      <td><button class="del-row" onclick="delRow(${i})">✕</button></td>
+    </tr>`).join('');
+  calcTotals();
+  document.getElementById('itemsMeta').textContent=items.length+' item'+(items.length!==1?'s':'');
+}
+function upd(i,f,v){
+  items[i][f]=f==='qty'?parseInt(v)||1:f==='price'||f==='total'?parseFloat(v)||0:v;
+  if(f==='price'||f==='qty'){
+    items[i].total=+(items[i].price*items[i].qty).toFixed(2);
+    const rows=document.getElementById('itemsBody').querySelectorAll('tr');
+    if(rows[i])rows[i].querySelectorAll('input')[4].value=items[i].total;
+  }
+  calcTotals();
+}
+function calcTotals(){
+  document.getElementById('grandTotal').textContent='RS. '+items.reduce((s,it)=>s+(it.total||0),0).toLocaleString();
+  document.getElementById('totalItems').textContent=items.reduce((s,it)=>s+(it.qty||0),0);
+}
+function addRow(){items.push({ref:'',product:'',price:0,qty:1,total:0});renderItems();}
+function delRow(i){items.splice(i,1);renderItems();}
+function clearAll(){
+  if(!confirm('Clear everything and start fresh?'))return;
+  items=[];receipts=[];renderItems();renderReceipts();
+  ['orderId','customerName','customerPhone','deliveryAddress','billingAddress','billingPhone','carrierName'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('paymentMethod').selectedIndex=0;
+  setStatus('','Cleared');
+}
+
+// ── PDF ──
+async function genPDF(type){
+  if(!items.length){alert('No items to generate invoice from.');return;}
+  const d={
+    orderId:document.getElementById('orderId').value||'TDXXXXX',
+    customer:document.getElementById('customerName').value||'Customer',
+    phone:document.getElementById('customerPhone').value||'',
+    delivAddr:document.getElementById('deliveryAddress').value||'',
+    billAddr:document.getElementById('billingAddress').value||document.getElementById('deliveryAddress').value||'',
+    billPhone:document.getElementById('billingPhone').value||document.getElementById('customerPhone').value||'',
+    payment:document.getElementById('paymentMethod').value,
+    carrier:document.getElementById('carrierName').value||'',
+    today:new Date().toLocaleDateString('en-GB'),
+    grandTotal:items.reduce((s,it)=>s+(it.total||0),0)
+  };
+  if(type==='compact')await genCompact(d);else await genA4(type,d);
+  logAct('pdf','Generated '+type+' PDF for order '+d.orderId);
+}
+
+async function genA4(type,d){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=20;let y=18;
+  const logo=await loadImg('https://tdreports.matwagroup.com/logo.png');
+  if(logo)doc.addImage(logo,'PNG',M,y,44,17);
+  doc.setFontSize(8.5);doc.setTextColor(120,120,120);
+  doc.text('Invoice Number',W-M,y+4,{align:'right'});doc.text('Invoice Date',W-M,y+9,{align:'right'});doc.text('Order Date',W-M,y+14,{align:'right'});
+  doc.setTextColor(30,30,30);doc.setFont(undefined,'bold');doc.text(d.orderId,W-M-36,y+4);
+  doc.setFont(undefined,'normal');doc.text(d.today,W-M-36,y+9);doc.text(d.today,W-M-36,y+14);
+  y+=24;doc.setDrawColor(220,220,220);doc.setLineWidth(0.25);doc.line(M,y,W-M,y);y+=7;
+  doc.setFontSize(7.5);doc.setTextColor(120,120,120);
+  doc.text('DELIVERY ADDRESS',M,y);doc.text('BILLING ADDRESS',W/2+4,y);y+=4;
+  doc.setFontSize(9);doc.setTextColor(30,30,30);doc.setFont(undefined,'bold');
+  doc.text(d.customer,M,y);doc.text(d.customer,W/2+4,y);doc.setFont(undefined,'normal');y+=5;
+  const da=doc.splitTextToSize(d.delivAddr,78),ba=doc.splitTextToSize(d.billAddr,78);
+  doc.text(da,M,y);doc.text(ba,W/2+4,y);y+=Math.max(da.length,ba.length)*4.5;
+  doc.text(d.phone,M,y);doc.text(d.billPhone,W/2+4,y);y+=8;
+  doc.line(M,y,W-M,y);y+=7;
+  const cx={ref:M,prod:M+28,price:W-M-40,qty:W-M-20,tot:W-M};
+  doc.setFillColor(245,245,245);doc.rect(M,y-4,W-2*M,8,'F');
+  doc.setFontSize(7.5);doc.setTextColor(100,100,100);doc.setFont(undefined,'bold');
+  doc.text('REF',cx.ref,y);doc.text('PRODUCT',cx.prod,y);doc.text('PRICE',cx.price,y,{align:'right'});doc.text('QTY',cx.qty,y,{align:'center'});doc.text('TOTAL',cx.tot,y,{align:'right'});
+  doc.setFont(undefined,'normal');y+=7;
+  doc.setFontSize(9);doc.setTextColor(30,30,30);
+  items.forEach((it,idx)=>{
+    if(idx%2===0){doc.setFillColor(252,252,252);doc.rect(M,y-3.5,W-2*M,7,'F');}
+    const pl=doc.splitTextToSize(it.product,68);
+    doc.text(it.ref||'—',cx.ref,y);doc.text(pl[0],cx.prod,y);
+    doc.text('RS.'+it.price.toLocaleString(),cx.price,y,{align:'right'});
+    doc.text(String(it.qty),cx.qty,y,{align:'center'});
+    doc.text('RS.'+it.total.toLocaleString(),cx.tot,y,{align:'right'});
+    y+=7;if(y>245){doc.addPage();y=20;}
+  });
+  y+=4;doc.line(M,y,W-M,y);y+=6;
+  doc.setFont(undefined,'bold');doc.setFontSize(9.5);
+  doc.text('Total Amount',W-M-36,y);doc.text('RS.'+d.grandTotal.toLocaleString(),W-M,y,{align:'right'});y+=5;
+  doc.setFontSize(11);doc.text('TOTAL',W-M-36,y);doc.text('RS.'+d.grandTotal.toLocaleString(),W-M,y,{align:'right'});y+=9;
+  doc.setFont(undefined,'normal');doc.setFontSize(8.5);doc.setTextColor(80,80,80);
+  doc.text('Payment Method: '+d.payment,M,y);y+=5;
+  if(type==='a4_carrier'&&d.carrier){doc.text('Carrier: '+d.carrier,M,y);y+=5;}
+  const footer=await loadImg('https://tdreports.matwagroup.com/footer_large.png');
+  if(footer)doc.addImage(footer,'PNG',M,274,W-2*M,13);
+  const fname=d.orderId+'_'+(type==='a4_carrier'?'internal':'customer')+'.pdf';
+  doc.save(fname);setStatus('ok','✓ Saved '+fname);
+}
+
+async function genCompact(d){
+  const{jsPDF}=window.jspdf;
+  const W=80,M=5;
+  const estH=Math.max(items.length*5+115,130);
+  const doc=new jsPDF({unit:'mm',format:[W,estH]});
+  let y=7;
+  const logo=await loadImg('https://tdreports.matwagroup.com/logo.png');
+  if(logo){doc.addImage(logo,'PNG',(W-36)/2,y,36,14);y+=18;}
+  doc.setFontSize(7);doc.setTextColor(60,60,60);
+  const adr=doc.splitTextToSize(d.delivAddr,W-2*M);
+  doc.text(adr,W/2,y,{align:'center'});y+=adr.length*3.5+1;
+  doc.text(d.phone,W/2,y,{align:'center'});y+=5;
+  doc.setDrawColor(200,200,200);doc.setLineWidth(0.2);doc.line(M,y,W-M,y);y+=3;
+  [['Invoice Number',d.orderId],['Invoice Date',d.today],['Order Reference',''],['Order date',d.today]].forEach(([k,v])=>{
+    doc.setTextColor(100,100,100);doc.text(k,M,y);doc.setTextColor(30,30,30);doc.text(v,W-M,y,{align:'right'});y+=3.8;
+  });
+  doc.line(M,y,W-M,y);y+=4;
+  doc.setFontSize(7.5);doc.setFont(undefined,'bold');doc.setTextColor(30,30,30);
+  doc.text('Products Details',W/2,y,{align:'center'});y+=4;
+  doc.setLineWidth(0.25);doc.line(M,y-1,W-M,y-1);
+  doc.setFontSize(6.5);doc.setTextColor(80,80,80);
+  doc.text('Reference',M,y+3);doc.text('Product',M+18,y+3);doc.text('Price',M+45,y+3,{align:'right'});doc.text('Qty',M+56,y+3,{align:'center'});doc.text('Total',W-M,y+3,{align:'right'});
+  y+=5;doc.line(M,y,W-M,y);y+=3;
+  doc.setFontSize(7);doc.setTextColor(30,30,30);doc.setFont(undefined,'normal');
+  items.forEach(it=>{
+    const nl=doc.splitTextToSize(it.product,24);
+    doc.text(it.ref||'',M,y);doc.text(nl[0],M+18,y);
+    doc.text(String(it.price),M+45,y,{align:'right'});doc.text(String(it.qty),M+56,y,{align:'center'});doc.text(String(it.total),W-M,y,{align:'right'});
+    y+=nl.length>1?5:4.5;
+  });
+  y+=2;doc.line(M,y,W-M,y);y+=4;
+  doc.setFontSize(7);
+  doc.text('Payment Method',M,y);doc.setFont(undefined,'bold');doc.text(d.payment,W-M,y,{align:'right'});y+=4.5;
+  doc.setFont(undefined,'normal');doc.text('Total Amount',M,y);doc.setFont(undefined,'bold');doc.text('RS.'+d.grandTotal.toLocaleString(),W-M,y,{align:'right'});y+=4;
+  doc.text('Total',M,y);doc.text('RS.'+d.grandTotal.toLocaleString(),W-M,y,{align:'right'});y+=6;
+  const footer=await loadImg('https://tdreports.matwagroup.com/footer_small.png');
+  if(footer)doc.addImage(footer,'PNG',M,y,W-2*M,10);
+  doc.save(d.orderId+'_compact.pdf');setStatus('ok','✓ Saved '+d.orderId+'_compact.pdf');
+}
+
+// ── JSON ──
+function saveJSON(){
+  if(!items.length){alert('No items to save.');return;}
+  const data={orderId:document.getElementById('orderId').value,customerName:document.getElementById('customerName').value,customerPhone:document.getElementById('customerPhone').value,deliveryAddress:document.getElementById('deliveryAddress').value,billingAddress:document.getElementById('billingAddress').value,billingPhone:document.getElementById('billingPhone').value,carrierName:document.getElementById('carrierName').value,paymentMethod:document.getElementById('paymentMethod').value,items,savedAt:new Date().toISOString()};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=(data.orderId||'invoice')+'_data.json';a.click();
+  logAct('invoice','Saved JSON for order '+(data.orderId||'(no ID)'));
+  setStatus('ok','✓ JSON saved');
+}
+function loadJSON(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      ['orderId','customerName','customerPhone','deliveryAddress','billingAddress','billingPhone','carrierName'].forEach(id=>document.getElementById(id).value=d[id.replace(/([A-Z])/g,m=>m)]||'');
+      document.getElementById('orderId').value=d.orderId||'';
+      document.getElementById('customerName').value=d.customerName||'';
+      document.getElementById('customerPhone').value=d.customerPhone||'';
+      document.getElementById('deliveryAddress').value=d.deliveryAddress||'';
+      document.getElementById('billingAddress').value=d.billingAddress||'';
+      document.getElementById('billingPhone').value=d.billingPhone||'';
+      document.getElementById('carrierName').value=d.carrierName||'';
+      document.getElementById('paymentMethod').value=d.paymentMethod||'Cash on Delivery';
+      items=d.items||[];renderItems();
+      logAct('invoice','Loaded JSON for order '+(d.orderId||'(no ID)'));
+      setStatus('ok','✓ Loaded invoice '+(d.orderId||''));
+    }catch(e){alert('Could not read file.');}
+  };
+  reader.readAsText(file);input.value='';
+}
+
+// ── HELPERS ──
+function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function loadImg(url){
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);res(c.toDataURL('image/png'));};
+    img.onerror=()=>res(null);
+    img.src=url+'?v='+Date.now();
+  });
+}
+function showModal(icon,title,sub,prog,showClose=false){
+  document.getElementById('mIcon').textContent=icon;document.getElementById('mTitle').textContent=title;
+  document.getElementById('mSub').textContent=sub;document.getElementById('mProg').style.width=prog+'%';
+  document.getElementById('mClose').style.display=showClose?'inline-block':'none';
+  document.getElementById('overlay').classList.add('show');setStatus('busy',title);
+}
+function setProgress(p){document.getElementById('mProg').style.width=p+'%';}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+function setStatus(state,msg){
+  const d=document.getElementById('sdot');d.className='sdot'+(state?' '+state:'');
+  document.getElementById('statusText').textContent=msg;
+}
+
+init();
+</script>
+</body>
+</html>
