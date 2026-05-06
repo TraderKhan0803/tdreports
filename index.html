@@ -1928,8 +1928,8 @@ async function doLogin(){
     sb('DELETE','sessions?expires_at=lt.'+new Date().toISOString()).catch(()=>{});
     authToken=token;
     curUser={u:usr.username,role:usr.role,email:usr.email||''};
-    sessionStorage.setItem('tezz_token',token);
-    sessionStorage.setItem('tezz_user',JSON.stringify(curUser));
+    localStorage.setItem('tezz_token',token);
+    localStorage.setItem('tezz_user',JSON.stringify(curUser));
     logActivity('session','Logged in');
     errEl.textContent='';
     // Check if must change password
@@ -1978,7 +1978,7 @@ function doLogout(){
   if(authToken)sb('DELETE','sessions?token=eq.'+encodeURIComponent(authToken)).catch(()=>{});
   logActivity('session','Logged out');
   authToken=null;curUser=null;
-  sessionStorage.removeItem('tezz_token');sessionStorage.removeItem('tezz_user');
+  localStorage.removeItem('tezz_token');localStorage.removeItem('tezz_user');
   document.getElementById('app').style.display='none';
   showLogin();
   document.getElementById('li-user').value='';document.getElementById('li-pass').value='';
@@ -5234,8 +5234,8 @@ function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_poll
 // INIT
 // ═══════════════════════════════════════════════
 (async function init(){
-  const t=sessionStorage.getItem('tezz_token');
-  const u=sessionStorage.getItem('tezz_user');
+  const t=localStorage.getItem('tezz_token');
+  const u=localStorage.getItem('tezz_user');
   if(t&&u){
     try{
       const sessions=await dbGet('sessions','token=eq.'+encodeURIComponent(t)+'&expires_at=gt.'+new Date().toISOString()+'&select=username,role');
