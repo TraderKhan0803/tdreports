@@ -588,7 +588,7 @@ async function searchCustomer(val){
   acTimer=setTimeout(async()=>{
     dd.innerHTML='<div class="ac-msg">Searching…</div>';dd.classList.add('show');
     try{
-      const rows=await dbGet('orders','customer=ilike.*'+encodeURIComponent(val)+'*&select=customer,address,phone&limit=10');
+      const res=await fetch(SB_URL+'/rest/v1/orders?customer=ilike.*'+encodeURIComponent(val)+'*&select=customer,address,phone&limit=10',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken}});if(!res.ok)throw new Error('401');const rows=await res.json();
       const seen=new Set();
       const uniq=rows.filter(r=>{if(seen.has(r.customer))return false;seen.add(r.customer);return true;});
       if(!uniq.length){dd.innerHTML='<div class="ac-msg">No customers found</div>';return;}
