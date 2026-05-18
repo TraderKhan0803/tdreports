@@ -1254,15 +1254,29 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="ec-panel" id="tab-ec-scenario" style="display:none;">
       <div style="display:grid;grid-template-columns:240px 1fr;gap:20px;">
         <div>
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Revenue levers</div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Fill from your data</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <button onclick="spFillFromData('prev')" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;text-align:left;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📅 Previous month</button>
+              <button onclick="spFillFromData('quarter')" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;text-align:left;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📊 Last quarter avg</button>
+              <button onclick="spFillFromData('thisyear')" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;text-align:left;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">📈 This year avg</button>
+              <button onclick="spFillFromData('lastyear')" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;cursor:pointer;text-align:left;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t2)'">🗓 Last year avg</button>
+            </div>
+            <div id="sp-fill-notice" style="font-size:10px;color:var(--t3);margin-top:6px;font-family:'DM Mono',monospace;min-height:14px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Revenue levers</div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Avg order size and monthly orders are filled from your delivered orders. Commission % is your take rate — set manually (D-Watson, POS/inventory profit, WHT, etc).</div>
           <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spSS('sp-order','spv-order');spCalc()"><input class="sp-val" id="spv-order" value="6000" oninput="spSI('sp-order',this,3000,15000)"></div>
           <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spSS('sp-comm','spv-comm');spCalc()"><input class="sp-val" id="spv-comm" value="5" oninput="spSI('sp-comm',this,3,20)"></div>
           <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spSS('sp-orders','spv-orders');spCalc()"><input class="sp-val" id="spv-orders" value="620" oninput="spSI('sp-orders',this,200,2000)"></div>
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Delivery capacity</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;">Delivery capacity</div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Max deliveries your team can handle. Used to calculate rider utilisation and whether break-even is reachable at current headcount.</div>
           <div class="sp-row"><label>Riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spSS('sp-riders','spv-riders');spCalc()"><input class="sp-val" id="spv-riders" value="3" oninput="spSI('sp-riders',this,1,8)"></div>
           <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="8" max="20" step="1" value="15" oninput="spSS('sp-dpd','spv-dpd');spCalc()"><input class="sp-val" id="spv-dpd" value="15" oninput="spSI('sp-dpd',this,8,20)"></div>
           <div class="sp-row"><label>Working days/month</label><input type="range" id="sp-wd" min="25" max="31" step="1" value="30" oninput="spSS('sp-wd','spv-wd');spCalc()"><input class="sp-val" id="spv-wd" value="30" oninput="spSI('sp-wd',this,25,31)"></div>
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Costs (PKR/month)</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;">Costs (PKR/month)</div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Manually set — not pulled from financials. Rider salary + fuel + store incharge are variable costs (scale with riders). Fixed costs = rent, utilities, admin.</div>
+          
           <div class="sp-row"><label>Rider salary/rider</label><input type="range" id="sp-rsal" min="20000" max="50000" step="500" value="28000" oninput="spSS('sp-rsal','spv-rsal');spCalc()"><input class="sp-val" id="spv-rsal" value="28000" oninput="spSI('sp-rsal',this,20000,50000)"></div>
           <div class="sp-row"><label>Fuel/rider/month</label><input type="range" id="sp-fuel" min="3000" max="20000" step="500" value="8000" oninput="spSS('sp-fuel','spv-fuel');spCalc()"><input class="sp-val" id="spv-fuel" value="8000" oninput="spSI('sp-fuel',this,3000,20000)"></div>
           <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spSS('sp-store','spv-store');spCalc()"><input class="sp-val" id="spv-store" value="62000" oninput="spSI('sp-store',this,30000,120000)"></div>
@@ -5390,6 +5404,61 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
     html='<strong style="color:var(--acc);">'+gap.toLocaleString()+' more orders/month to break even</strong><br>';
   }
 
+function spFillFromData(period){
+  const now=new Date();
+  const curYear=now.getFullYear();
+  const curMonth=now.getMonth()+1;
+  const deliveredOrders=S.orders.filter(o=>o.Status==='delivered'&&o.Year&&o.Month);
+  let months=[];
+  if(period==='prev'){
+    const pm=curMonth===1?12:curMonth-1;
+    const py=curMonth===1?curYear-1:curYear;
+    months=deliveredOrders.filter(o=>o.Year===py&&o.Month===pm);
+  } else if(period==='quarter'){
+    // last 3 complete months
+    for(let i=1;i<=3;i++){
+      const m=curMonth-i<=0?curMonth-i+12:curMonth-i;
+      const y=curMonth-i<=0?curYear-1:curYear;
+      deliveredOrders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>months.push(o));
+    }
+  } else if(period==='thisyear'){
+    months=deliveredOrders.filter(o=>o.Year===curYear&&o.Month<curMonth);
+  } else if(period==='lastyear'){
+    months=deliveredOrders.filter(o=>o.Year===curYear-1);
+  }
+  const notice=document.getElementById('sp-fill-notice');
+  if(!months.length){if(notice)notice.textContent='⚠ No data found for that period';return;}
+
+  // Group by month to get per-month order counts, then average
+  const byMonth={};
+  months.forEach(o=>{
+    const k=`${o.Year}-${o.Month}`;
+    if(!byMonth[k]){byMonth[k]={sales:0,count:0};}
+    byMonth[k].sales+=o.Total_Sales;
+    byMonth[k].count++;
+  });
+  const monthKeys=Object.keys(byMonth);
+  const totalOrders=months.length;
+  const totalSales=months.reduce((s,o)=>s+o.Total_Sales,0);
+  const avgMonthlyOrders=Math.round(totalOrders/monthKeys.length);
+  const avgOrderSize=Math.round(totalSales/totalOrders);
+
+  // Set values and sync sliders
+  const setVal=(valId,sliderId,val,min,max)=>{
+    const clamped=Math.max(min,Math.min(max,val));
+    const vi=document.getElementById(valId);
+    const si=document.getElementById(sliderId);
+    if(vi)vi.value=clamped;
+    if(si)si.value=clamped;
+  };
+  setVal('spv-order','sp-order',avgOrderSize,3000,15000);
+  setVal('spv-orders','sp-orders',avgMonthlyOrders,200,2000);
+  spCalc();
+
+  const label=period==='prev'?'previous month':period==='quarter'?'last quarter':period==='thisyear'?'this year':' last year';
+  if(notice)notice.textContent=`✓ Filled from ${label} (${monthKeys.length} month${monthKeys.length>1?'s':''}). Commission % not updated — set manually.`;
+}
+  
   // Strategic recommendations based on commission rate
   html+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px;">';
   html+='<strong style="font-size:10px;text-transform:uppercase;letter-spacing:.4px;">Strategic recommendations</strong><br>';
