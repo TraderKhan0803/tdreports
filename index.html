@@ -5404,7 +5404,25 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
     html='<strong style="color:var(--acc);">'+gap.toLocaleString()+' more orders/month to break even</strong><br>';
   }
 
-function spFillFromData(period){
+  // Strategic recommendations based on commission rate
+  html+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px;">';
+  html+='<strong style="font-size:10px;text-transform:uppercase;letter-spacing:.4px;">Strategic recommendations</strong><br>';
+  if(comm<=0.06){
+    html+='<br><strong>Short term (next 6 months):</strong> Focus on growing B2C order volume and average basket size. Target 900–1,000 orders/month. Each additional order at current contribution adds to fixed cost coverage without adding overhead.<br><br>'
+      +'<strong>Medium term (with funding):</strong> Reintroduce inventory for your top 20–30 B2C SKUs — milk, eggs, bread, cooking oil. This alone takes your effective margin from 5% to 9–11% on those items, dramatically improving P&L without changing anything else.<br><br>'
+      +'<strong>Longer term:</strong> B2B becomes a natural extension once you have the inventory infrastructure. A restaurant ordering 50kg of flour is just a large B2C order handled by the same warehouse.';
+  } else if(comm<=0.10){
+    html+='<br><strong>You are in the inventory transition zone.</strong> At '+Math.round(comm*100)+'% margin you are capturing more value from each order. Focus now on: (1) expanding the SKU range carrying inventory, (2) growing repeat purchase rate above 30%, (3) pushing average basket to PKR 7,000+.';
+  } else {
+    html+='<br><strong>Strong margin position.</strong> At '+Math.round(comm*100)+'% you have a healthy inventory model running. Priority is volume growth and operational efficiency — the unit economics support scale.';
+  }
+  html+='</div>';
+
+  el.style.background=bg;el.style.color=color;
+  el.innerHTML=html;
+}
+
+  function spFillFromData(period){
   const now=new Date();
   const curYear=now.getFullYear();
   const curMonth=now.getMonth()+1;
@@ -5458,25 +5476,6 @@ function spFillFromData(period){
   const label=period==='prev'?'previous month':period==='quarter'?'last quarter':period==='thisyear'?'this year':' last year';
   if(notice)notice.textContent=`✓ Filled from ${label} (${monthKeys.length} month${monthKeys.length>1?'s':''}). Commission % not updated — set manually.`;
 }
-  
-  // Strategic recommendations based on commission rate
-  html+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px;">';
-  html+='<strong style="font-size:10px;text-transform:uppercase;letter-spacing:.4px;">Strategic recommendations</strong><br>';
-  if(comm<=0.06){
-    html+='<br><strong>Short term (next 6 months):</strong> Focus on growing B2C order volume and average basket size. Target 900–1,000 orders/month. Each additional order at current contribution adds to fixed cost coverage without adding overhead.<br><br>'
-      +'<strong>Medium term (with funding):</strong> Reintroduce inventory for your top 20–30 B2C SKUs — milk, eggs, bread, cooking oil. This alone takes your effective margin from 5% to 9–11% on those items, dramatically improving P&L without changing anything else.<br><br>'
-      +'<strong>Longer term:</strong> B2B becomes a natural extension once you have the inventory infrastructure. A restaurant ordering 50kg of flour is just a large B2C order handled by the same warehouse.';
-  } else if(comm<=0.10){
-    html+='<br><strong>You are in the inventory transition zone.</strong> At '+Math.round(comm*100)+'% margin you are capturing more value from each order. Focus now on: (1) expanding the SKU range carrying inventory, (2) growing repeat purchase rate above 30%, (3) pushing average basket to PKR 7,000+.';
-  } else {
-    html+='<br><strong>Strong margin position.</strong> At '+Math.round(comm*100)+'% you have a healthy inventory model running. Priority is volume growth and operational efficiency — the unit economics support scale.';
-  }
-  html+='</div>';
-
-  el.style.background=bg;el.style.color=color;
-  el.innerHTML=html;
-}
-
 // G&R info modals
 function showGrModal(key){
   const modals={
