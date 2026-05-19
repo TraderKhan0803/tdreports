@@ -1274,20 +1274,19 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           </div>
           <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="50000" step="100" value="6000" oninput="spSS('sp-order','spv-order');spCalc()"><input class="sp-val" id="spv-order" value="6000" oninput="spSI('sp-order',this,3000,50000)"></div>          
 
-          <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spSS('sp-comm','spv-comm');spCalc()"><input class="sp-val" id="spv-comm" value="5" oninput="spSI('sp-comm',this,3,20)"></div>
-          <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="1" max="50000" step="10" value="620" oninput="spSS('sp-orders','spv-orders');spCalc()"><input class="sp-val" id="spv-orders" value="620" oninput="spSI('sp-orders',this,200,2000)"></div>
+          <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="0.1" max="50" step="0.5" value="5" oninput="spSS('sp-comm','spv-comm');spCalc()"><input class="sp-val" id="spv-comm" value="5" oninput="spSI('sp-comm',this,0.1,50)"></div>         
+          <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="1" max="50000" step="10" value="620" oninput="spSS('sp-orders','spv-orders');spCalc()"><input class="sp-val" id="spv-orders" value="620" oninput="spSI('sp-orders',this,1,50000)"></div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;">Delivery capacity</div>
           <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Max deliveries your team can handle. Used to calculate rider utilisation and whether break-even is reachable at current headcount.</div>
-          <div class="sp-row"><label>Riders</label><input type="range" id="sp-riders" min="1" max="8" step="1" value="3" oninput="spSS('sp-riders','spv-riders');spCalc()"><input class="sp-val" id="spv-riders" value="3" oninput="spSI('sp-riders',this,1,8)"></div>
-          <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="8" max="20" step="1" value="15" oninput="spSS('sp-dpd','spv-dpd');spCalc()"><input class="sp-val" id="spv-dpd" value="15" oninput="spSI('sp-dpd',this,8,20)"></div>
+          <div class="sp-row"><label>Riders</label><input type="range" id="sp-riders" min="1" max="100" step="1" value="3" oninput="spSS('sp-riders','spv-riders');spCalc()"><input class="sp-val" id="spv-riders" value="3" oninput="spSI('sp-riders',this,1,100)"></div>
+          <div class="sp-row"><label>Deliveries/rider/day</label><input type="range" id="sp-dpd" min="1" max="50" step="1" value="15" oninput="spSS('sp-dpd','spv-dpd');spCalc()"><input class="sp-val" id="spv-dpd" value="15" oninput="spSI('sp-dpd',this,1,50)"></div>
           <div class="sp-row"><label>Working days/month</label><input type="range" id="sp-wd" min="25" max="31" step="1" value="30" oninput="spSS('sp-wd','spv-wd');spCalc()"><input class="sp-val" id="spv-wd" value="30" oninput="spSI('sp-wd',this,25,31)"></div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;">Costs (PKR/month)</div>
           <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Manually set — not pulled from financials. Rider salary + fuel + store incharge are variable costs (scale with riders). Fixed costs = rent, utilities, admin.</div>
           
-          <div class="sp-row"><label>Rider salary/rider</label><input type="range" id="sp-rsal" min="20000" max="50000" step="500" value="28000" oninput="spSS('sp-rsal','spv-rsal');spCalc()"><input class="sp-val" id="spv-rsal" value="28000" oninput="spSI('sp-rsal',this,20000,50000)"></div>
-          <div class="sp-row"><label>Fuel/rider/month</label><input type="range" id="sp-fuel" min="3000" max="20000" step="500" value="8000" oninput="spSS('sp-fuel','spv-fuel');spCalc()"><input class="sp-val" id="spv-fuel" value="8000" oninput="spSI('sp-fuel',this,3000,20000)"></div>
-          <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="30000" max="120000" step="1000" value="62000" oninput="spSS('sp-store','spv-store');spCalc()"><input class="sp-val" id="spv-store" value="62000" oninput="spSI('sp-store',this,30000,120000)"></div>
-          <div class="sp-row"><label>Fixed costs</label><input type="range" id="sp-fixed" min="200000" max="800000" step="5000" value="454000" oninput="spSS('sp-fixed','spv-fixed');spCalc()"><input class="sp-val" id="spv-fixed" value="454000" oninput="spSI('sp-fixed',this,200000,800000)"></div>
+          <div class="sp-row"><label>Fuel/rider/month</label><input type="range" id="sp-fuel" min="0" max="100000" step="500" value="8000" oninput="spSS('sp-fuel','spv-fuel');spCalc()"><input class="sp-val" id="spv-fuel" value="8000" oninput="spSI('sp-fuel',this,0,100000)"></div>
+          <div class="sp-row"><label>Store incharge</label><input type="range" id="sp-store" min="0" max="1000000" step="1000" value="62000" oninput="spSS('sp-store','spv-store');spCalc()"><input class="sp-val" id="spv-store" value="62000" oninput="spSI('sp-store',this,0,1000000)"></div>
+          <div class="sp-row"><label>Fixed costs</label><input type="range" id="sp-fixed" min="0" max="10000000" step="5000" value="454000" oninput="spSS('sp-fixed','spv-fixed');spCalc()"><input class="sp-val" id="spv-fixed" value="454000" oninput="spSI('sp-fixed',this,0,10000000)"></div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:8px 10px;background:var(--sur2);border-radius:var(--r2);border:1px solid var(--bdr);">
             <input type="checkbox" id="sp-fee-on" onchange="document.getElementById('sp-fee-amt').disabled=!this.checked;spCalc()" style="accent-color:var(--acc);width:14px;height:14px;cursor:pointer;flex-shrink:0;">
             <label for="sp-fee-on" style="font-size:12px;color:var(--t2);flex:1;cursor:pointer;">Charge delivery fee?</label>
@@ -5360,16 +5359,16 @@ function spCalc(){
   });
   
   const g=(id,def)=>+(document.getElementById(id)?.value)||def;
-  const ord=Math.max(3000,Math.min(50000,g('spv-order',6000)));
-  const com=Math.max(0.03,Math.min(0.20,g('spv-comm',5)/100));
+  const ord=Math.max(1,g('spv-order',6000));
+  const com=Math.max(0.001,g('spv-comm',5)/100);
   const mo=Math.max(1,g('spv-orders',620));
-  const ri=Math.max(1,Math.min(8,g('spv-riders',3)));
-  const dpd=Math.max(8,Math.min(20,g('spv-dpd',15)));
-  const wd=Math.max(25,Math.min(31,g('spv-wd',30)));
-  const rsal=Math.max(20000,Math.min(50000,g('spv-rsal',28000)));
-  const fuel=Math.max(3000,Math.min(20000,g('spv-fuel',8000)));
-  const sc=Math.max(30000,Math.min(120000,g('spv-store',62000)));
-  const fc=Math.max(200000,Math.min(800000,g('spv-fixed',454000)));
+  const ri=Math.max(1,g('spv-riders',3));
+  const dpd=Math.max(1,g('spv-dpd',15));
+  const wd=Math.max(1,g('spv-wd',30));
+  const rsal=Math.max(1,g('spv-rsal',28000));
+  const fuel=Math.max(0,g('spv-fuel',8000));
+  const sc=Math.max(0,g('spv-store',62000));
+  const fc=Math.max(0,g('spv-fixed',454000));
   const feeOn=document.getElementById('sp-fee-on')?.checked||false;
   const fee=feeOn?Math.max(0,g('sp-fee-amt',0)):0;
 
