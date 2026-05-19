@@ -5299,7 +5299,7 @@ function spSetSegment(seg){
   });
   // Auto-fill avg order size from data for selected segment
   const deliveredOrders=S.orders.filter(o=>(o.Status||'').toLowerCase()==='delivered');
-  const segOrders=seg==='B2C'?deliveredOrders.filter(o=>o.Customer_Type!=='B2B'):
+  const segOrds=seg==='B2C'?deliveredOrders.filter(o=>o.Customer_Type!=='B2B'):
                   seg==='B2B'?deliveredOrders.filter(o=>o.Customer_Type==='B2B'):
                   deliveredOrders;
 
