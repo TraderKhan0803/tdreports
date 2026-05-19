@@ -1266,7 +1266,14 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           </div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Revenue levers</div>
           <div style="font-size:10px;color:var(--t3);margin-bottom:8px;line-height:1.5;">Avg order size and monthly orders are filled from your delivered orders. Commission % is your take rate — set manually (D-Watson, POS/inventory profit, WHT, etc).</div>
-          <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="15000" step="100" value="6000" oninput="spSS('sp-order','spv-order');spCalc()"><input class="sp-val" id="spv-order" value="6000" oninput="spSI('sp-order',this,3000,15000)"></div>
+
+          <div style="display:flex;gap:4px;margin-bottom:6px;">
+            <button id="sp-seg-b2c" onclick="spSetSegment('B2C')" style="flex:1;padding:3px 6px;border:1px solid var(--bdr);background:var(--acc);color:#fff;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2C</button>
+            <button id="sp-seg-all" onclick="spSetSegment('all')" style="flex:1;padding:3px 6px;border:1px solid var(--bdr);background:transparent;color:var(--t2);border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">All</button>
+            <button id="sp-seg-b2b" onclick="spSetSegment('B2B')" style="flex:1;padding:3px 6px;border:1px solid var(--bdr);background:transparent;color:var(--t2);border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;">B2B</button>
+          </div>
+          <div class="sp-row"><label>Avg order size (PKR)</label><input type="range" id="sp-order" min="3000" max="50000" step="100" value="6000" oninput="spSS('sp-order','spv-order');spCalc()"><input class="sp-val" id="spv-order" value="6000" oninput="spSI('sp-order',this,3000,50000)"></div>          
+
           <div class="sp-row"><label>Commission %</label><input type="range" id="sp-comm" min="3" max="20" step="0.5" value="5" oninput="spSS('sp-comm','spv-comm');spCalc()"><input class="sp-val" id="spv-comm" value="5" oninput="spSI('sp-comm',this,3,20)"></div>
           <div class="sp-row"><label>Monthly orders</label><input type="range" id="sp-orders" min="200" max="2000" step="10" value="620" oninput="spSS('sp-orders','spv-orders');spCalc()"><input class="sp-val" id="spv-orders" value="620" oninput="spSI('sp-orders',this,200,2000)"></div>
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;">Delivery capacity</div>
@@ -5279,8 +5286,51 @@ function spRender(){
   spCalc();
 }
 
-function spFmtK(n){const a=Math.abs(Math.round(n));return(n<0?'- ':'')+'PKR '+(a>=1000000?(a/1000000).toFixed(1)+'M':a>=1000?Math.round(a/1000)+'K':a.toLocaleString());}
-function spFmt(n){return(n<0?'- ':'')+'PKR '+Math.abs(Math.round(n)).toLocaleString();}
+let _spSegment='B2C'; // B2C | B2B | all
+
+function spSetSegment(seg){
+  _spSegment=seg;
+  ['b2c','all','b2b'].forEach(s=>{
+    const btn=document.getElementById('sp-seg-'+s);
+    if(!btn)return;
+    const isActive=s===seg||(seg==='all'&&s==='all');
+    btn.style.background=s===seg?'var(--acc)':'transparent';
+    btn.style.color=s===seg?'#fff':'var(--t2)';
+  });
+  // Auto-fill avg order size from data for selected segment
+  const deliveredOrders=S.orders.filter(o=>o.Status==='delivered');
+  const segOrders=seg==='B2C'?deliveredOrders.filter(o=>o.Customer_Type!=='B2B'):
+                  seg==='B2B'?deliveredOrders.filter(o=>o.Customer_Type==='B2B'):
+                  deliveredOrders;
+  if(segOrders.length){
+    const avg=Math.round(segOrders.reduce((s,o)=>s+o.Total_Sales,0)/segOrders.length);
+    const clamped=Math.max(3000,Math.min(50000,avg));
+    const vi=document.getElementById('spv-order');
+    const si=document.getElementById('sp-order');
+    if(vi)vi.value=clamped;
+    if(si)si.value=clamped;
+  }
+  spCalc();
+}
+
+function spCurPrefix(){return kpiCurrency==='USD'?'$':'PKR ';}
+function spCurConvert(pkrVal){
+  if(kpiCurrency==='USD'){const r=getKpiRate()||280.46;return pkrVal/r;}
+  return pkrVal;
+}
+function spFmtK(n){
+  const v=spCurConvert(n);
+  const a=Math.abs(v);
+  const prefix=spCurPrefix();
+  const fmt=kpiCurrency==='USD'
+    ?(a>=1000000?'$'+(a/1000000).toFixed(2)+'M':a>=1000?'$'+(a/1000).toFixed(1)+'K':'$'+parseFloat(a.toFixed(0)).toLocaleString())
+    :(a>=1000000?'PKR '+(a/1000000).toFixed(1)+'M':a>=1000?'PKR '+Math.round(a/1000)+'K':'PKR '+Math.round(a).toLocaleString());
+  return(n<0?'- ':'')+fmt;
+}
+function spFmt(n){
+  const v=spCurConvert(n);
+  return(n<0?'- ':'')+spCurPrefix()+Math.abs(Math.round(v)).toLocaleString();
+}
 
 // Sync slider → input
 function spSS(sid,vid){const s=document.getElementById(sid),v=document.getElementById(vid);if(s&&v)v.value=s.value;}
@@ -5458,9 +5508,16 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
   const monthKeys=Object.keys(byMonth);
   const totalOrders=months.length;
   const totalSales=months.reduce((s,o)=>s+o.Total_Sales,0);
-  const avgMonthlyOrders=Math.round(totalOrders/monthKeys.length);
-  const avgOrderSize=Math.round(totalSales/totalOrders);
 
+  const segMonths=months.filter(o=>{
+  if(_spSegment==='B2C')return o.Customer_Type!=='B2B';
+  if(_spSegment==='B2B')return o.Customer_Type==='B2B';
+  return true;
+  });
+  const avgMonthlyOrders=Math.round((_spSegment==='all'?totalOrders:segMonths.length)/monthKeys.length);
+  const avgOrderSize=segMonths.length?Math.round(segMonths.reduce((s,o)=>s+o.Total_Sales,0)/segMonths.length):Math.round(totalSales/totalOrders); 
+    
+  
   // Set values and sync sliders
   const setVal=(valId,sliderId,val,min,max)=>{
     const clamped=Math.max(min,Math.min(max,val));
@@ -5683,13 +5740,18 @@ function setGlobalCurrency(cur){
   if(usdBtn){usdBtn.style.background=cur==='USD'?'var(--acc)':'transparent';usdBtn.style.color=cur==='USD'?'#fff':'var(--t2)';}
   // Re-render everything affected
   renderDashboard(selCust||undefined);
+
+  
   if(currentMode==='exec'){
     if(ecCurTab==='growth')grRender();
+    else if(ecCurTab==='scenario')spCalc();
     else ecRenderUnified();
   }
   notif(cur==='PKR'?'Showing PKR':'Showing USD');
 }
 
+
+  
 function ecSetCurMain(cur){setGlobalCurrency(cur);}
 function ecSetYearMain(year){ecYearMain=year;ecRenderUnified();}
 function ecToggleSection(section){
