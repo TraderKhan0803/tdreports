@@ -5302,15 +5302,24 @@ function spSetSegment(seg){
   const segOrders=seg==='B2C'?deliveredOrders.filter(o=>o.Customer_Type!=='B2B'):
                   seg==='B2B'?deliveredOrders.filter(o=>o.Customer_Type==='B2B'):
                   deliveredOrders;
-  if(segOrders.length){
-    const avg=Math.round(segOrders.reduce((s,o)=>s+o.Total_Sales,0)/segOrders.length);
+
+  if(segOrds.length){
+    const avg=Math.round(segOrds.reduce((s,o)=>s+o.Total_Sales,0)/segOrds.length);
     const clamped=Math.max(3000,Math.min(50000,avg));
     const vi=document.getElementById('spv-order');
     const si=document.getElementById('sp-order');
     if(vi)vi.value=clamped;
     if(si)si.value=clamped;
+    // Also update monthly orders for this segment
+    const monthKeys=[...new Set(segOrds.filter(o=>o.Year&&o.Month).map(o=>o.Year+'-'+o.Month))];
+    const avgMonthlyOrders=Math.round(segOrds.length/Math.max(1,monthKeys.length));
+    const clampedOrders=Math.max(200,Math.min(2000,avgMonthlyOrders));
+    const vio=document.getElementById('spv-orders');
+    const sio=document.getElementById('sp-orders');
+    if(vio)vio.value=clampedOrders;
+    if(sio)sio.value=clampedOrders;
   }
-  spCalc();
+  spCalc();  
 }
 
 function spCurPrefix(){return kpiCurrency==='USD'?'$':'PKR ';}
@@ -5318,18 +5327,21 @@ function spCurConvert(pkrVal){
   if(kpiCurrency==='USD'){const r=getKpiRate()||280.46;return pkrVal/r;}
   return pkrVal;
 }
+function spCurRate(){return(kpiCurrency==='USD'?(getKpiRate()||280.46):1);}
 function spFmtK(n){
-  const v=spCurConvert(n);
+  const v=n/spCurRate();
   const a=Math.abs(v);
-  const prefix=spCurPrefix();
-  const fmt=kpiCurrency==='USD'
-    ?(a>=1000000?'$'+(a/1000000).toFixed(2)+'M':a>=1000?'$'+(a/1000).toFixed(1)+'K':'$'+parseFloat(a.toFixed(0)).toLocaleString())
-    :(a>=1000000?'PKR '+(a/1000000).toFixed(1)+'M':a>=1000?'PKR '+Math.round(a/1000)+'K':'PKR '+Math.round(a).toLocaleString());
-  return(n<0?'- ':'')+fmt;
+  if(kpiCurrency==='USD'){
+    const s=a>=1000000?'$'+(a/1000000).toFixed(2)+'M':a>=1000?'$'+(a/1000).toFixed(2)+'K':'$'+v.toFixed(2);
+    return(n<0?'- ':'')+s;
+  }
+  const s=a>=1000000?'PKR '+(a/1000000).toFixed(1)+'M':a>=1000?'PKR '+Math.round(a/1000)+'K':'PKR '+Math.round(a).toLocaleString();
+  return(n<0?'- ':'')+s;
 }
 function spFmt(n){
-  const v=spCurConvert(n);
-  return(n<0?'- ':'')+spCurPrefix()+Math.abs(Math.round(v)).toLocaleString();
+  const v=n/spCurRate();
+  if(kpiCurrency==='USD') return(n<0?'- ':'')+'$'+Math.abs(v).toFixed(2);
+  return(n<0?'- ':'')+'PKR '+Math.abs(Math.round(v)).toLocaleString();
 }
 
 // Sync slider → input
@@ -5338,6 +5350,15 @@ function spSS(sid,vid){const s=document.getElementById(sid),v=document.getElemen
 function spSI(sid,inp,min,max){const v=Math.max(min,Math.min(max,parseFloat(inp.value)||min));const s=document.getElementById(sid);if(s)s.value=v;spCalc();}
 
 function spCalc(){
+
+   // Re-apply segment button highlight on every calc (survives re-renders)
+  ['b2c','all','b2b'].forEach(s=>{
+    const btn=document.getElementById('sp-seg-'+s);
+    if(!btn)return;
+    btn.style.background=s===_spSegment?'var(--acc)':'transparent';
+    btn.style.color=s===_spSegment?'#fff':'var(--t2)';
+  });
+  
   const g=(id,def)=>+(document.getElementById(id)?.value)||def;
   const ord=Math.max(3000,Math.min(15000,g('spv-order',6000)));
   const com=Math.max(0.03,Math.min(0.20,g('spv-comm',5)/100));
@@ -5383,7 +5404,7 @@ function spCalc(){
   set('sp-fixper',spFmt(fixPer));
   set('sp-contrib',spFmt(conPer),conPer>=0?G:R);
 
-  if(beSize&&beSize>0)set('sp-besize','PKR '+Math.round(beSize).toLocaleString(),beSize<=ord?G:beSize<=10000?A:R);
+  if(beSize&&beSize>0)set('sp-besize',spFmt(beSize),beSize<=ord?G:beSize<=10000?A:R);
   else set('sp-besize',feeOn?'Fee covers it':'—',feeOn?G:R);
 
   if(be){set('sp-bevol',be.toLocaleString(),be<=mo?G:be<=cap?A:R);set('sp-bevol-s',be<=mo?'✓ exceeded by '+(mo-be):'+'+(be-mo)+' needed');}
