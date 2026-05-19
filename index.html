@@ -5298,7 +5298,7 @@ function spSetSegment(seg){
     btn.style.color=s===seg?'#fff':'var(--t2)';
   });
   // Auto-fill avg order size from data for selected segment
-  const deliveredOrders=S.orders.filter(o=>o.Status==='delivered');
+  const deliveredOrders=S.orders.filter(o=>(o.Status||'').toLowerCase()==='delivered');
   const segOrders=seg==='B2C'?deliveredOrders.filter(o=>o.Customer_Type!=='B2B'):
                   seg==='B2B'?deliveredOrders.filter(o=>o.Customer_Type==='B2B'):
                   deliveredOrders;
@@ -5313,7 +5313,7 @@ function spSetSegment(seg){
     // Also update monthly orders for this segment
     const monthKeys=[...new Set(segOrds.filter(o=>o.Year&&o.Month).map(o=>o.Year+'-'+o.Month))];
     const avgMonthlyOrders=Math.round(segOrds.length/Math.max(1,monthKeys.length));
-    const clampedOrders=Math.max(200,Math.min(2000,avgMonthlyOrders));
+    const clampedOrders=Math.max(1,Math.min(2000,avgMonthlyOrders));
     const vio=document.getElementById('spv-orders');
     const sio=document.getElementById('sp-orders');
     if(vio)vio.value=clampedOrders;
@@ -5360,7 +5360,7 @@ function spCalc(){
   });
   
   const g=(id,def)=>+(document.getElementById(id)?.value)||def;
-  const ord=Math.max(3000,Math.min(15000,g('spv-order',6000)));
+  const ord=Math.max(3000,Math.min(50000,g('spv-order',6000)));
   const com=Math.max(0.03,Math.min(0.20,g('spv-comm',5)/100));
   const mo=Math.max(200,Math.min(2000,g('spv-orders',620)));
   const ri=Math.max(1,Math.min(8,g('spv-riders',3)));
@@ -5493,32 +5493,37 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
   el.innerHTML=html;
 }
 
-  function spFillFromData(period){
+function spFillFromData(period){
   const now=new Date();
   const curYear=now.getFullYear();
   const curMonth=now.getMonth()+1;
-  const deliveredOrders=S.orders.filter(o=>o.Status==='delivered'&&o.Year&&o.Month);
+
+  // Fix 1: case-insensitive status, Fix 2: apply segment filter BEFORE period filter
+  const allDelivered=S.orders.filter(o=>(o.Status||'').toLowerCase()==='delivered'&&o.Year&&o.Month);
+  const segDelivered=_spSegment==='B2C'?allDelivered.filter(o=>o.Customer_Type!=='B2B'):
+                     _spSegment==='B2B'?allDelivered.filter(o=>o.Customer_Type==='B2B'):
+                     allDelivered;
+
   let months=[];
   if(period==='prev'){
     const pm=curMonth===1?12:curMonth-1;
     const py=curMonth===1?curYear-1:curYear;
-    months=deliveredOrders.filter(o=>o.Year===py&&o.Month===pm);
+    months=segDelivered.filter(o=>o.Year===py&&o.Month===pm);
   } else if(period==='quarter'){
-    // last 3 complete months
     for(let i=1;i<=3;i++){
       const m=curMonth-i<=0?curMonth-i+12:curMonth-i;
       const y=curMonth-i<=0?curYear-1:curYear;
-      deliveredOrders.filter(o=>o.Year===y&&o.Month===m).forEach(o=>months.push(o));
+      segDelivered.filter(o=>o.Year===y&&o.Month===m).forEach(o=>months.push(o));
     }
   } else if(period==='thisyear'){
-    months=deliveredOrders.filter(o=>o.Year===curYear&&o.Month<curMonth);
+    months=segDelivered.filter(o=>o.Year===curYear&&o.Month<curMonth);
   } else if(period==='lastyear'){
-    months=deliveredOrders.filter(o=>o.Year===curYear-1);
+    months=segDelivered.filter(o=>o.Year===curYear-1);
   }
+
   const notice=document.getElementById('sp-fill-notice');
   if(!months.length){if(notice)notice.textContent='⚠ No data found for that period';return;}
 
-  // Group by month to get per-month order counts, then average
   const byMonth={};
   months.forEach(o=>{
     const k=`${o.Year}-${o.Month}`;
@@ -5530,16 +5535,10 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
   const totalOrders=months.length;
   const totalSales=months.reduce((s,o)=>s+o.Total_Sales,0);
 
-  const segMonths=months.filter(o=>{
-  if(_spSegment==='B2C')return o.Customer_Type!=='B2B';
-  if(_spSegment==='B2B')return o.Customer_Type==='B2B';
-  return true;
-  });
-  const avgMonthlyOrders=Math.round((_spSegment==='all'?totalOrders:segMonths.length)/monthKeys.length);
-  const avgOrderSize=segMonths.length?Math.round(segMonths.reduce((s,o)=>s+o.Total_Sales,0)/segMonths.length):Math.round(totalSales/totalOrders); 
-    
-  
-  // Set values and sync sliders
+  // months is already segment-filtered, so calculate directly
+  const avgMonthlyOrders=Math.round(totalOrders/Math.max(1,monthKeys.length));
+  const avgOrderSize=totalOrders?Math.round(totalSales/totalOrders):0;
+
   const setVal=(valId,sliderId,val,min,max)=>{
     const clamped=Math.max(min,Math.min(max,val));
     const vi=document.getElementById(valId);
@@ -5547,13 +5546,17 @@ function spRenderAdvisory(netPL,contribPerOrder,beOrders,beSize,capacity,orders,
     if(vi)vi.value=clamped;
     if(si)si.value=clamped;
   };
-  setVal('spv-order','sp-order',avgOrderSize,3000,15000);
+
+  // Fix 3: max order size raised to 50000 to accommodate B2B
+  setVal('spv-order','sp-order',avgOrderSize,3000,50000);
   setVal('spv-orders','sp-orders',avgMonthlyOrders,200,2000);
   spCalc();
 
-  const label=period==='prev'?'previous month':period==='quarter'?'last quarter':period==='thisyear'?'this year':' last year';
-  if(notice)notice.textContent=`✓ Filled from ${label} (${monthKeys.length} month${monthKeys.length>1?'s':''}). Commission % not updated — set manually.`;
-}
+  const segLabel=_spSegment==='B2C'?'B2C only':_spSegment==='B2B'?'B2B only':'All segments';
+  const label=period==='prev'?'previous month':period==='quarter'?'last quarter':period==='thisyear'?'this year':'last year';
+  if(notice)notice.textContent=`✓ Filled from ${label} (${monthKeys.length} month${monthKeys.length>1?'s':''}) · ${segLabel}. Commission % not updated — set manually.`;
+}  
+  
 // G&R info modals
 function showGrModal(key){
   const modals={
