@@ -4759,11 +4759,34 @@ function bcResetDefaults(){
 // ═══════════════════════════════════════════════
 // AI INTERPRET — core + section-specific callers
 // ═══════════════════════════════════════════════
+const aiCache=new Map();
+
+function _aiShowResult(panel,panelId,txt,fromCache){
+  const cacheNote=fromCache
+    ?`<span style="font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;">cached · <button onclick="document.getElementById('${panelId}')._aiRefresh?.()" style="background:none;border:none;color:var(--pur);font-size:9px;font-family:'DM Mono',monospace;cursor:pointer;padding:0;">↻ refresh</button></span>`
+    :'';
+  panel.innerHTML=`<div style="padding:12px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;"><span class="ai-lbl">🤖 AI INTERPRETATION</span>${cacheNote}</div>
+        <button onclick="document.getElementById('${panelId}').style.display='none'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;" title="Dismiss">✕</button>
+      </div>
+      <div class="ai-txt">${esc(txt)}</div>
+    </div>`;
+}
+
 async function aiInterpret(panelId,dataText,sysInstruction){
   const panel=document.getElementById(panelId);if(!panel)return;
   if(!getAnthropicKey()){
     panel.style.display='block';
     panel.innerHTML=`<div style="padding:12px 14px;font-size:12px;color:var(--acc);">⚠ No API key set. Go to Super Admin → 🧠 Context and enter your Anthropic API key.</div>`;
+    return;
+  }
+  const cacheKey=dataText;
+  if(aiCache.has(cacheKey)){
+    panel.style.display='block';
+    _aiShowResult(panel,panelId,aiCache.get(cacheKey),true);
+    panel._aiRefresh=()=>{aiCache.delete(cacheKey);aiInterpret(panelId,dataText,sysInstruction);};
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
     return;
   }
   panel.style.display='block';
@@ -4780,13 +4803,9 @@ async function aiInterpret(panelId,dataText,sysInstruction){
     if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+resp.status);}
     const d=await resp.json();
     const txt=d.content?.[0]?.text||'No response.';
-    panel.innerHTML=`<div style="padding:12px 14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span class="ai-lbl">🤖 AI INTERPRETATION</span>
-        <button onclick="document.getElementById('${panelId}').style.display='none'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;" title="Dismiss">✕</button>
-      </div>
-      <div class="ai-txt">${esc(txt)}</div>
-    </div>`;
+    aiCache.set(cacheKey,txt);
+    _aiShowResult(panel,panelId,txt,false);
+    panel._aiRefresh=()=>{aiCache.delete(cacheKey);aiInterpret(panelId,dataText,sysInstruction);};
   }catch(e){
     panel.innerHTML=`<div style="padding:12px 14px;">
       <div class="ai-lbl" style="color:var(--red);margin-bottom:6px;">⚠ INTERPRETATION FAILED</div>
