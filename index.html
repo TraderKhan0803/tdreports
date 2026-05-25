@@ -1955,6 +1955,14 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div class="adm-title" style="color:var(--pur)">🧠 Business Context Editor</div>
         <div style="font-size:11px;color:var(--t2);margin-bottom:14px;">This context is injected into every AI interpretation. Keep it accurate and up to date — Claude uses it to relate numbers to real business events.</div>
 
+        <!-- Section 0: API Key -->
+        <div style="font-size:10px;font-weight:700;color:var(--t3);font-family:'DM Mono',monospace;letter-spacing:.5px;margin-bottom:6px;">ANTHROPIC API KEY</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+          <input type="password" id="bc-api-key" placeholder="sk-ant-api03-…" style="flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);border-radius:var(--r2);padding:8px 12px;font-size:12px;font-family:'DM Mono',monospace;outline:none;">
+          <button onclick="bcSaveKey()" style="padding:8px 16px;background:var(--pur);border:none;border-radius:var(--r2);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">Save Key</button>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:18px;">Stored in your browser only — never sent to the server or saved in the code.</div>
+
         <!-- Section 1: Static context -->
         <div style="font-size:10px;font-weight:700;color:var(--t3);font-family:'DM Mono',monospace;letter-spacing:.5px;margin-bottom:6px;">STATIC BUSINESS CONTEXT</div>
         <textarea id="bc-static-txt" rows="5" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);border-radius:var(--r2);padding:10px 12px;font-size:12px;line-height:1.65;resize:vertical;font-family:'DM Sans',sans-serif;outline:none;"></textarea>
@@ -2035,7 +2043,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 // ═══════════════════════════════════════════════
 const SUPABASE_URL='https://wtagesqnpaakyrlebpuv.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0YWdlc3FucGFha3lybGVicHV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1Nzg0MzAsImV4cCI6MjA5MTE1NDQzMH0._AvBKau3tEV6TSzdKITOeBNI2XI2qZ5767_u6Pg97-4';
-const ANTHROPIC_API_KEY='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';
+function getAnthropicKey(){return localStorage.getItem('bc_anthropic_key')||'';}
 
 // ═══════════════════════════════════════════════
 // CONSTANTS
@@ -4695,10 +4703,20 @@ function bcRenderTimeline(){
     </div>`).join('');
 }
 
+function bcSaveKey(){
+  const inp=document.getElementById('bc-api-key');
+  if(!inp)return;
+  const val=inp.value.trim();
+  if(val)localStorage.setItem('bc_anthropic_key',val);
+  else localStorage.removeItem('bc_anthropic_key');
+  notif(val?'✓ API key saved':'API key cleared');
+}
 function bcInitPanel(){
   const bc=bcLoad();
   const ta=document.getElementById('bc-static-txt');
   if(ta)ta.value=bc.static;
+  const ki=document.getElementById('bc-api-key');
+  if(ki)ki.value=localStorage.getItem('bc_anthropic_key')||'';
   bcRenderTimeline();
 }
 
@@ -4743,6 +4761,11 @@ function bcResetDefaults(){
 // ═══════════════════════════════════════════════
 async function aiInterpret(panelId,dataText,sysInstruction){
   const panel=document.getElementById(panelId);if(!panel)return;
+  if(!getAnthropicKey()){
+    panel.style.display='block';
+    panel.innerHTML=`<div style="padding:12px 14px;font-size:12px;color:var(--acc);">⚠ No API key set. Go to Super Admin → 🧠 Context and enter your Anthropic API key.</div>`;
+    return;
+  }
   panel.style.display='block';
   panel.innerHTML=`<div style="display:flex;align-items:center;gap:9px;padding:12px 14px;"><div class="ai-spinner"></div><span style="font-size:11px;color:var(--t3);">Interpreting…</span></div>`;
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -4751,7 +4774,7 @@ async function aiInterpret(panelId,dataText,sysInstruction){
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
     });
     if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+resp.status);}
