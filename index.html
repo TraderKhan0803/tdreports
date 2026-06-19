@@ -5297,6 +5297,11 @@ function renderCustomerSummary(){
     }
   });
   let custs=Object.values(custMap).map(c=>({...c,AvgOrder:c.Sales/Math.max(1,c.Orders)}));
+  // Baseline = main filter area's selection (date range, B2B/B2C, city, etc.) before the area search below narrows it further
+  const baseCustomers=custs.length;
+  const baseOrders=custs.reduce((s,c)=>s+c.Orders,0);
+  const baseSales=custs.reduce((s,c)=>s+c.Sales,0);
+  const baseAvgOrder=baseOrders?baseSales/baseOrders:0;
   const addrQ=(document.getElementById('rpt-cust-addr-search')?.value||'').trim().toLowerCase();
   if(addrQ)custs=custs.filter(c=>(c.City+' '+c.Address).toLowerCase().includes(addrQ));
   custs.sort((a,b)=>{
@@ -5309,11 +5314,13 @@ function renderCustomerSummary(){
   });
   const totalSales=custs.reduce((s,c)=>s+c.Sales,0);
   const totalOrds=custs.reduce((s,c)=>s+c.Orders,0);
+  const avgOrder=totalOrds?totalSales/totalOrds:0;
+  const pctOf=(num,den)=>den?Math.round(num/den*100)+'% of total':'—';
   document.getElementById('rpt-cust-kpis').innerHTML=
-    kpi('Total Customers',fmtFull(custs.length))+
-    kpi('Total Orders',fmtFull(totalOrds),'c-blu')+
-    kpi('Total Sales',fmt(totalSales),'c-grn','PKR')+
-    kpi('Avg Order',fmt(totalOrds?totalSales/totalOrds:0),'','PKR');
+    kpi('Total Customers',fmtFull(custs.length),'',addrQ?pctOf(custs.length,baseCustomers):'')+
+    kpi('Total Orders',fmtFull(totalOrds),'c-blu',addrQ?pctOf(totalOrds,baseOrders):'')+
+    kpi('Total Sales',fmt(totalSales),'c-grn',addrQ?'PKR · '+pctOf(totalSales,baseSales):'PKR')+
+    kpi('Avg Order',fmt(avgOrder),'',addrQ?'PKR · '+pctOf(avgOrder,baseAvgOrder):'PKR');
   const frag=document.createDocumentFragment();
   custs.forEach(c=>{
     const tr=document.createElement('tr');
