@@ -1028,10 +1028,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button class="dbtn" id="rpt-btn-customers" onclick="setReport('customers')">Customer Summary</button>
         <button class="dbtn" id="rpt-btn-atrisk" onclick="setReport('atrisk')">At-Risk Customers</button>
         <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-          <button class="dbtn on" id="rpt-type-all" onclick="setRptType('all')">All</button>
-          <button class="dbtn" id="rpt-type-b2b" onclick="setRptType('B2B')">B2B</button>
-          <button class="dbtn" id="rpt-type-b2c" onclick="setRptType('B2C')">B2C</button>
-          <div style="width:1px;height:16px;background:var(--bdr);"></div>
           <button onclick="downloadReport()" id="rpt-download-btn" style="padding:4px 14px;background:var(--grn);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
         </div>
       </div>
@@ -1069,10 +1065,13 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       </div>
       <!-- Customer Summary -->
       <div id="rpt-customers" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <input type="text" id="rpt-cust-addr-search" placeholder="Search by area or address… (e.g. Islamabad, F-10, 19 Sachal Sarmast Road)" oninput="renderCustomerSummary()" style="width:100%;max-width:420px;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:7px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;">
+        </div>
         <div class="kpi-row mb12" id="rpt-cust-kpis"></div>
         <div class="tw"><div style="overflow-x:auto;overflow-y:auto;max-height:62vh;"><table class="dt" id="rpt-cust-table">
           <thead><tr>
-            <th onclick="sortRptCust('Customer')">Customer ↕</th><th>Type</th><th>City</th>
+            <th onclick="sortRptCust('Customer')">Customer ↕</th><th>Type</th><th>City</th><th>Address</th>
             <th onclick="sortRptCust('FirstOrder')" style="text-align:right">First Order ↕</th>
             <th onclick="sortRptCust('LastOrder')" style="text-align:right">Last Order ↕</th>
             <th onclick="sortRptCust('Orders')" style="text-align:right">Orders ↕</th>
@@ -4657,7 +4656,7 @@ async function recalcNewCustomers(){
 // ═══════════════════════════════════════════════
 // REPORTS
 // ═══════════════════════════════════════════════
-let rptReport='monthly',rptType='all',rptMetric='sales',rptRisk=30;
+let rptReport='monthly',rptMetric='sales',rptRisk=30;
 let rptCustSort={key:'Sales',asc:false};
 let rptChart=null,rptCustChart=null,rptSplitChart=null;
 
@@ -4914,11 +4913,6 @@ function setReport(r){
   });
   renderReport();
 }
-function setRptType(t){
-  rptType=t;
-  ['all','B2B','B2C'].forEach(x=>document.getElementById('rpt-type-'+x.toLowerCase()).classList.toggle('on',x===t));
-  renderReport();
-}
 function setRptMetric(m){
   rptMetric=m;
   ['sales','orders','avg'].forEach(x=>document.getElementById('rpt-metric-'+x)?.classList.toggle('on',x===m));
@@ -4932,7 +4926,7 @@ function setRisk(d){
 function sortRptCust(key){if(rptCustSort.key===key)rptCustSort.asc=!rptCustSort.asc;else{rptCustSort.key=key;rptCustSort.asc=false;}renderReport();}
 
 function getRptOrders(){
-  return S.orders.filter(o=>rptType==='all'||o.Customer_Type===rptType);
+  return S.orders.filter(o=>fSt.ctype==='all'||o.Customer_Type===fSt.ctype);
 }
 
 function renderReport(){
@@ -5275,7 +5269,7 @@ function renderMonthlyReport(){
     summaryEl.innerHTML=`Avg <strong style="color:var(--blu);font-family:'DM Mono',monospace;">${avgRetPct}% returning customers</strong> in ${period} — ${signal}`;
   }else if(summaryEl){summaryEl.innerHTML='';}
 
-  window._rptMonthlyData={metric:rptMetric,type:rptType,latestYr,years:[...years],
+  window._rptMonthlyData={metric:rptMetric,type:fSt.ctype,latestYr,years:[...years],
     matrix:Object.fromEntries(years.map(y=>[y,[...matrix[y]]])),
     total,bestMonth,yoyPct:yoyPctNum,
     monthlyAvg:total/Math.max(1,nonZeroMonths),
@@ -5288,18 +5282,23 @@ function renderMonthlyReport(){
 }
 
 function renderCustomerSummary(){
-  const orders=getRptOrders();
+  const orders=filtered;
   const custMap={};
   orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
-    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Address:o.Address||'',Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
     custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
     if(o.Order_Date){
       if(!custMap[name].FirstOrder||o.Order_Date<custMap[name].FirstOrder)custMap[name].FirstOrder=o.Order_Date;
-      if(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder)custMap[name].LastOrder=o.Order_Date;
+      if(!custMap[name].LastOrder||o.Order_Date>=custMap[name].LastOrder){
+        custMap[name].LastOrder=o.Order_Date;
+        if(o.Address)custMap[name].Address=o.Address;
+      }
     }
   });
   let custs=Object.values(custMap).map(c=>({...c,AvgOrder:c.Sales/Math.max(1,c.Orders)}));
+  const addrQ=(document.getElementById('rpt-cust-addr-search')?.value||'').trim().toLowerCase();
+  if(addrQ)custs=custs.filter(c=>(c.City+' '+c.Address).toLowerCase().includes(addrQ));
   custs.sort((a,b)=>{
     let va=a[rptCustSort.key],vb=b[rptCustSort.key];
     if(va instanceof Date&&vb instanceof Date)return rptCustSort.asc?va-vb:vb-va;
@@ -5319,13 +5318,13 @@ function renderCustomerSummary(){
   custs.forEach(c=>{
     const tr=document.createElement('tr');
     if(c.Type==='B2B')tr.className='b2b-row';
-    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.AvgOrder)}</td>`;
+    tr.innerHTML=`<td>${esc(c.Customer)}</td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="font-size:11px">${esc(c.City)}</td><td style="font-size:11px">${esc(c.Address||'—')}</td><td style="text-align:right;font-size:11px">${c.FirstOrder?fmtDate(c.FirstOrder):'—'}</td><td style="text-align:right;font-size:11px">${c.LastOrder?fmtDate(c.LastOrder):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.AvgOrder)}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('rpt-cust-tbody');tb.innerHTML='';
-  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
+  if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="9" style="text-align:center;padding:30px;color:var(--t3)">No data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="5" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
+  document.getElementById('rpt-cust-tfoot').innerHTML=`<tr><td colspan="6" style="text-align:right;color:var(--t3)">Totals</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalOrds)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:600">${fmtFull(totalSales)}</td><td></td></tr>`;
 }
 
 // Shared helper — builds inactive customer list relative to last order in DB
@@ -5403,30 +5402,39 @@ function downloadMonthlyExcel(){
   const agg={};
   orders.filter(o=>o.Year&&o.Month).forEach(o=>{
     const k=`${o.Year}-${o.Month}`;
-    if(!agg[k])agg[k]={Month:MONTHS[o.Month-1],Year:o.Year,Sales:0,Orders:0,Type:rptType==='all'?'Combined':rptType};
+    if(!agg[k])agg[k]={Month:MONTHS[o.Month-1],Year:o.Year,Sales:0,Orders:0,Type:fSt.ctype==='all'?'Combined':fSt.ctype};
     agg[k].Sales+=o.Total_Sales;agg[k].Orders++;
   });
   const aggRows=[['Month','Year','Sales (PKR)','Orders','Avg Order (PKR)','Type'],
     ...Object.values(agg).sort((a,b)=>a.Year-b.Year||MONTHS.indexOf(a.Month)-MONTHS.indexOf(b.Month))
     .map(r=>[r.Month,r.Year,Math.round(r.Sales),r.Orders,Math.round(r.Sales/r.Orders),r.Type])
   ];
-  makeExcelDownload(aggRows,`tezz_monthly_sales_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  makeExcelDownload(aggRows,`tezz_monthly_sales_${fSt.ctype}_${new Date().toISOString().slice(0,10)}.csv`);
   notif('✓ Downloaded monthly sales report');
 }
 
 function downloadCustomerExcel(){
-  const orders=getRptOrders();
+  const orders=filtered;
   const custMap={};
   orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
-    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
+    if(!custMap[name])custMap[name]={Customer:name,Type:o.Customer_Type,City:o.City,Address:o.Address||'',Orders:0,Sales:0,FirstOrder:null,LastOrder:null};
     custMap[name].Orders++;custMap[name].Sales+=o.Total_Sales;
-    if(o.Order_Date){if(!custMap[name].FirstOrder||o.Order_Date<custMap[name].FirstOrder)custMap[name].FirstOrder=o.Order_Date;if(!custMap[name].LastOrder||o.Order_Date>custMap[name].LastOrder)custMap[name].LastOrder=o.Order_Date;}
+    if(o.Order_Date){
+      if(!custMap[name].FirstOrder||o.Order_Date<custMap[name].FirstOrder)custMap[name].FirstOrder=o.Order_Date;
+      if(!custMap[name].LastOrder||o.Order_Date>=custMap[name].LastOrder){
+        custMap[name].LastOrder=o.Order_Date;
+        if(o.Address)custMap[name].Address=o.Address;
+      }
+    }
   });
-  const rows=[['Customer','Type','City','First Order','Last Order','Total Orders','Total Sales (PKR)','Avg Order (PKR)'],
-    ...Object.values(custMap).sort((a,b)=>b.Sales-a.Sales).map(c=>[c.Customer,c.Type,c.City,c.FirstOrder?fmtDate(c.FirstOrder):'—',c.LastOrder?fmtDate(c.LastOrder):'—',c.Orders,Math.round(c.Sales),Math.round(c.Sales/c.Orders)])
+  const addrQ=(document.getElementById('rpt-cust-addr-search')?.value||'').trim().toLowerCase();
+  let custs=Object.values(custMap);
+  if(addrQ)custs=custs.filter(c=>(c.City+' '+c.Address).toLowerCase().includes(addrQ));
+  const rows=[['Customer','Type','City','Address','First Order','Last Order','Total Orders','Total Sales (PKR)','Avg Order (PKR)'],
+    ...custs.sort((a,b)=>b.Sales-a.Sales).map(c=>[c.Customer,c.Type,c.City,c.Address,c.FirstOrder?fmtDate(c.FirstOrder):'—',c.LastOrder?fmtDate(c.LastOrder):'—',c.Orders,Math.round(c.Sales),Math.round(c.Sales/c.Orders)])
   ];
-  makeExcelDownload(rows,`tezz_customer_summary_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  makeExcelDownload(rows,`tezz_customer_summary_${fSt.ctype}_${new Date().toISOString().slice(0,10)}.csv`);
   notif('✓ Downloaded customer summary report');
 }
 
@@ -5448,7 +5456,7 @@ function downloadAtRiskExcel(){
   const rows=[['Customer','Type','Last Order','Days Inactive','Total Orders','Total Sales (PKR)','Avg Order (PKR)'],
     ...atRisk.map(c=>[c.Customer,c.Type,c.LastOrder?fmtDate(c.LastOrder):'Never',c.Days===999?'Unknown':c.Days,c.Orders,Math.round(c.Sales),Math.round(c.Sales/c.Orders)])
   ];
-  makeExcelDownload(rows,`tezz_at_risk_${rptRisk}days_${rptType}_${new Date().toISOString().slice(0,10)}.csv`);
+  makeExcelDownload(rows,`tezz_at_risk_${rptRisk}days_${fSt.ctype}_${new Date().toISOString().slice(0,10)}.csv`);
   notif('✓ Downloaded at-risk customers report');
 }
 
