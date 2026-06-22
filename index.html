@@ -2484,19 +2484,38 @@ async function loadAllData_UNUSED(){
   }catch(e){hideLoader();notif('❌ Failed to load: '+e.message);console.error(e);}
 }
 
-// Full reload (used by admin upload, delete etc) — loads everything
+// Reload (used by admin upload, delete etc) — current month first, then
+// fills in full history in the background, same pattern as loadAllData()
 async function reloadAllData(){
   showLoader('Reloading all data…');
   try{
     _setCachedConfig(null); // invalidate cache
     localStorage.removeItem('tezz_config_cache');
-    const [orders,products,config,users]=await Promise.all([
-      fetchAllRows('orders'),fetchAllRows('products'),
+
+    // Current month only — fast. Full history loads in the background below,
+    // same as loadAllData(), instead of blocking on the entire orders/products tables.
+    let mk=getCurrentMonthKey();
+    let [curYearStr,curMonStr]=mk.split('-');
+    let curYear=parseInt(curYearStr),mm=parseInt(curMonStr);
+
+    let [curOrders,config,users]=await Promise.all([
+      fetchAllRows('orders','year=eq.'+curYear+'&month=eq.'+mm),
       dbGet('admin_config','select=*'),
       dbGet('users','select=username,role,email')
     ]);
-    S.orders=orders.map(parseOrder);
-    S.prods=products.map(parseProduct);
+
+    // Fallback: if no data for current month, use most recent month with data
+    if(!curOrders.length){
+      for(let i=1;i<=6;i++){
+        let d=new Date(curYear,mm-1-i,1);
+        let fy=d.getFullYear(),fm=d.getMonth()+1;
+        const tryOrders=await fetchAllRows('orders','year=eq.'+fy+'&month=eq.'+fm);
+        if(tryOrders.length){curOrders=tryOrders;curYear=fy;mm=fm;mk=fy+'-'+String(fm).padStart(2,'0');break;}
+      }
+    }
+
+    S.orders=curOrders.map(parseOrder);
+    S.prods=[]; // products loaded in background, same as loadAllData()
     S.adminB2B=[];S.adminTests=[];S.cityMappings=[];S.manualCities={};
     S._rawConfig=config;
     config.forEach(r=>{
@@ -2509,7 +2528,10 @@ async function reloadAllData(){
     await loadLinks();
     hideLoader();
     buildDynamicFilters();buildTimeNav();applyFilters();updateMeta();updateUploadMeta();
-    _historyLoaded=true;
+
+    // Load full history in background, same as loadAllData()
+    _historyLoading=true;_historyLoaded=false;
+    _loadHistoryInBackground(mk);
   }catch(e){hideLoader();notif('❌ Failed to reload: '+e.message);}
 }
 
