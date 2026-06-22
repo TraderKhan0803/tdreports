@@ -1,0 +1,8 @@
+project_id = "wtagesqnpaakyrlebpuv"
+
+[functions.db-gateway]
+# Client sends its own session token (from the `sessions` table) in the
+# Authorization header, not a Supabase-issued JWT — platform JWT
+# verification must stay off or every request gets rejected before
+# reaching our code.
+verify_jwt = false
