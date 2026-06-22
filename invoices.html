@@ -456,7 +456,7 @@ tbody td{padding:3px 5px;}
 
 <script>
 const SB_URL='https://wtagesqnpaakyrlebpuv.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0YWdlc3FucGFha3lybGVicHV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1Nzg0MzAsImV4cCI6MjA5MTE1NDQzMH0._AvBKau3tEV6TSzdKITOeBNI2XI2qZ5767_u6Pg97-4';
+const GATEWAY_URL=SB_URL+'/functions/v1/db-gateway';
 const WORKER='https://tezz-ai.atif-k-bashir.workers.dev';
 const ADMIN_ROLES=['super','admin'];
 
@@ -474,8 +474,8 @@ let pendingSaveDoc=null,pendingSaveExt='pdf';
 
 // ── SUPABASE ──
 async function sb(method,path,body){
-  const h={'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=representation'};
-  const r=await fetch(SB_URL+'/rest/v1/'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+  const h={'Authorization':'Bearer '+authToken,'Content-Type':'application/json','Prefer':'return=representation'};
+  const r=await fetch(GATEWAY_URL+'/'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
   if(!r.ok){const t=await r.text();throw new Error(t);}
   return r.json().catch(()=>[]);
 }
@@ -490,10 +490,12 @@ async function init(){
     try{
       const u=JSON.parse(usr);
       if(ADMIN_ROLES.includes(u.role)){
+        authToken=tok;
         const s=await dbGet('sessions','token=eq.'+encodeURIComponent(tok)+'&select=username,role,expires_at');
-        if(s.length&&new Date(s[0].expires_at)>new Date()){authToken=tok;curUser=u;showApp();return;}
+        if(s.length&&new Date(s[0].expires_at)>new Date()){curUser=u;showApp();return;}
+        authToken=null;
       }
-    }catch(e){}
+    }catch(e){authToken=null;}
   }
   showLogin();
 }
@@ -504,15 +506,22 @@ async function doLogin(){
   const err=document.getElementById('li-err');
   err.textContent='Signing in…';
   try{
-    const users=await dbGet('users','username=eq.'+encodeURIComponent(u)+'&select=username,password,role,email');
-    if(!users.length||users[0].password!==p){err.textContent='Invalid username or password';return;}
-    const usr=users[0];
-    if(!ADMIN_ROLES.includes(usr.role)){err.textContent='';showDenied();return;}
-    const token=btoa(u+':'+Date.now()+':'+Math.random());
-    const expires=new Date(Date.now()+12*60*60*1000).toISOString();
-    await dbInsert('sessions',[{token,username:usr.username,role:usr.role,expires_at:expires}]);
-    authToken=token;curUser={u:usr.username,role:usr.role,email:usr.email||''};
-    localStorage.setItem('tezz_token',token);
+    const res=await fetch(GATEWAY_URL+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      if(data.error==='locked'){
+        const mins=Math.max(1,Math.ceil((new Date(data.lockedUntil).getTime()-Date.now())/60000));
+        err.textContent=`Your account is locked. Try again in ${mins} minute${mins===1?'':'s'}.`;
+      }else if(typeof data.attemptsLeft==='number'){
+        err.textContent=`Invalid username or password — ${data.attemptsLeft} out of 5 attempts left`;
+      }else{
+        err.textContent=data.error||'Invalid username or password';
+      }
+      return;
+    }
+    if(!ADMIN_ROLES.includes(data.role)){err.textContent='';showDenied();return;}
+    authToken=data.token;curUser={u:data.username,role:data.role,email:data.email||''};
+    localStorage.setItem('tezz_token',authToken);
     localStorage.setItem('tezz_user',JSON.stringify(curUser));
     logAct('session','Logged in to Invoice Generator');
     err.textContent='';showApp();
@@ -587,7 +596,7 @@ async function searchCustomer(val){
   acTimer=setTimeout(async()=>{
     dd.innerHTML='<div class="ac-msg">Searching…</div>';dd.classList.add('show');
     try{
-      const res=await fetch(SB_URL+'/rest/v1/orders?customer=ilike.*'+encodeURIComponent(val)+'*&select=customer,address,phone&limit=10',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken}});
+      const res=await fetch(GATEWAY_URL+'/orders?customer=ilike.*'+encodeURIComponent(val)+'*&select=customer,address,phone&limit=10',{headers:{'Authorization':'Bearer '+authToken}});
       if(!res.ok)throw new Error('401');
       const rows=await res.json();
       const seen=new Set();
