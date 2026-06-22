@@ -28,6 +28,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .auth-sub{color:var(--t3);font-size:11px;font-family:\'DM Mono\',monospace;letter-spacing:2px;margin-bottom:28px;}
 .auth-inp{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:var(--r2);font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:9px;}
 .auth-inp:focus{outline:none;border-color:var(--acc);}
+.auth-pass-wrap{position:relative;margin-bottom:9px;}
+.auth-pass-wrap .auth-inp{margin-bottom:0;padding-right:38px;}
+.auth-pass-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;color:var(--t3);cursor:pointer;}
+.auth-pass-toggle:hover{color:var(--t2);}
 .auth-btn{width:100%;padding:11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;}
 .auth-btn:hover{opacity:.9;}
 .auth-err{color:var(--red);font-size:12px;margin-top:6px;min-height:16px;}
@@ -697,7 +701,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     <div class="auth-logo">TEZZ</div>
     <div class="auth-sub">ANALYTICS PLATFORM</div>
     <input class="auth-inp" type="text" id="li-user" placeholder="Username" autofocus onkeydown="if(event.key==='Enter')doLogin()">
-    <input class="auth-inp" type="password" id="li-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="auth-pass-wrap">
+      <input class="auth-inp" type="password" id="li-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <span class="auth-pass-toggle" id="li-pass-toggle" onclick="toggleLoginPassword()" title="Show password">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </span>
+    </div>
     <button class="auth-btn" onclick="doLogin()">Sign In</button>
     <div class="auth-err" id="li-err"></div>
     <span class="auth-link" onclick="showForgot()">Forgot your password?</span>
@@ -2118,6 +2127,16 @@ async function fetchAllRows(table,extra=''){
 function showLogin(){document.getElementById('login-screen').style.display='flex';document.getElementById('forgot-screen').style.display='none';document.getElementById('change-pw-screen').style.display='none';}
 function showForgot(){document.getElementById('login-screen').style.display='none';document.getElementById('forgot-screen').style.display='flex';}
 
+function toggleLoginPassword(){
+  const inp=document.getElementById('li-pass');
+  const btn=document.getElementById('li-pass-toggle');
+  const showing=inp.type==='text';
+  inp.type=showing?'password':'text';
+  btn.title=showing?'Show password':'Hide password';
+  btn.innerHTML=showing
+    ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+    :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+}
 async function doLogin(){
   const u=document.getElementById('li-user').value.trim();
   const p=document.getElementById('li-pass').value;
@@ -2126,7 +2145,17 @@ async function doLogin(){
   try{
     const res=await fetch(GATEWAY_URL+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
     const data=await res.json().catch(()=>({}));
-    if(!res.ok){errEl.textContent=data.error||'Invalid username or password';return;}
+    if(!res.ok){
+      if(data.error==='locked'){
+        const mins=Math.max(1,Math.ceil((new Date(data.lockedUntil).getTime()-Date.now())/60000));
+        errEl.textContent=`Your account is locked. Try again in ${mins} minute${mins===1?'':'s'}.`;
+      }else if(typeof data.attemptsLeft==='number'){
+        errEl.textContent=`Invalid username or password — ${data.attemptsLeft} out of 5 attempts left`;
+      }else{
+        errEl.textContent=data.error||'Invalid username or password';
+      }
+      return;
+    }
     authToken=data.token;
     curUser={u:data.username,role:data.role,email:data.email||''};
     localStorage.setItem('tezz_token',authToken);

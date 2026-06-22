@@ -92,11 +92,6 @@ function clearAttempts(username: string): void {
   }).catch(() => {});
 }
 
-function lockoutMessage(lockedUntil: string): string {
-  const mins = Math.max(1, Math.ceil((new Date(lockedUntil).getTime() - Date.now()) / 60000));
-  return `Too many failed attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`;
-}
-
 async function handleLogin(req: Request): Promise<Response> {
   let body: { username?: string; password?: string };
   try {
@@ -110,7 +105,7 @@ async function handleLogin(req: Request): Promise<Response> {
 
   const attempt = await getAttempt(username);
   if (attempt?.locked_until && new Date(attempt.locked_until) > new Date()) {
-    return json(req, 429, { error: lockoutMessage(attempt.locked_until) });
+    return json(req, 429, { error: 'locked', lockedUntil: attempt.locked_until });
   }
 
   const lookupRes = await fetch(
@@ -119,9 +114,16 @@ async function handleLogin(req: Request): Promise<Response> {
   );
   if (!lookupRes.ok) return json(req, 502, { error: 'Login failed' });
   const users = await lookupRes.json();
-  if (!users.length || users[0].password !== password) {
-    const lockedUntil = await recordFailure(username, attempt?.failed_count || 0);
-    if (lockedUntil) return json(req, 429, { error: lockoutMessage(lockedUntil) });
+  const userExists = users.length > 0;
+  const passwordOk = userExists && users[0].password === password;
+
+  if (!passwordOk) {
+    const priorCount = attempt?.failed_count || 0;
+    const lockedUntil = await recordFailure(username, priorCount);
+    if (lockedUntil) return json(req, 429, { error: 'locked', lockedUntil });
+    if (userExists) {
+      return json(req, 401, { error: 'Invalid username or password', attemptsLeft: MAX_ATTEMPTS - (priorCount + 1) });
+    }
     return json(req, 401, { error: 'Invalid username or password' });
   }
   clearAttempts(username);
