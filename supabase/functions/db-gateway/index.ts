@@ -108,14 +108,25 @@ async function handleLogin(req: Request): Promise<Response> {
     return json(req, 429, { error: 'locked', lockedUntil: attempt.locked_until });
   }
 
-  const lookupRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&select=username,password,role,email,must_change_password`,
+  // Existence check only — never selects the password column, just used
+  // to decide whether a wrong-password response includes attemptsLeft.
+  const existsRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&select=username`,
     { headers: svcHeaders() },
   );
-  if (!lookupRes.ok) return json(req, 502, { error: 'Login failed' });
-  const users = await lookupRes.json();
-  const userExists = users.length > 0;
-  const passwordOk = userExists && users[0].password === password;
+  if (!existsRes.ok) return json(req, 502, { error: 'Login failed' });
+  const userExists = (await existsRes.json()).length > 0;
+
+  // The actual password check happens in Postgres via verify_password —
+  // the hash is compared server-side and never sent back here.
+  const verifyRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_password`, {
+    method: 'POST',
+    headers: { ...svcHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_username: username, p_password: password }),
+  });
+  if (!verifyRes.ok) return json(req, 502, { error: 'Login failed' });
+  const matches = await verifyRes.json();
+  const passwordOk = Array.isArray(matches) && matches.length > 0;
 
   if (!passwordOk) {
     const priorCount = attempt?.failed_count || 0;
@@ -127,14 +138,14 @@ async function handleLogin(req: Request): Promise<Response> {
     return json(req, 401, { error: 'Invalid username or password' });
   }
   clearAttempts(username);
-  const usr = users[0];
+  const usr = matches[0];
   const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
   const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
 
   const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
     method: 'POST',
     headers: { ...svcHeaders(), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify([{ token, username: usr.username, role: usr.role, expires_at: expires }]),
+    body: JSON.stringify([{ token, username, role: usr.role, expires_at: expires }]),
   });
   if (!insertRes.ok) return json(req, 502, { error: 'Login failed' });
 
@@ -145,7 +156,7 @@ async function handleLogin(req: Request): Promise<Response> {
 
   return json(req, 200, {
     token,
-    username: usr.username,
+    username,
     role: usr.role,
     email: usr.email || '',
     must_change_password: !!usr.must_change_password,
