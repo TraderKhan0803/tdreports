@@ -1514,7 +1514,13 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="rb-tpl-grid" id="rb-mt"></div>
       <div class="rb-dvd"></div>
       <div class="rb-sec">Log This Interaction</div>
-      <div style="display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;">
+      <div style="display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
+        <span class="ec-tip" style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;" title="Tracks whether this interaction was a phone call or a written message — used in CSR reporting.">Type</span>
+        <select class="rb-osel" id="rb-mtype">
+          <option value="">Select type…</option>
+          <option value="call">📞 Call</option>
+          <option value="message">💬 Message</option>
+        </select>
         <select class="rb-osel" id="rb-mo">
           <option value="">Select outcome…</option>
           <option value="Responded Positively">😊 Responded Positively</option>
@@ -7621,7 +7627,7 @@ function rbQWA(id){
   const msg=encodeURIComponent(RB_TEMPLATES[14].en.replace('[Name]',c.name));
   const target=num?`https://wa.me/${num}?text=${msg}`:`https://wa.me/?text=${msg}`;
   window.open(target,'_blank');
-  rbLogA(c.id,c.name,'Quick WA link opened','','');
+  rbLogA(c.id,c.name,'Quick WA link opened','','','message');
 }
 
 function rbDefaultWA(){
@@ -7691,6 +7697,7 @@ function rbOpenC(id){
   rbRenderMH(c);
   const note=document.getElementById('rb-mnote');if(note)note.value='';
   const mo=document.getElementById('rb-mo');if(mo)mo.value='';
+  const mtype=document.getElementById('rb-mtype');if(mtype)mtype.value='';
   const cm=document.getElementById('rb-cm');if(cm)cm.classList.add('open');
 }
 
@@ -7873,7 +7880,7 @@ function rbFilterCommHistory(){
 async function rbSaveCommReply(cid,cname){
   const txt=document.getElementById('comm-reply-text')?.value.trim();
   if(!txt){notif('⚠ Enter reply text');return;}
-  await rbLogA(cid,cname,'Customer reply logged','',txt);
+  await rbLogA(cid,cname,'Customer reply logged','',txt,'message');
   document.getElementById('comm-reply-text').value='';
   // Reload logs
   const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
@@ -7989,7 +7996,7 @@ function rbSTplBtn(btn){
 
 function rbSTpl(cid,tid,lnk){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
-  rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','');
+  rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','','message');
   rbRenderMH(c);
 }
 
@@ -8009,15 +8016,20 @@ function rbSaveLog(){
   const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
   const note=document.getElementById('rb-mnote').value.trim();
   const outcome=document.getElementById('rb-mo').value;
-  rbLogA(c.id,c.name,'Interaction logged',outcome,note);
-  document.getElementById('rb-mnote').value='';document.getElementById('rb-mo').value='';
+  const itype=document.getElementById('rb-mtype').value;
+  if(!itype){notif('⚠ Please select Call or Message');return;}
+  rbLogA(c.id,c.name,'Interaction logged',outcome,note,itype);
+  document.getElementById('rb-mnote').value='';document.getElementById('rb-mo').value='';document.getElementById('rb-mtype').value='';
   rbRenderMH(c);rbRenderAct();notif('Interaction saved');
 }
 
-async function rbLogA(cid,cn,action,outcome,note){
+async function rbLogA(cid,cn,action,outcome,note,interactionType=''){
+  // Naming convention: status/profile changes are system noise, not real
+  // outreach — keeps Phase 3's reporting able to filter them out by default.
+  const category=/^(Status:|Language set:)/.test(action)?'system':'outreach';
   const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note};
   RB.alog.unshift(entry);
-  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts}]).catch(()=>{});
+  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts,interaction_type:interactionType||'',category}]).catch(()=>{});
 }
 
 // ── ADD CUSTOMER ──────────────────────────────────────────────────────────────
