@@ -1653,9 +1653,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div class="adm-title">📂 Data Management</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files <span title="Date of most recently uploaded order record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
-            <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-orders-last-date" style="color:var(--txt);font-weight:600">—</span></div>
-            <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-orders-last-file" style="color:var(--t2)">—</span></div>
+            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Orders Files</div>
             <label class="up-btn" id="adm-lbl-orders">
               <span>📁</span><span id="adm-txt-orders">Select one or more .xlsx files</span>
               <input type="file" id="adm-file-orders" accept=".xlsx,.xls" multiple onchange="admFilesSelected('orders',this.files)">
@@ -1663,9 +1661,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <div style="font-size:10px;color:var(--t3);">Multiple files supported — processed in order.</div>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files <span title="Date of most recently uploaded product record" style="cursor:help;color:var(--acc)">ⓘ</span></div>
-            <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">Last upload: <span id="adm-prods-last-date" style="color:var(--txt);font-weight:600">—</span></div>
-            <div style="font-size:10px;color:var(--t3);margin-bottom:10px;">File: <span id="adm-prods-last-file" style="color:var(--t2)">—</span></div>
+            <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;text-transform:uppercase;margin-bottom:8px;">Products Files</div>
             <label class="up-btn" id="adm-lbl-products">
               <span>📁</span><span id="adm-txt-products">Select one or more .xlsx files</span>
               <input type="file" id="adm-file-products" accept=".xlsx,.xls" multiple onchange="admFilesSelected('products',this.files)">
@@ -2527,7 +2523,7 @@ async function reloadAllData(){
     S.users=users.map(u=>({u:u.username,role:u.role,email:u.email||''}));
     await loadLinks();
     hideLoader();
-    buildDynamicFilters();buildTimeNav();applyFilters();updateMeta();updateUploadMeta();
+    buildDynamicFilters();buildTimeNav();applyFilters();updateMeta();
 
     // Load full history in background, same as loadAllData()
     _historyLoading=true;_historyLoaded=false;
@@ -2541,7 +2537,6 @@ function launchApp(){
   buildTimeNav();
   applyFilters();
   updateMeta();
-  updateUploadMeta();
   applyPanelLayout();
   rbInit();
 }
@@ -3378,7 +3373,7 @@ function updateMeta(){
 // ═══════════════════════════════════════════════
 function showAdmin(){
   if(!curUser||curUser.role==='viewer')return;
-  renderAdminLists();buildCityAssign();updateUploadMeta();renderLinkList();
+  renderAdminLists();buildCityAssign();renderLinkList();
   renderUploadHistory();
   switchAdminTab('analytics');
   document.getElementById('admin-overlay').style.display='block';
@@ -3925,8 +3920,11 @@ async function sendInChunks(table,rows,ulog){
     const pct=Math.round(((i+1)/chunks.length)*100);
     ulog(`⬆ Batch ${i+1}/${chunks.length} (${pct}%)…`);
     try{
-      const res=await fetch(GATEWAY_URL+'/'+table,{method:'POST',headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json','Prefer':'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(chunks[i])});
-      if(res.ok)added+=chunks[i].length;
+      // return=representation (not minimal) so we get back only the rows
+      // actually inserted — duplicates skipped by ignore-duplicates don't
+      // come back, which is how we can tell a real 0-added from a normal one.
+      const res=await fetch(GATEWAY_URL+'/'+table,{method:'POST',headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json','Prefer':'resolution=ignore-duplicates,return=representation'},body:JSON.stringify(chunks[i])});
+      if(res.ok){const inserted=await res.json().catch(()=>[]);added+=Array.isArray(inserted)?inserted.length:0;}
       else{const t=await res.text();ulog(`<span style="color:var(--acc)">⚠ Batch ${i+1}: ${t.slice(0,100)}</span>`);}
     }catch(e){ulog(`<span style="color:var(--acc)">⚠ ${e.message}</span>`);}
   }
@@ -3938,6 +3936,7 @@ async function runAdminUpload(){
   log.style.display='block';log.innerHTML='';
   const ulog=m=>{log.innerHTML+=`<div>${m}</div>`;log.scrollTop=log.scrollHeight;};
   document.getElementById('adm-upload-btn').disabled=true;
+  const zeroRowFiles=[];
   if(admOrdersFiles.length){
     ulog(`<span style="color:var(--acc)">━━ Processing ${admOrdersFiles.length} Orders file(s) ━━</span>`);
     let total=0;
@@ -3951,10 +3950,14 @@ async function runAdminUpload(){
           const dbRows=rows.map(r=>({order_id:r.Order_ID,customer:r.Customer,address:r.Address,phone:r.Phone,placed_on:r.Placed_On,payment:r.Payment,source:r.Source,status:r.Status,total_sales:r.Total_Sales,other_details:r.Other_Details,scheduled:r.Scheduled,city:r.City,customer_type:r.Customer_Type,is_first_order:r.IsFirstOrder,year:r.Year||null,month:r.Month||null,order_date_str:r.Order_Date_Str,order_date_iso:r.Order_Date_ISO,batch_id:batchId}));
           const res=await sendInChunks('orders',dbRows,ulog);total+=res.added;
           await saveBatchMeta(batchId,'orders',f.name,res.added);
+          if(res.added===0){
+            ulog(`<span style="color:var(--acc)">⚠️ 0 new rows added from ${f.name} — every row in this file already exists in the database, likely from a previous upload. If you intended to replace this data, delete the existing batch first, then re-upload.</span>`);
+            zeroRowFiles.push(f.name);
+          }
         }
       }catch(e){ulog(`<span style="color:var(--red)">❌ ${e.message}</span>`);}
     }
-    ulog(`<span style="color:var(--grn)">✅ Orders complete — ${total} rows</span>`);
+    if(total>0)ulog(`<span style="color:var(--grn)">✅ Orders complete — ${total} rows</span>`);
     logActivity('upload','Uploaded '+admOrdersFiles.length+' orders file(s): '+total+' rows');
   }
   if(admProductsFiles.length){
@@ -3970,10 +3973,14 @@ async function runAdminUpload(){
           const dbRows=rows.map(r=>({sr_no:r.SR_NO,product_id:r.Product_ID,mart_id:r.Mart_ID,product_name:r.Product_Name,order_id:r.Order_ID,qty:r.Qty,unit_price:r.Unit_Price,total_price:r.Total_Price,batch_id:batchId}));
           const res=await sendInChunks('products',dbRows,ulog);total+=res.added;
           await saveBatchMeta(batchId,'products',f.name,res.added);
+          if(res.added===0){
+            ulog(`<span style="color:var(--acc)">⚠️ 0 new rows added from ${f.name} — every row in this file already exists in the database, likely from a previous upload. If you intended to replace this data, delete the existing batch first, then re-upload.</span>`);
+            zeroRowFiles.push(f.name);
+          }
         }
       }catch(e){ulog(`<span style="color:var(--red)">❌ ${e.message}</span>`);}
     }
-    ulog(`<span style="color:var(--grn)">✅ Products complete — ${total} rows</span>`);
+    if(total>0)ulog(`<span style="color:var(--grn)">✅ Products complete — ${total} rows</span>`);
     logActivity('upload','Uploaded '+admProductsFiles.length+' products file(s): '+total+' rows');
   }
   admOrdersFiles=[];admProductsFiles=[];
@@ -3982,7 +3989,10 @@ async function runAdminUpload(){
   document.getElementById('adm-lbl-orders').classList.remove('loaded');
   document.getElementById('adm-lbl-products').classList.remove('loaded');
   document.getElementById('adm-upload-btn').disabled=true;
-  await reloadAllData();updateUploadMeta();renderUploadHistory();
+  await reloadAllData();renderUploadHistory();
+  if(zeroRowFiles.length){
+    alert('⚠️ No new rows were added from '+(zeroRowFiles.length===1?'this file':zeroRowFiles.length+' of the files')+':\n\n'+zeroRowFiles.map(n=>'• '+n).join('\n')+'\n\nEvery row already exists in the database, likely from a previous upload. If you intended to replace this data, delete the existing batch first, then re-upload.');
+  }
 }
 
 async function saveBatchMeta(batchId,type,filename,rowCount){
@@ -4000,14 +4010,23 @@ async function deleteBatch(batchId,type){
   if(!confirm(`Delete all ${type} data from this file? This cannot be undone.`))return;
   showLoader('Deleting batch…');
   try{
-    if(type==='orders'){
-      await sb('DELETE','orders?batch_id=eq.'+encodeURIComponent(batchId));
-    } else {
-      await sb('DELETE','products?batch_id=eq.'+encodeURIComponent(batchId));
-    }
+    // Look up the filename before its metadata gets deleted below
+    let filename=batchId;
+    const metaRows=await dbGet('admin_config','type=eq.batch&value1=eq.'+encodeURIComponent(batchId)).catch(()=>[]);
+    if(metaRows.length){try{const meta=JSON.parse(metaRows[0].value2||'{}');if(meta.filename)filename=meta.filename;}catch(e){}}
+
+    const table=type==='orders'?'orders':'products';
+    const res=await fetch(GATEWAY_URL+'/'+table+'?batch_id=eq.'+encodeURIComponent(batchId),{
+      method:'DELETE',
+      headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json','Prefer':'return=representation'}
+    });
+    const deletedRows=await res.json().catch(()=>[]);
+    const count=Array.isArray(deletedRows)?deletedRows.length:0;
+
     // Remove batch meta
     await sb('DELETE','admin_config?type=eq.batch&value1=eq.'+encodeURIComponent(batchId));
     hideLoader();notif('✓ Batch deleted');
+    logActivity('admin',`Deleted ${type} batch "${filename}" — ${count} record(s) removed`);
     await reloadAllData();renderUploadHistory();
   }catch(e){hideLoader();notif('❌ Delete failed: '+e.message);}
 }
@@ -4037,22 +4056,6 @@ async function renderUploadHistory(){
   }catch(e){el.innerHTML=`<div style="color:var(--t3);font-size:12px;">Could not load history.</div>`;}
 }
 
-async function saveUploadMeta(type,filename){
-  const now=new Date().toISOString();
-  const kd='lastUpload_'+type+'_date',kf='lastUpload_'+type+'_file';
-  await sb('DELETE','admin_config?type=eq.'+kd).catch(()=>{});
-  await sb('DELETE','admin_config?type=eq.'+kf).catch(()=>{});
-  await dbInsert('admin_config',[{type:kd,value1:now,value2:'',updated_by:curUser?.u||'',updated_at:now},{type:kf,value1:filename,value2:'',updated_by:curUser?.u||'',updated_at:now}]).catch(()=>{});
-}
-function updateUploadMeta(){
-  const cfg=S._rawConfig||[];
-  const get=k=>{const r=cfg.find(c=>c.type===k);return r?r.value1:'—';};
-  const fmtM=d=>d&&d!=='—'?new Date(d).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}):d;
-  document.getElementById('adm-orders-last-date').textContent=fmtM(get('lastUpload_orders_date'));
-  document.getElementById('adm-orders-last-file').textContent=get('lastUpload_orders_file');
-  document.getElementById('adm-prods-last-date').textContent=fmtM(get('lastUpload_products_date'));
-  document.getElementById('adm-prods-last-file').textContent=get('lastUpload_products_file');
-}
 function confirmClearData(){document.getElementById('clear-inp').value='';document.getElementById('clear-modal').style.display='block';}
 async function executeDataClear(){
   if(document.getElementById('clear-inp').value.trim()!=='DELETE'){notif('⚠ Type DELETE in capitals to confirm');return;}
