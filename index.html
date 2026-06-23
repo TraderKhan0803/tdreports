@@ -4043,10 +4043,12 @@ async function renderUploadHistory(){
       <tbody>${cfg.map(r=>{
         let meta={};try{meta=JSON.parse(r.value2||'{}');}catch(e){}
         const dateStr=meta.uploadedAt?new Date(meta.uploadedAt).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'}):'—';
+        const zeroRows=!meta.rowCount;
+        const zeroWarn=zeroRows?` <span title="No new rows added — likely a duplicate of an existing upload." onclick="notif('⚠️ No new rows added — likely a duplicate of an existing upload.')" style="cursor:pointer;color:var(--acc);">⚠️</span>`:'';
         return`<tr>
           <td title="${esc(meta.filename||'')}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">${esc((meta.filename||'unknown').slice(0,30))}</td>
           <td><span class="bdg ${meta.type==='orders'?'b-b2b':'b-b2c'}">${meta.type||'—'}</span></td>
-          <td style="text-align:right;font-family:\'DM Mono\',monospace;">${(meta.rowCount||0).toLocaleString()}</td>
+          <td style="text-align:right;font-family:\'DM Mono\',monospace;">${(meta.rowCount||0).toLocaleString()}${zeroWarn}</td>
           <td style="font-size:11px;color:var(--t3);">${dateStr}</td>
           <td style="font-size:11px;">${esc(meta.uploadedBy||'—')}</td>
           <td><button onclick="deleteBatch('${esc(r.value1)}','${esc(meta.type||'orders')}')" style="padding:2px 8px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;color:var(--red);font-size:10px;cursor:pointer;">Delete</button></td>
