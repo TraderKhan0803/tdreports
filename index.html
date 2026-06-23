@@ -3150,9 +3150,13 @@ function showCustInfo(cust){
     <span style="color:var(--t3);font-size:10px;">${esc(o.Order_Date_Str||'—')}</span>
     <span style="font-family:\'DM Mono\',monospace;">${fmtFull(o.Total_Sales)}</span>
   </div>`).join('');
+  const rbCust=RB.custs.find(x=>x.name.toLowerCase()===cust.toLowerCase());
+  const custLang=rbCust?.lang||'?';
   document.getElementById('cust-info-box').innerHTML=`
     <div class="info-name">${esc(cust)}</div>
     <div class="info-row"><div class="info-lbl">Status</div><div class="info-val" style="color:${statusColor};font-weight:600;">${status}</div></div>
+    <div class="info-row"><div class="info-lbl">Language</div><div class="info-val"><select onchange="dashUpdLang('${esc(cust)}',this.value)" style="background:transparent;border:none;color:var(--txt);font-family:inherit;font-size:inherit;font-weight:600;outline:none;cursor:pointer;padding:0;"><option value="?" style="background:var(--sur2);color:var(--txt);"${custLang!=='ur'&&custLang!=='en'?' selected':''}>❓ Unknown</option><option value="en" style="background:var(--sur2);color:var(--txt);"${custLang==='en'?' selected':''}>🇬🇧 English</option><option value="ur" style="background:var(--sur2);color:var(--txt);"${custLang==='ur'?' selected':''}>🇵🇰 Urdu</option></select></div></div>
+    <div class="info-row"><div class="info-lbl">Communication History</div><div class="info-val" style="cursor:pointer;color:var(--acc);text-decoration:underline;" onclick="rbOpenDashCommHistory('${esc(cust)}')">View full history →</div></div>
     <div class="info-row"><div class="info-lbl">Phone</div><div class="info-val">${esc(phone)}</div></div>
     <div class="info-row"><div class="info-lbl">Address</div><div class="info-val" style="font-size:10px;">${esc(addr)}</div></div>
     <div class="info-row"><div class="info-lbl">All Orders</div><div class="info-val" style="font-family:\'DM Mono\',monospace;">${allOrds.length}</div></div>
@@ -7661,7 +7665,7 @@ function rbOpenC(id){
   const mig=document.getElementById('rb-mig');
   if(mig)mig.innerHTML=
     '<div class="rb-ii"><div class="rb-il">Location</div><div class="rb-iv">'+(mapsUrl?'<a href="'+mapsUrl+'" target="_blank" style="color:var(--acc);text-decoration:none;word-break:break-word;">📍 '+esc(rbShortenAddress(latestAddress))+'</a>':'📍 —')+'</div></div>'+
-    '<div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv">'+(c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown')+'</div></div>'+
+    '<div class="rb-ii"><div class="rb-il">Language</div><div class="rb-iv"><select id="rb-mls" onchange="rbUpdLang()" style="background:transparent;border:none;color:var(--txt);font-family:\'DM Mono\',monospace;font-size:12px;font-weight:600;outline:none;cursor:pointer;width:100%;"><option value="?" style="background:var(--sur2);color:var(--txt);"'+(c.lang!=='ur'&&c.lang!=='en'?' selected':'')+'>❓ Unknown</option><option value="en" style="background:var(--sur2);color:var(--txt);"'+(c.lang==='en'?' selected':'')+'>🇬🇧 English</option><option value="ur" style="background:var(--sur2);color:var(--txt);"'+(c.lang==='ur'?' selected':'')+'>🇵🇰 Urdu</option></select></div></div>'+
     '<div class="rb-ii"><div class="rb-il">Status</div><div class="rb-iv"><span class="rb-bdg '+rbBc(autoStatus)+'">'+autoStatus+'</span></div></div>'+
     '<div class="rb-ii"><div class="rb-il">Last Order</div><div class="rb-iv">'+(c.lastOrder||'?')+'</div></div>'+
     '<div class="rb-ii"><div class="rb-il">Days Since</div><div class="rb-iv" style="color:'+dc+'">'+d+'d</div></div>'+
@@ -8474,21 +8478,39 @@ function rbAutoStatus(lastOrderDate){
 
 // ── OUTREACH TAB (Marketing lists in Raabta) ──────────────────────────────────
 
-function rbOpenOutreachCust(name){
-  // Find in RB.custs or create temp record
+function rbFindOrCreateCust(name){
+  // Find in RB.custs or create a temp record from order data
   let c=RB.custs.find(x=>x.name.toLowerCase()===name.toLowerCase());
   if(!c){
-    // Pull from orders data
     const orders=S.orders.filter(o=>resolveCustomerName(o.Customer)===name);
-    if(!orders.length){notif('Customer not found in Raabta');return;}
+    if(!orders.length)return null;
     const lastOrd=orders.reduce((m,o)=>o.Order_Date&&(!m||o.Order_Date>m)?o.Order_Date:m,null);
     c={id:'tmp_'+rbUid(),name,phone:orders[0].Phone||'',city:orders[0].City||'',lang:'?',
       status:rbAutoStatus(lastOrd?lastOrd.toISOString().split('T')[0]:''),
       lastOrder:lastOrd?lastOrd.toISOString().split('T')[0]:'',notes:''};
     RB.custs.push(c);rbSave();
   }
+  return c;
+}
+function rbOpenOutreachCust(name){
+  const c=rbFindOrCreateCust(name);
+  if(!c){notif('Customer not found in Raabta');return;}
   RB.acid=c.id;
   rbOpenC(c.id);
+}
+// Used by the Dashboard's Customer Info panel, which works off S.orders
+// rather than RB.custs — creates the Raabta record on first edit/use only,
+// not just from viewing the panel.
+function dashUpdLang(name,newLang){
+  const c=rbFindOrCreateCust(name);
+  if(!c){notif('Customer not found');return;}
+  if(newLang!==c.lang){rbLogA(c.id,c.name,`Language set: ${newLang}`,'','');c.lang=newLang;rbSave();}
+  showCustInfo(name);
+}
+function rbOpenDashCommHistory(name){
+  const c=rbFindOrCreateCust(name);
+  if(!c){notif('Customer not found');return;}
+  rbOpenCommHistory(c.id,c.name);
 }
 
 // ── UPDATED rbInit — Fatima = full access ─────────────────────────────────────
