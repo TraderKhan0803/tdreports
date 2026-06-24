@@ -1335,19 +1335,19 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <option value="">All Users</option>
           </select>
           <input type="text" id="rb-act-client" placeholder="Search client…" oninput="rbRenderAct()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;flex:1;min-width:130px;">
-          <select class="rb-osel" id="rb-act-itype" onchange="rbRenderAct()">
+          <select class="rb-osel" id="rb-act-itype" onchange="rbActClearCardFilterAndRender()">
             <option value="">All Types</option>
             <option value="call">📞 Call</option>
             <option value="message">💬 Message</option>
           </select>
-          <select class="rb-osel" id="rb-act-outcome" onchange="rbRenderAct()">
+          <select class="rb-osel" id="rb-act-outcome" onchange="rbActClearCardFilterAndRender()">
             <option value="">All Outcomes</option>
           </select>
           <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="rb-act-system" onchange="rbRenderAct()" style="accent-color:var(--acc);"> Show system events too</label>
         </div>
         <div style="overflow-x:auto;">
           <table class="rb-act-table">
-            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Follow-up</th><th>Outcome / Note</th><th></th></tr></thead>
+            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th></tr></thead>
             <tbody id="rb-act-body"></tbody>
           </table>
         </div>
