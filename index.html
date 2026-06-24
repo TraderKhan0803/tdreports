@@ -1332,7 +1332,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         </div>
         <div style="overflow-x:auto;">
           <table class="rb-act-table">
-            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th></tr></thead>
+            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th></tr></thead>
             <tbody id="rb-act-body"></tbody>
           </table>
         </div>
@@ -1526,12 +1526,6 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <span id="rb-mtype-sent-note" style="display:none;font-size:10px;color:var(--t3);">💬 Logged as Message — already sent this session</span>
         <select class="rb-osel" id="rb-mo">
           <option value="">Select outcome…</option>
-          <option value="Responded Positively">😊 Responded Positively</option>
-          <option value="Placed Order">🛒 Placed Order</option>
-          <option value="No Response">😶 No Response</option>
-          <option value="Complaint Received">⚠️ Complaint Received</option>
-          <option value="Complaint Resolved">✅ Complaint Resolved</option>
-          <option value="Requested Callback">📞 Requested Callback</option>
         </select>
       </div>
       <textarea id="rb-mnote" placeholder="Add a note about this conversation…" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;min-height:65px;resize:vertical;outline:none;margin-bottom:8px;display:block;"></textarea>
@@ -1768,6 +1762,17 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <button class="adm-add" onclick="rbAddWANumber()">+ Add</button>
         </div>
         <div id="rb-wa-list" style="margin-top:8px;"></div>
+      </div>
+      <!-- Outcome Options -->
+      <div class="adm-card mb12">
+        <div class="adm-title">🏷 Outcome Options</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Outcomes available when logging a Raabta interaction. The 6 default outcomes are permanent and can't be removed — you can still add your own on top.</div>
+        <div class="adm-inp-row" style="flex-wrap:wrap;">
+          <input class="adm-inp" id="rb-oc-icon" placeholder="Icon (optional)" style="flex:0 0 110px;">
+          <input class="adm-inp" id="rb-oc-label" placeholder="Outcome label (e.g. Asked for Discount)" style="flex:1;min-width:160px;">
+          <button class="adm-add" onclick="rbAddOutcome()">+ Add New Outcome</button>
+        </div>
+        <div id="rb-oc-list" style="margin-top:8px;"></div>
       </div>
       <!-- Template Editor -->
       <div class="adm-card mb12">
@@ -2240,6 +2245,9 @@ function onLoginSuccess(){
     if(lmA)lmA.style.display=access.analytics?'':'none';
     if(lmR)lmR.style.display=access.raabta?'':'none';
     if(lmE)lmE.style.display=access.exec?'':'none';
+    if(curUser.role!=='admin'&&curUser.role!=='super'&&access.raabtaAdmin){
+      const btnAdmin=document.getElementById('btn-admin');if(btnAdmin)btnAdmin.style.display='';
+    }
     if(access.analytics)setMode('analytics');
     else if(access.raabta)setMode('raabta');
     else if(access.exec)setMode('exec');
@@ -3385,10 +3393,19 @@ function updateMeta(){
 // ADMIN
 // ═══════════════════════════════════════════════
 function showAdmin(){
-  if(!curUser||curUser.role==='viewer')return;
-  renderAdminLists();buildCityAssign();renderLinkList();
-  renderUploadHistory();
-  switchAdminTab('analytics');
+  if(!curUser)return;
+  const isFullAdmin=curUser.role==='admin'||curUser.role==='super';
+  const raabtaAdminOnly=!isFullAdmin&&getUserAccess(curUser).raabtaAdmin;
+  if(curUser.role==='viewer'&&!raabtaAdminOnly)return;
+  const tabAnalytics=document.getElementById('adm-tab-analytics');
+  if(tabAnalytics)tabAnalytics.style.display=raabtaAdminOnly?'none':'';
+  if(raabtaAdminOnly){
+    switchAdminTab('raabta');
+  }else{
+    renderAdminLists();buildCityAssign();renderLinkList();
+    renderUploadHistory();
+    switchAdminTab('analytics');
+  }
   document.getElementById('admin-overlay').style.display='block';
 }
 async function showSuper(){
@@ -4178,6 +4195,7 @@ function editUserPerms(username){
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-downloads" ${perms.downloads?'checked':''} style="accent-color:var(--blu);width:15px;height:15px;"> ⬇ Download Reports</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-templates" ${perms.templates?'checked':''} style="accent-color:var(--acc);width:15px;height:15px;"> ✏ Edit Message Templates</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-scenario" ${perms.scenario?'checked':''} style="accent-color:var(--pur);width:15px;height:15px;"> 🎯 Scenario Planner</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;"><input type="checkbox" id="ep-raabtaAdmin" ${perms.raabtaAdmin?'checked':''} style="accent-color:var(--grn);width:15px;height:15px;"> 🛠 Raabta Admin</label>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button onclick="document.getElementById('edit-perms-overlay').remove()" style="padding:7px 16px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
@@ -4197,11 +4215,13 @@ async function saveEditedPerms(username){
     downloads:!!document.getElementById('ep-downloads')?.checked,
     templates:!!document.getElementById('ep-templates')?.checked,
     scenario:!!document.getElementById('ep-scenario')?.checked,
+    raabtaAdmin:!!document.getElementById('ep-raabtaAdmin')?.checked,
   };
   await saveUserPerms(username,perms);
   // Reload config so renderUserList shows updated perms
   const config=await dbGet('admin_config','select=*');
   S._rawConfig=config;
+  _setCachedConfig(config); // keep the 1hr config cache fresh too -- otherwise the next login on this browser (even a different user) could load stale config missing this permission change for up to an hour
   document.getElementById('edit-perms-overlay')?.remove();
   renderUserList();
   notif(`✓ Permissions updated for "${username}"`);
@@ -6497,7 +6517,7 @@ let aiLoading=false;
 // ═══════════════════════════════════════════════
 // RAABTA — STATE & STORAGE
 // ═══════════════════════════════════════════════
-let RB={custs:[],alog:[],waNumbers:[],acid:null,tplLangState:{},campaigns:[],sentThisSession:false};
+let RB={custs:[],alog:[],waNumbers:[],acid:null,tplLangState:{},campaigns:[],sentThisSession:false,outcomes:[]};
 
 function rbSave(){
   localStorage.setItem('rb_custs',JSON.stringify(RB.custs));
@@ -6520,6 +6540,7 @@ async function rbInit(){
   rbLoad();
   await alertsLoad();
   await rbLoadWANumbers();
+  await rbLoadOutcomes();
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -7466,9 +7487,9 @@ function toggleViewerAccess(){
 }
 
 function getUserAccess(user){
-  if(!user)return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};
-  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true,templates:true,scenario:true};
-  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true,templates:true,scenario:false};
+  if(!user)return{analytics:false,raabta:false,exec:false,growth:false,downloads:false,raabtaAdmin:false};
+  if(user.role==='super')return{analytics:true,raabta:true,exec:true,growth:true,downloads:true,templates:true,scenario:true,raabtaAdmin:true};
+  if(user.role==='admin')return{analytics:true,raabta:true,exec:true,growth:false,downloads:true,templates:true,scenario:false,raabtaAdmin:true};
   try{
     const cfg=S._rawConfig||[];
     const row=cfg.find(c=>c.type==='user_perms_'+user.u);
@@ -7481,8 +7502,9 @@ function getUserAccess(user){
       downloads:!!perms.downloads,
       templates:!!perms.templates,
       scenario:!!perms.scenario,
+      raabtaAdmin:!!perms.raabtaAdmin,
     };
-  }catch(e){return{analytics:false,raabta:false,exec:false,growth:false,downloads:false};}
+  }catch(e){return{analytics:false,raabta:false,exec:false,growth:false,downloads:false,raabtaAdmin:false};}
 }
 
 async function saveUserPerms(username, perms){
@@ -7512,7 +7534,7 @@ function switchAdminTab(tab){
   document.getElementById('adm-tab-analytics').style.borderBottomColor=isAnalytics?'var(--acc)':'transparent';
   document.getElementById('adm-tab-raabta').style.color=isAnalytics?'var(--t3)':'var(--grn)';
   document.getElementById('adm-tab-raabta').style.borderBottomColor=isAnalytics?'transparent':'var(--grn)';
-  if(tab==='raabta'){tplRenderEditor();rbRenderWAList();}
+  if(tab==='raabta'){tplRenderEditor();rbRenderWAList();rbRenderOutcomeList();}
 }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────────────
@@ -7704,7 +7726,7 @@ function rbOpenC(id){
   if(hist){hist.style.maxHeight='0';hist.style.overflow='hidden';}
   rbRenderMH(c);
   const note=document.getElementById('rb-mnote');if(note)note.value='';
-  const mo=document.getElementById('rb-mo');if(mo)mo.value='';
+  const mo=document.getElementById('rb-mo');if(mo){mo.innerHTML=rbBuildOutcomeOptionsHTML();mo.value='';}
   const mtype=document.getElementById('rb-mtype');if(mtype)mtype.value='';
   RB.sentThisSession=false;
   const mtw=document.getElementById('rb-mtype-wrap');if(mtw)mtw.style.display='inline-flex';
@@ -7816,34 +7838,33 @@ function rbToggleHistory(){
   p.style.overflow=open?'hidden':'auto';
 }
 
+function rbCommLogEntryHTML(l,nested){
+  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;">EDITED</span>':'';
+  return`
+    <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);${nested?'margin-left:14px;border-left:2px solid var(--acc);':''}">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+        ${editTag}
+        <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+        <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
+        <span style="font-weight:600;font-size:11px;color:var(--acc);">${esc(l.user)}</span>
+        <span style="font-size:11px;color:var(--txt);">${esc(l.action)}</span>
+      </div>
+      ${l.outcome?`<div style="font-size:11px;color:var(--grn);margin-bottom:2px;">${esc(l.outcome)}</div>`:''}
+      ${l.note?`<div style="font-size:11px;color:var(--t2);font-style:italic;">${esc(l.note)}</div>`:''}
+    </div>`;
+}
+
 async function rbOpenCommHistory(cid, cname){
-  // Load all logs for this customer
-  let allLogs=[];
-  try{
-    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&order=timestamp.desc&limit=500');
-    const remoteIds=new Set(rows.map(l=>l.id));
-    const localOnly=RB.alog.filter(l=>l.customerId===cid&&!remoteIds.has(l.id));
-    allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-  }catch(e){allLogs=RB.alog.filter(l=>l.customerId===cid);}
+  const grouped=await rbFetchGroupedLogs(cid);
 
   const overlay=document.createElement('div');
   overlay.id='rb-comm-overlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;';
   overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
 
-  function renderLogs(logs){
-    if(!logs.length)return'<div style="color:var(--t3);font-size:12px;padding:20px;text-align:center;font-family:\'DM Mono\',monospace;">No interactions found.</div>';
-    return logs.map(l=>`
-      <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
-          <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
-          <span style="font-weight:600;font-size:11px;color:var(--acc);">${esc(l.user)}</span>
-          <span style="font-size:11px;color:var(--txt);">${esc(l.action)}</span>
-        </div>
-        ${l.outcome?`<div style="font-size:11px;color:var(--grn);margin-bottom:2px;">${esc(l.outcome)}</div>`:''}
-        ${l.note?`<div style="font-size:11px;color:var(--t2);font-style:italic;">${esc(l.note)}</div>`:''}
-      </div>`).join('');
+  function renderLogs(grp){
+    if(!grp.length)return'<div style="color:var(--t3);font-size:12px;padding:20px;text-align:center;font-family:\'DM Mono\',monospace;">No interactions found.</div>';
+    return grp.map(l=>rbCommLogEntryHTML(l,false)+(l.edits||[]).map(e=>rbCommLogEntryHTML(e,true)).join('')).join('');
   }
 
   overlay.innerHTML=`
@@ -7860,7 +7881,7 @@ async function rbOpenCommHistory(cid, cname){
         <input type="date" id="comm-date" oninput="rbFilterCommHistory()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
       </div>
       <div id="comm-log-body" style="max-height:60vh;overflow-y:auto;">
-        ${renderLogs(allLogs)}
+        ${renderLogs(grouped)}
       </div>
       <div style="padding:12px 18px;border-top:1px solid var(--bdr);">
         <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Log a reply from customer (paste from WhatsApp):</div>
@@ -7871,21 +7892,31 @@ async function rbOpenCommHistory(cid, cname){
       </div>
     </div>`;
 
-  // Store logs for search
-  overlay._allLogs=allLogs;
+  // Store grouped threads (original + its edits, as a unit) for search
+  overlay._allGrouped=grouped;
   overlay._renderLogs=renderLogs;
   document.body.appendChild(overlay);
 }
+
+function rbLogMatches(l,q){return(l.action||'').toLowerCase().includes(q)||(l.note||'').toLowerCase().includes(q)||(l.outcome||'').toLowerCase().includes(q)||(l.user||'').toLowerCase().includes(q);}
 
 function rbFilterCommHistory(){
   const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
   const q=(document.getElementById('comm-search')?.value||'').toLowerCase();
   const d=document.getElementById('comm-date')?.value||'';
-  let logs=overlay._allLogs||[];
-  if(q)logs=logs.filter(l=>(l.action||'').toLowerCase().includes(q)||(l.note||'').toLowerCase().includes(q)||(l.outcome||'').toLowerCase().includes(q)||(l.user||'').toLowerCase().includes(q));
-  if(d)logs=logs.filter(l=>l.ts&&l.ts.startsWith(d));
+  let grouped=overlay._allGrouped||[];
+  // Filtering operates on whole threads -- a match in an edit keeps the
+  // original (and the rest of its edits) visible too, not just that row.
+  if(q)grouped=grouped.filter(l=>rbLogMatches(l,q)||(l.edits||[]).some(e=>rbLogMatches(e,q)));
+  if(d)grouped=grouped.filter(l=>(l.ts&&l.ts.startsWith(d))||(l.edits||[]).some(e=>e.ts&&e.ts.startsWith(d)));
   const body=document.getElementById('comm-log-body');
-  if(body)body.innerHTML=overlay._renderLogs(logs);
+  if(body)body.innerHTML=overlay._renderLogs(grouped);
+}
+
+async function rbRefreshCommHistory(cid,cname){
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  overlay._allGrouped=await rbFetchGroupedLogs(cid);
+  rbFilterCommHistory();
 }
 
 async function rbSaveCommReply(cid,cname){
@@ -7893,16 +7924,60 @@ async function rbSaveCommReply(cid,cname){
   if(!txt){notif('⚠ Enter reply text');return;}
   await rbLogA(cid,cname,'Customer reply logged','',txt,'message');
   document.getElementById('comm-reply-text').value='';
-  // Reload logs
-  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
-  try{
-    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&order=timestamp.desc&limit=500');
-    const remoteIds=new Set(rows.map(l=>l.id));
-    const localOnly=RB.alog.filter(l=>l.customerId===cid&&!remoteIds.has(l.id));
-    overlay._allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-  }catch(e){}
-  rbFilterCommHistory();
+  await rbRefreshCommHistory(cid,cname);
   notif('Reply saved');
+}
+
+// ── EDIT A LOGGED INTERACTION ───────────────────────────────────────────────
+// Editing never mutates the original row -- it inserts a new row with
+// is_edit=true, edited_from pointing at the *original* record's id (never
+// at a previous edit, so edits of edits still resolve back to the root).
+async function rbOpenEditLog(logId,cid,cname){
+  let rec;
+  try{
+    const rows=await dbGet('raabta_log','id=eq.'+encodeURIComponent(logId)+'&select=id,outcome,note,interaction_type,is_edit,edited_from');
+    rec=rows[0];
+  }catch(e){}
+  if(!rec){notif('⚠ Could not load that record');return;}
+  const rootId=rec.is_edit&&rec.edited_from?rec.edited_from:rec.id;
+
+  const overlay=document.createElement('div');
+  overlay.id='rb-edit-log-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;width:360px;max-width:95vw;box-sizing:border-box;">
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--acc);margin-bottom:12px;">Edit Interaction</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+      <select class="rb-osel" id="rb-edit-type" style="flex:1;min-width:130px;">
+        <option value="">Select type…</option>
+        <option value="call"${rec.interaction_type==='call'?' selected':''}>📞 Call</option>
+        <option value="message"${rec.interaction_type==='message'?' selected':''}>💬 Message</option>
+      </select>
+      <select class="rb-osel" id="rb-edit-outcome" style="flex:1;min-width:130px;"></select>
+    </div>
+    <textarea id="rb-edit-note" placeholder="Add a note about this conversation…" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;min-height:65px;resize:vertical;outline:none;margin-bottom:10px;box-sizing:border-box;">${esc(rec.note||'')}</textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+      <button onclick="document.getElementById('rb-edit-log-overlay').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
+      <button onclick="rbSaveLogEdit('${rootId}','${cid}','${esc(cname)}')" style="padding:7px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);border-radius:var(--r2);color:var(--grn);font-size:12px;font-weight:600;cursor:pointer;">Save Edit</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  // Populate the outcome select after attaching to the DOM, same way the
+  // main "Log This Interaction" panel's rb-mo select is populated.
+  document.getElementById('rb-edit-outcome').innerHTML=rbBuildOutcomeOptionsHTML(rec.outcome||'');
+}
+
+async function rbSaveLogEdit(rootId,cid,cname){
+  const outcome=document.getElementById('rb-edit-outcome').value;
+  const note=document.getElementById('rb-edit-note').value.trim();
+  const itype=document.getElementById('rb-edit-type').value;
+  if(!itype){notif('⚠ Please select Call or Message');return;}
+  await rbLogA(cid,cname,'Interaction logged',outcome,note,itype,rootId,true);
+  document.getElementById('rb-edit-log-overlay')?.remove();
+  notif('Edit saved');
+  if(RB.acid===cid){const c=RB.custs.find(x=>x.id===cid);if(c)rbRenderMH(c);}
+  if(document.getElementById('rb-comm-overlay'))await rbRefreshCommHistory(cid,cname);
+  if(document.getElementById('rb-act-body'))await rbRenderAct();
 }
 
 function rbGoToDash(name){
@@ -7911,19 +7986,49 @@ function rbGoToDash(name){
 }
 
 
+// Groups a flat, timestamp-sorted list of raabta_log rows so each edit
+// (is_edit, edited_from) is attached to its original record rather than
+// shown as its own top-level entry. Edits always point at the original,
+// never at another edit, so this is a one-level grouping, not a chain.
+function rbGroupLogsWithEdits(logs){
+  const editsByOriginal={};
+  logs.filter(l=>l.isEdit&&l.editedFrom).forEach(e=>{
+    (editsByOriginal[e.editedFrom]=editsByOriginal[e.editedFrom]||[]).push(e);
+  });
+  Object.values(editsByOriginal).forEach(arr=>arr.sort((a,b)=>new Date(a.ts)-new Date(b.ts)));
+  return logs.filter(l=>!l.isEdit).map(l=>({...l,edits:editsByOriginal[l.id]||[]}));
+}
+
+async function rbFetchGroupedLogs(cid,limit=500){
+  try{
+    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&order=timestamp.desc&limit='+limit);
+    const remoteIds=new Set(rows.map(l=>l.id));
+    const localOnly=RB.alog.filter(l=>l.customerId===cid&&!remoteIds.has(l.id));
+    const flat=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note,editedFrom:l.edited_from,isEdit:!!l.is_edit})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    return rbGroupLogsWithEdits(flat);
+  }catch(e){
+    return rbGroupLogsWithEdits(RB.alog.filter(l=>l.customerId===cid));
+  }
+}
+
+function rbLogEntryHTML(l,nested){
+  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>':'';
+  return`<div class="rb-log"${nested?' style="margin-left:14px;border-left:2px solid var(--acc);padding-left:9px;"':''}>
+    <div class="rb-lt">${editTag}<span class="rb-la">${esc(l.action)}</span><span class="rb-lm">${esc(l.user)} · ${rbFt(l.ts)}</span></div>
+    ${l.outcome?`<div class="rb-lo">${esc(l.outcome)}</div>`:''}
+    ${l.note?`<div class="rb-ln">${esc(l.note)}</div>`:''}
+  </div>`;
+}
+function rbLogThreadHTML(l){
+  return rbLogEntryHTML(l,false)+(l.edits||[]).map(e=>rbLogEntryHTML(e,true)).join('');
+}
+
 async function rbRenderMH(c){
   const el=document.getElementById('rb-mh');if(!el)return;
   el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:7px 0;">Loading…</div>';
   try{
-    const rows=await dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(c.id)+'&order=timestamp.desc&limit=100');
-    const remoteIds=new Set(rows.map(l=>l.id));
-    const localOnly=RB.alog.filter(l=>l.customerId===c.id&&!remoteIds.has(l.id));
-    const allLogs=[...rows.map(l=>({ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-    el.innerHTML=allLogs.length?allLogs.map(l=>`<div class="rb-log">
-      <div class="rb-lt"><span class="rb-la">${esc(l.action)}</span><span class="rb-lm">${esc(l.user)} · ${rbFt(l.ts)}</span></div>
-      ${l.outcome?`<div class="rb-lo">${esc(l.outcome)}</div>`:''}
-      ${l.note?`<div class="rb-ln">${esc(l.note)}</div>`:''}
-    </div>`).join(''):'<div style="color:var(--t3);font-size:11px;padding:7px 0;font-family:\'DM Mono\',monospace;">No interactions logged yet.</div>';
+    const grouped=await rbFetchGroupedLogs(c.id,100);
+    el.innerHTML=grouped.length?grouped.map(l=>rbLogThreadHTML(l)).join(''):'<div style="color:var(--t3);font-size:11px;padding:7px 0;font-family:\'DM Mono\',monospace;">No interactions logged yet.</div>';
   }catch(e){el.innerHTML='<div style="color:var(--red);font-size:11px;padding:7px 0;">Failed to load</div>';}
 }
 
@@ -8045,13 +8150,14 @@ function rbMarkSentThisSession(cid){
   const mtw=document.getElementById('rb-mtype-wrap');if(mtw)mtw.style.display='none';
   const mtn=document.getElementById('rb-mtype-sent-note');if(mtn)mtn.style.display='block';
 }
-async function rbLogA(cid,cn,action,outcome,note,interactionType=''){
+async function rbLogA(cid,cn,action,outcome,note,interactionType='',editedFrom='',isEdit=false){
   // Naming convention: status/profile changes are system noise, not real
   // outreach — keeps Phase 3's reporting able to filter them out by default.
   const category=/^(Status:|Language set:)/.test(action)?'system':'outreach';
-  const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note};
+  const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note,interactionType,editedFrom,isEdit:!!isEdit};
   RB.alog.unshift(entry);
-  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts,interaction_type:interactionType||'',category}]).catch(()=>{});
+  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts,interaction_type:interactionType||'',category,edited_from:editedFrom||null,is_edit:!!isEdit}]).catch(()=>{});
+  return entry.id;
 }
 
 // ── ADD CUSTOMER ──────────────────────────────────────────────────────────────
@@ -8160,29 +8266,36 @@ function rbCpTpl(id){
 async function rbRenderAct(){
   const fu=document.getElementById('rb-af')?.value||'';
   const tb=document.getElementById('rb-act-body');if(!tb)return;
-  tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
+  tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
   try{
     let qp='order=timestamp.desc&limit=300';
     if(fu)qp+='&username=eq.'+encodeURIComponent(fu);
     const rows=await dbGet('raabta_log',qp);
     const remoteIds=new Set(rows.map(l=>l.id));
     const localOnly=RB.alog.filter(l=>!remoteIds.has(l.id));
-    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,editedFrom:l.edited_from,isEdit:!!l.is_edit})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
     const af=document.getElementById('rb-af');
     if(af){
       const users=[...new Set(allLogs.map(l=>l.user))].sort();
       const cur=af.value;
       af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}"${u===cur?' selected':''}>${esc(u)}</option>`).join('');
     }
-    if(!allLogs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
-    tb.innerHTML=allLogs.map(l=>`<tr>
-      <td style="white-space:nowrap;color:var(--t3);font-family:\'DM Mono\',monospace;font-size:10px">${rbFt(l.ts)}</td>
-      <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
-      <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
-      <td style="color:var(--txt)">${esc(l.action)}</td>
-      <td>${l.outcome?`<span style="color:var(--acc);font-family:\'DM Mono\',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
-    </tr>`).join('');
-  }catch(e){tb.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';}
+    if(!allLogs.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
+    const grouped=rbGroupLogsWithEdits(allLogs);
+    tb.innerHTML=grouped.map(l=>rbActRowHTML(l,false)+(l.edits||[]).map(e=>rbActRowHTML(e,true)).join('')).join('');
+  }catch(e){tb.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';}
+}
+
+function rbActRowHTML(l,nested){
+  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>':'';
+  return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
+    <td style="white-space:nowrap;color:var(--t3);font-family:\'DM Mono\',monospace;font-size:10px">${rbFt(l.ts)}</td>
+    <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
+    <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
+    <td style="color:var(--txt)">${editTag}${esc(l.action)}</td>
+    <td>${l.outcome?`<span style="color:var(--acc);font-family:\'DM Mono\',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
+    <td><button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;white-space:nowrap;">Edit</button></td>
+  </tr>`;
 }
 
 // ── WHATSAPP NUMBERS ──────────────────────────────────────────────────────────
@@ -8244,6 +8357,85 @@ function rbRenderWAList(){
       </div>
       <button onclick="rbRemoveWA('${n.id}')" class="rm-btn">✕</button>
     </div>`).join('');
+}
+
+// ── OUTCOME OPTIONS ────────────────────────────────────────────────────────────
+const RB_DEFAULT_OUTCOMES=[
+  {label:'Responded Positively',icon:'😊'},
+  {label:'Placed Order',icon:'🛒'},
+  {label:'No Response',icon:'😶'},
+  {label:'Complaint Received',icon:'⚠️'},
+  {label:'Complaint Resolved',icon:'✅'},
+  {label:'Requested Callback',icon:'📞'},
+];
+function rbIsProtectedOutcome(label){return RB_DEFAULT_OUTCOMES.some(o=>o.label===label);}
+
+async function rbLoadOutcomes(){
+  try{
+    const cfg=S._rawConfig||[];
+    let cfgRows=cfg.filter(r=>r.type&&r.type.startsWith('outcome_'));
+    if(!cfgRows.length)cfgRows=await dbGet('admin_config','type=like.outcome_%25&order=updated_at.asc');
+    if(!cfgRows.length){
+      // First run — seed the original 6 outcomes into admin_config so the
+      // dropdown isn't empty for anyone until an admin adds something.
+      const now=new Date().toISOString();
+      const rows=RB_DEFAULT_OUTCOMES.map((o,i)=>{
+        const id=rbUid();
+        return{type:'outcome_'+id,value1:JSON.stringify({id,label:o.label,icon:o.icon,order:i}),value2:'',updated_by:curUser?.u||'',updated_at:now};
+      });
+      await dbInsert('admin_config',rows).catch(()=>{});
+      RB.outcomes=rows.map(r=>JSON.parse(r.value1));
+      S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);
+      return;
+    }
+    RB.outcomes=cfgRows.map(r=>{try{return JSON.parse(r.value1);}catch(e){return null;}}).filter(Boolean).sort((a,b)=>(a.order||0)-(b.order||0));
+  }catch(e){RB.outcomes=[];}
+}
+
+async function rbAddOutcome(){
+  const icon=document.getElementById('rb-oc-icon').value.trim();
+  const label=document.getElementById('rb-oc-label').value.trim();
+  if(!label){notif('⚠ Enter an outcome label');return;}
+  if(RB.outcomes.some(o=>o.label.toLowerCase()===label.toLowerCase())){notif('⚠ That outcome already exists');return;}
+  const id=rbUid();
+  const obj={id,label,icon,order:RB.outcomes.length};
+  RB.outcomes.push(obj);
+  await dbInsert('admin_config',[{type:'outcome_'+id,value1:JSON.stringify(obj),value2:'',updated_by:curUser?.u||'',updated_at:new Date().toISOString()}]).catch(()=>{});
+  S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);
+  rbRenderOutcomeList();
+  document.getElementById('rb-oc-icon').value='';document.getElementById('rb-oc-label').value='';
+  notif('Outcome added');
+  logActivity('admin','Added Raabta outcome option: '+label);
+}
+
+async function rbRemoveOutcome(id){
+  const o=RB.outcomes.find(x=>x.id===id);if(!o)return;
+  if(rbIsProtectedOutcome(o.label)){notif('⚠ This is a default outcome and cannot be removed');return;}
+  if(!confirm(`Remove outcome "${o.label}"? Existing log entries using it will have their outcome cleared — notes, timestamps and everything else stay untouched.`))return;
+  await sb('DELETE','admin_config?type=eq.outcome_'+encodeURIComponent(id)).catch(()=>{});
+  await sb('PATCH','raabta_log?outcome=eq.'+encodeURIComponent(o.label),{outcome:''}).catch(()=>{});
+  RB.alog.forEach(l=>{if(l.outcome===o.label)l.outcome='';});
+  RB.outcomes=RB.outcomes.filter(x=>x.id!==id);
+  S._rawConfig=await dbGet('admin_config','select=*').catch(()=>S._rawConfig);
+  rbRenderOutcomeList();
+  notif('Outcome removed');
+  logActivity('admin','Removed Raabta outcome option: '+o.label);
+}
+
+function rbRenderOutcomeList(){
+  const el=document.getElementById('rb-oc-list');if(!el)return;
+  if(!RB.outcomes.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;padding:6px;">No outcomes configured</div>';return;}
+  el.innerHTML=RB.outcomes.map(o=>{
+    const locked=rbIsProtectedOutcome(o.label);
+    return`<div class="rb-wa-num-row">
+      <div class="num-label">${o.icon?esc(o.icon)+' ':''}${esc(o.label)}</div>
+      ${locked?'<span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">default — can’t remove</span>':`<button onclick="rbRemoveOutcome('${o.id}')" class="rm-btn">✕</button>`}
+    </div>`;
+  }).join('');
+}
+
+function rbBuildOutcomeOptionsHTML(selected=''){
+  return'<option value="">Select outcome…</option>'+RB.outcomes.map(o=>`<option value="${esc(o.label)}"${o.label===selected?' selected':''}>${o.icon?esc(o.icon)+' ':''}${esc(o.label)}</option>`).join('');
 }
 
 // ── TEMPLATE EDITOR ───────────────────────────────────────────────────────────
