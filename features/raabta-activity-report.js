@@ -15,6 +15,43 @@
 // the table, on top of the general filters.
 
 let _rbActCardFilter=null; // null | 'call' | 'message' | 'positive' | 'complaint-total' | 'complaint-resolved' | 'complaint-outstanding'
+let _rbActPendingCsr=null,_rbActPendingOutcome=null; // set by rbActRestoreFilters(), consumed by the next rbRenderAct()
+
+// Phase 4: captures everything needed to reproduce the current view, used
+// when navigating away (e.g. clicking a customer or CSR name) so goBack()
+// can restore the exact same filtered view, not just the tab.
+function rbActSnapshotFilters(){
+  return{
+    from:document.getElementById('rb-act-from')?.value||'',
+    to:document.getElementById('rb-act-to')?.value||'',
+    csr:document.getElementById('rb-af')?.value||'',
+    client:document.getElementById('rb-act-client')?.value||'',
+    itype:document.getElementById('rb-act-itype')?.value||'',
+    outcome:document.getElementById('rb-act-outcome')?.value||'',
+    system:!!document.getElementById('rb-act-system')?.checked,
+    cardFilter:_rbActCardFilter,
+  };
+}
+
+// Only sets values/state — does not call rbRenderAct() itself. goBack()
+// calls this, then rbSwitchTab('rb-activity'), which triggers the one
+// render; calling rbRenderAct() from both places would race two renders
+// against each other and could leave the stale one displayed last.
+// rb-af/rb-act-outcome's <option> lists get rebuilt inside rbRenderAct()
+// itself, so a plain .value= here could silently no-op if the matching
+// option doesn't exist yet -- _rbActPendingCsr/Outcome let the rebuild
+// pick the right one regardless of what options existed beforehand.
+function rbActRestoreFilters(snap){
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val;};
+  set('rb-act-from',snap.from||'');
+  set('rb-act-to',snap.to||'');
+  set('rb-act-client',snap.client||'');
+  set('rb-act-itype',snap.itype||'');
+  const sysEl=document.getElementById('rb-act-system');if(sysEl)sysEl.checked=!!snap.system;
+  _rbActCardFilter=snap.cardFilter||null;
+  _rbActPendingCsr=snap.csr||'';
+  _rbActPendingOutcome=snap.outcome||'';
+}
 
 function rbActOutcomeFilterOptions(selected){
   return'<option value="">All Outcomes</option>'+RB.outcomes.map(o=>`<option value="${esc(o.label)}"${o.label===selected?' selected':''}>${o.icon?esc(o.icon)+' ':''}${esc(o.label)}</option>`).join('');
@@ -75,8 +112,8 @@ function rbActRowHTML(l,nested){
   const firstTd=nested?'border-left:2px solid var(--acc);padding-left:9px;':'';
   return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
     <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${firstTd}">${rbFt(l.ts)}</td>
-    <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
-    <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
+    <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
+    <td style="font-weight:500;color:var(--txt);cursor:pointer;text-decoration:underline;" onclick="goToDashboardCustomer('${esc(l.customerName)}','Raabta Activity Report')">${esc(l.customerName)}</td>
     <td style="color:var(--txt)">${editTag}${esc(l.action)}</td>
     <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
     <td><button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;white-space:nowrap;">Edit</button></td>
@@ -146,11 +183,15 @@ async function rbRenderAct(){
     const af=document.getElementById('rb-af');
     if(af){
       const users=[...new Set(allLogs.map(l=>l.user))].sort();
-      const cur=af.value;
+      const cur=_rbActPendingCsr!==null?_rbActPendingCsr:af.value;
       af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}"${u===cur?' selected':''}>${esc(u)}</option>`).join('');
     }
     const oSel=document.getElementById('rb-act-outcome');
-    if(oSel){const cur=oSel.value;oSel.innerHTML=rbActOutcomeFilterOptions(cur);}
+    if(oSel){
+      const cur=_rbActPendingOutcome!==null?_rbActPendingOutcome:oSel.value;
+      oSel.innerHTML=rbActOutcomeFilterOptions(cur);
+    }
+    _rbActPendingCsr=null;_rbActPendingOutcome=null;
 
     const threads=rbGroupLogsWithEdits(allLogs);
 
