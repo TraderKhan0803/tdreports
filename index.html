@@ -1323,16 +1323,31 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
 
     <!-- ═══ RAABTA: ACTIVITY ═══ -->
     <div class="rb-panel" id="tab-rb-activity">
+      <div class="kpi-row" id="rb-act-summary"></div>
       <div class="rb-card">
         <div class="rb-card-hd">
-          <div class="rb-card-title">Activity Log</div>
+          <div class="rb-card-title">Activity Report</div>
+        </div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="date" id="rb-act-from" onchange="rbRenderAct()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+          <input type="date" id="rb-act-to" onchange="rbRenderAct()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
           <select class="rb-osel" id="rb-af" onchange="rbRenderAct()">
             <option value="">All Users</option>
           </select>
+          <input type="text" id="rb-act-client" placeholder="Search client…" oninput="rbRenderAct()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;flex:1;min-width:130px;">
+          <select class="rb-osel" id="rb-act-itype" onchange="rbRenderAct()">
+            <option value="">All Types</option>
+            <option value="call">📞 Call</option>
+            <option value="message">💬 Message</option>
+          </select>
+          <select class="rb-osel" id="rb-act-outcome" onchange="rbRenderAct()">
+            <option value="">All Outcomes</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="rb-act-system" onchange="rbRenderAct()" style="accent-color:var(--acc);"> Show system events too</label>
         </div>
         <div style="overflow-x:auto;">
           <table class="rb-act-table">
-            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th></tr></thead>
+            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Follow-up</th><th>Outcome / Note</th><th></th></tr></thead>
             <tbody id="rb-act-body"></tbody>
           </table>
         </div>
@@ -8263,40 +8278,8 @@ function rbCpTpl(id){
 }
 
 // ── ACTIVITY LOG ──────────────────────────────────────────────────────────────
-async function rbRenderAct(){
-  const fu=document.getElementById('rb-af')?.value||'';
-  const tb=document.getElementById('rb-act-body');if(!tb)return;
-  tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
-  try{
-    let qp='order=timestamp.desc&limit=300';
-    if(fu)qp+='&username=eq.'+encodeURIComponent(fu);
-    const rows=await dbGet('raabta_log',qp);
-    const remoteIds=new Set(rows.map(l=>l.id));
-    const localOnly=RB.alog.filter(l=>!remoteIds.has(l.id));
-    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,editedFrom:l.edited_from,isEdit:!!l.is_edit})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-    const af=document.getElementById('rb-af');
-    if(af){
-      const users=[...new Set(allLogs.map(l=>l.user))].sort();
-      const cur=af.value;
-      af.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${esc(u)}"${u===cur?' selected':''}>${esc(u)}</option>`).join('');
-    }
-    if(!allLogs.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity logged yet.</td></tr>';return;}
-    const grouped=rbGroupLogsWithEdits(allLogs);
-    tb.innerHTML=grouped.map(l=>rbActRowHTML(l,false)+(l.edits||[]).map(e=>rbActRowHTML(e,true)).join('')).join('');
-  }catch(e){tb.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';}
-}
-
-function rbActRowHTML(l,nested){
-  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>':'';
-  return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
-    <td style="white-space:nowrap;color:var(--t3);font-family:\'DM Mono\',monospace;font-size:10px">${rbFt(l.ts)}</td>
-    <td><span style="font-weight:700;color:var(--acc)">${esc(l.user)}</span></td>
-    <td style="font-weight:500;color:var(--txt)">${esc(l.customerName)}</td>
-    <td style="color:var(--txt)">${editTag}${esc(l.action)}</td>
-    <td>${l.outcome?`<span style="color:var(--acc);font-family:\'DM Mono\',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
-    <td><button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;white-space:nowrap;">Edit</button></td>
-  </tr>`;
-}
+// rbRenderAct() and friends now live in features/raabta-activity-report.js
+// (Phase 3a/3b) — kept out of this file per the plan's ground rules.
 
 // ── WHATSAPP NUMBERS ──────────────────────────────────────────────────────────
 async function rbLoadWANumbers(){
@@ -9890,5 +9873,6 @@ const RB_TEMPLATES=[
   {id:'15',name:'Language Preference',tim:'First contact only',en:`Hi! Welcome to Tezz Delivery 👋\n\nWould you prefer to chat in:\n\n🇬🇧 Reply English\n🇵🇰 Reply اردو\n\nWe want to make your experience comfortable! 😊`,ur:null},
 ];
 </script>
+<script src="features/raabta-activity-report.js"></script>
 </body>
 </html>
