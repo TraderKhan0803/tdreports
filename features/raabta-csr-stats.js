@@ -122,10 +122,10 @@ async function rbCsrStatsRender(){
 
     if(summaryEl)summaryEl.innerHTML=
       kpi(rbCsrTip('Calls made',"Calls made — interactions belonging to this CSR (logged or edited by them) whose current Type is Call."),calls)
-      +kpi(rbCsrTip('Messages sent','Messages sent — includes templates and quick WhatsApp links, excludes status/profile changes.'),messages)
-      +kpi(rbCsrTip('Response rate','Response rate — interactions with outcome Responded Positively, divided by total interactions belonging to this CSR in range.'),responseRate+'%','',positive+' of '+total+' total')
+      +kpi(rbCsrTip('Messages sent','Messages sent — includes templates and quick WhatsApp links, excludes status/profile changes.'),messages,'c-blu')
+      +kpi(rbCsrTip('Response rate','Response rate — interactions with outcome Responded Positively, divided by total interactions belonging to this CSR in range.'),responseRate+'%','c-grn',positive+' of '+total+' total')
       +kpi(rbCsrTip('Complaints handled','Complaints handled — Resolved / Outstanding, based on the latest edit (if any) within each complaint thread this CSR logged or edited.'),resolved.length+' resolved','',outstanding.length+' outstanding')
-      +kpi(rbCsrTip('Orders generated','Orders generated from outreach — customers who ordered within each campaign\'s attribution window, across this CSR\'s campaigns sent in range.'),camp.orders,'',fmtFull(camp.revenue)+' revenue · '+camp.campaignCount+' campaign(s)');
+      +kpi(rbCsrTip('Orders generated','Orders generated from outreach — customers who ordered within each campaign\'s attribution window, across this CSR\'s campaigns sent in range.'),camp.orders,'c-pur',fmtFull(camp.revenue)+' revenue · '+camp.campaignCount+' campaign(s)');
 
     if(recentEl){
       const recent=mine.slice(0,10);

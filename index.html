@@ -4126,7 +4126,7 @@ async function renderUploadHistory(){
       </tr></thead>
       <tbody>${cfg.map(r=>{
         let meta={};try{meta=JSON.parse(r.value2||'{}');}catch(e){}
-        const dateStr=meta.uploadedAt?new Date(meta.uploadedAt).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'}):'—';
+        const dateStr=fmtDateTime(meta.uploadedAt);
         const zeroRows=!meta.rowCount;
         const zeroWarn=zeroRows?` <span title="No new rows added — likely a duplicate of an existing upload." onclick="notif('⚠️ No new rows added — likely a duplicate of an existing upload.')" style="cursor:pointer;color:var(--acc);">⚠️</span>`:'';
         return`<tr>
@@ -4412,7 +4412,7 @@ async function loadResetRequests(){
     const logs=await dbGet('activity_log','type=eq.reset_request&order=timestamp.desc&limit=10&select=timestamp,username,message');
     const el=document.getElementById('reset-requests');
     if(!logs.length){el.textContent='No pending requests.';return;}
-    el.innerHTML=logs.map(l=>`<div class="log-entry"><span class="log-time">${new Date(l.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(l.username)}</span><span>${esc(l.message)}</span></div>`).join('');
+    el.innerHTML=logs.map(l=>`<div class="log-entry"><span class="log-time">${fmtDateTime(l.timestamp)}</span><span class="log-user">${esc(l.username)}</span><span>${esc(l.message)}</span></div>`).join('');
   }catch(e){}
 }
 
@@ -4443,7 +4443,7 @@ function filterLogs(){
   });
   const el=document.getElementById('log-all-entries');
   if(!el)return;
-  const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+  const fmtE=e=>`<div class="log-entry"><span class="log-time">${fmtDateTime(e.timestamp)}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
   el.innerHTML=filtered.map(fmtE).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No matching logs</div>';
 }
 
@@ -4451,7 +4451,7 @@ async function renderSuperLog(){
   try{
     const logs=await dbGet('activity_log','select=*&order=timestamp.desc&limit=1000');
     _allLogs=logs;
-    const fmtE=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span>${esc(e.message)}</span></div>`;
+    const fmtE=e=>`<div class="log-entry"><span class="log-time">${fmtDateTime(e.timestamp)}</span><span class="log-user">${esc(e.username)}</span><span>${esc(e.message)}</span></div>`;
     const sessions=logs.filter(l=>l.type==='session');
     const changes=logs.filter(l=>l.type==='admin'||l.type==='upload');
     document.getElementById('log-sessions').innerHTML=sessions.slice(0,50).map(fmtE).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No sessions yet</div>';
@@ -4462,7 +4462,7 @@ async function renderSuperLog(){
     // Populate full log
     const allEl=document.getElementById('log-all-entries');
     if(allEl){
-      const fmtFull=e=>`<div class="log-entry"><span class="log-time">${new Date(e.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
+      const fmtFull=e=>`<div class="log-entry"><span class="log-time">${fmtDateTime(e.timestamp)}</span><span class="log-user">${esc(e.username)}</span><span style="background:rgba(59,130,246,.12);color:var(--blu);padding:1px 6px;border-radius:8px;font-size:9px;font-family:\'DM Mono\',monospace;">${e.type}</span><span>${esc(e.message)}</span></div>`;
       allEl.innerHTML=logs.slice(0,200).map(fmtFull).join('')||'<div style="color:var(--t3);font-size:12px;padding:8px">No logs</div>';
     }
     // Populate user filter
@@ -4511,6 +4511,20 @@ function detectCity(addr){
 }
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return Math.round(n).toLocaleString();}
 function fmtFull(n){return Math.round(n).toLocaleString();}
+// Short timezone abbreviation for the viewer's own browser/device (e.g.
+// "PKT", or "GMT+5" if the JS engine has no named abbreviation for that
+// zone) -- never hardcoded, so it stays correct from anywhere.
+function getTzAbbr(){
+  try{
+    const parts=new Intl.DateTimeFormat('en-US',{timeZoneName:'short'}).formatToParts(new Date());
+    const tz=parts.find(p=>p.type==='timeZoneName');
+    return tz?tz.value:'';
+  }catch(e){return'';}
+}
+function fmtDateTime(ts){
+  if(!ts)return'—';
+  return new Date(ts).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})+' '+getTzAbbr();
+}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sbadge(s){const m={delivered:'b-del',cancelled:'b-can',assigned:'b-asg',pending:'b-pnd',collected:'b-col'};return`<span class="bdg ${m[s]||'b-pnd'}">${esc(s)}</span>`;}
 function notif(msg){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);}
@@ -7899,7 +7913,7 @@ function rbCommLogEntryHTML(l,nested){
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
         ${editTag}
         <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
-        <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
+        <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${getTzAbbr()}</span>
         <span style="font-weight:600;font-size:11px;color:var(--acc);">${esc(l.user)}</span>
         <span style="font-size:11px;color:var(--txt);">${esc(l.action)}</span>
       </div>
@@ -8627,7 +8641,7 @@ function rbFt(ts){
   if(diff<60)return'just now';
   if(diff<3600)return Math.floor(diff/60)+'m ago';
   if(diff<86400)return Math.floor(diff/3600)+'h ago';
-  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+getTzAbbr();
 }
 
 // Close Raabta modals on overlay click

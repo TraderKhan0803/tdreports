@@ -120,14 +120,21 @@ function rbActRowHTML(l,nested){
   </tr>`;
 }
 
-function rbActKpiCard(key,label,val,tip){
+// Calls the shared kpi() helper directly (same markup/CSS as the
+// Dashboard's Total Customers/Total Orders cards, including the colored
+// top-accent-line variants) and wraps its output in a clickable div,
+// rather than hand-rolling equivalent markup that could drift from kpi()
+// over time. kpi() itself isn't modified -- it has no concept of click
+// handlers or an active-state highlight, so both are added on the wrapper.
+function rbActClickableKpi(key,label,colorClass,val,tip,sub){
   const active=_rbActCardFilter===key;
-  return`<div class="kpi" onclick="rbActApplyCardFilter('${key}')" style="cursor:pointer;${active?'box-shadow:0 0 0 2px var(--acc) inset;':''}">
-    <div class="kpi-lbl"><span class="ec-tip" title="${esc(tip)}">${esc(label)}</span></div>
-    <div class="kpi-val">${val}</div>
-  </div>`;
+  const inner=kpi(`<span class="ec-tip" title="${esc(tip)}">${esc(label)}</span>`,val,colorClass,sub);
+  return`<div onclick="rbActApplyCardFilter('${key}')" style="cursor:pointer;${active?'box-shadow:0 0 0 2px var(--acc);border-radius:var(--r);':''}">${inner}</div>`;
 }
 
+// Two independently-clickable numbers can't go through a single kpi()
+// call, so this still builds its own markup -- but reuses the same .kpi/
+// .kpi-lbl CSS classes kpi() itself relies on, for the same look.
 function rbActComplaintStatusCard(resolvedCount,outstandingCount){
   const seg=(key,label,count,color)=>{
     const active=_rbActCardFilter===key;
@@ -154,10 +161,10 @@ function rbActSummaryCardsHTML(threads,resolvedThreads,outstandingThreads){
     if((eff.outcome||'').includes('Complaint'))complaintsTotal++;
     if(eff.outcome==='Responded Positively')positive++;
   });
-  return rbActKpiCard('call','Calls made',calls,"Calls made — interactions whose current Type (using the latest edit if it's been corrected) is Call.")
-    +rbActKpiCard('message','Messages sent',messages,'Messages sent — includes templates and quick WhatsApp links, excludes status/profile changes.')
-    +rbActKpiCard('complaint-total','Complaints',complaintsTotal,'Complaints — current outcome is Complaint Received or Complaint Resolved.')
-    +rbActKpiCard('positive','Positive Feedback',positive,'Positive Feedback — current outcome is Responded Positively.')
+  return rbActClickableKpi('call','Calls made','',calls,"Calls made — interactions whose current Type (using the latest edit if it's been corrected) is Call.")
+    +rbActClickableKpi('message','Messages sent','c-blu',messages,'Messages sent — includes templates and quick WhatsApp links, excludes status/profile changes.')
+    +rbActClickableKpi('complaint-total','Complaints','',complaintsTotal,'Complaints — current outcome is Complaint Received or Complaint Resolved.')
+    +rbActClickableKpi('positive','Positive Feedback','c-grn',positive,'Positive Feedback — current outcome is Responded Positively.')
     +rbActComplaintStatusCard(resolvedThreads.length,outstandingThreads.length);
 }
 
