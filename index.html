@@ -6585,7 +6585,7 @@ let aiLoading=false;
 // ═══════════════════════════════════════════════
 // RAABTA — STATE & STORAGE
 // ═══════════════════════════════════════════════
-let RB={custs:[],alog:[],waNumbers:[],acid:null,tplLangState:{},campaigns:[],sentThisSession:false,outcomes:[]};
+let RB={custs:[],alog:[],waNumbers:[],acid:null,tplLangState:{},campaigns:[],sentThisSession:false,outcomes:[],activeAlert:null,sessionParent:null};
 
 function rbSave(){
   localStorage.setItem('rb_custs',JSON.stringify(RB.custs));
@@ -7724,7 +7724,7 @@ function rbQWA(id){
   const msg=encodeURIComponent(RB_TEMPLATES[14].en.replace('[Name]',c.name));
   const target=num?`https://wa.me/${num}?text=${msg}`:`https://wa.me/?text=${msg}`;
   window.open(target,'_blank');
-  rbLogA(c.id,c.name,'Quick WA link opened','','','message');
+  rbLogA(c.id,c.name,'Quick WA link opened','','','message').then(id=>{RB.sessionParent=id||null;});
   rbMarkSentThisSession(c.id);
 }
 
@@ -7736,6 +7736,7 @@ function rbDefaultWA(){
 // ── CUSTOMER MODAL ────────────────────────────────────────────────────────────
 function rbOpenC(id){
   const c=RB.custs.find(x=>x.id===id);if(!c)return;
+  if(id!==RB.acid){RB.activeAlert=null;RB.sessionParent=null;} // alert/session context is per-customer; clear when switching
   RB.acid=id;
   const nm=document.getElementById('rb-mn');
   if(nm)nm.innerHTML='<span style="cursor:pointer;text-decoration:underline;color:var(--acc);" onclick="rbGoToDash(\'' + esc(c.name) + '\')" title="View full order history">'+esc(c.name)+'</span>';
@@ -8100,7 +8101,7 @@ async function rbRenderMH(c){
   }catch(e){el.innerHTML='<div style="color:var(--red);font-size:11px;padding:7px 0;">Failed to load</div>';}
 }
 
-function rbCloseCM(){document.getElementById('rb-cm').classList.remove('open');RB.acid=null;rbRenderAll();}
+function rbCloseCM(){document.getElementById('rb-cm').classList.remove('open');RB.acid=null;RB.activeAlert=null;RB.sessionParent=null;rbRenderAll();}
 
 function rbTplFillPlaceholder(cid,tid,custName,custPhone){
   const tpls=rbGetTemplates();
@@ -8178,9 +8179,11 @@ function rbSTplBtn(btn){
   }
 }
 
-function rbSTpl(cid,tid,lnk){
+async function rbSTpl(cid,tid,lnk){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
-  rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','','message');
+  const parentId=await rbEnsureAlertParent(cid,c.name)||'';
+  const logId=await rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','','message','',false,parentId);
+  RB.sessionParent=logId||null; // template becomes the session parent for notes; overwrites if multiple sends
   rbMarkSentThisSession(cid);
   rbRenderMH(c);
 }
@@ -8197,7 +8200,7 @@ function rbUpdLang(){
   if(nl!==c.lang){rbLogA(c.id,c.name,`Language set: ${nl}`,'','');c.lang=nl;rbSave();rbOpenC(RB.acid);}
 }
 
-function rbSaveLog(){
+async function rbSaveLog(){
   const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
   const note=document.getElementById('rb-mnote').value.trim();
   const outcome=document.getElementById('rb-mo').value;
@@ -8207,7 +8210,10 @@ function rbSaveLog(){
   }else if(!itype){
     notif('⚠ Please select Call or Message');return;
   }
-  rbLogA(c.id,c.name,'Interaction logged',outcome,note,itype);
+  let parentId='';
+  if(RB.sessionParent){parentId=RB.sessionParent;}
+  else{parentId=await rbEnsureAlertParent(c.id,c.name)||'';}
+  rbLogA(c.id,c.name,'Interaction logged',outcome,note,itype,'',false,parentId);
   document.getElementById('rb-mnote').value='';document.getElementById('rb-mo').value='';document.getElementById('rb-mtype').value='';
   rbRenderMH(c);rbRenderAct();notif('Interaction saved');
 }
@@ -8218,14 +8224,23 @@ function rbMarkSentThisSession(cid){
   const mtw=document.getElementById('rb-mtype-wrap');if(mtw)mtw.style.display='none';
   const mtn=document.getElementById('rb-mtype-sent-note');if(mtn)mtn.style.display='block';
 }
-async function rbLogA(cid,cn,action,outcome,note,interactionType='',editedFrom='',isEdit=false){
+async function rbLogA(cid,cn,action,outcome,note,interactionType='',editedFrom='',isEdit=false,parentId='',alertId=''){
   // Naming convention: status/profile changes are system noise, not real
   // outreach — keeps Phase 3's reporting able to filter them out by default.
   const category=/^(Status:|Language set:)/.test(action)?'system':'outreach';
-  const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note,interactionType,editedFrom,isEdit:!!isEdit};
+  const entry={id:rbUid(),ts:new Date().toISOString(),user:curUser?.u||'system',customerId:cid,customerName:cn,action,outcome,note,interactionType,editedFrom,isEdit:!!isEdit,parentId:parentId||'',alertId:alertId||''};
   RB.alog.unshift(entry);
-  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts,interaction_type:interactionType||'',category,edited_from:editedFrom||null,is_edit:!!isEdit}]).catch(()=>{});
+  dbInsert('raabta_log',[{id:entry.id,username:entry.user,customer_id:cid,customer_name:cn,action,outcome:outcome||'',note:note||'',timestamp:entry.ts,interaction_type:interactionType||'',category,edited_from:editedFrom||null,is_edit:!!isEdit,parent_id:parentId||null,alert_id:alertId||null}]).catch(()=>{});
   return entry.id;
+}
+
+async function rbEnsureAlertParent(cid,cname){
+  if(!RB.activeAlert)return null;
+  try{
+    const rows=await dbGet('raabta_log','alert_id=eq.'+encodeURIComponent(RB.activeAlert.id)+'&parent_id=is.null&select=id&limit=1');
+    if(rows.length)return rows[0].id;
+    return await rbLogA(cid,cname,'Alert follow-up','',RB.activeAlert.note||'','','',false,'',RB.activeAlert.id);
+  }catch(e){return null;}
 }
 
 // ── ADD CUSTOMER ──────────────────────────────────────────────────────────────
@@ -8992,8 +9007,8 @@ function aiShareWA(msgId){
 let ALERTS=[];
 async function alertsLoad(){
   try{
-    const rows=await dbGet('alerts','order=created_at.desc&limit=200');
-    ALERTS=rows.map(r=>({id:r.id,linkType:r.link_type,linkValue:r.link_value,note:r.note,date:r.date,createdBy:r.created_by,createdAt:r.created_at,dismissed:r.dismissed,dismissedBy:r.dismissed_by,dismissedAt:r.dismissed_at}));
+    const rows=await dbGet('alerts','deleted=not.is.true&order=created_at.desc&limit=200');
+    ALERTS=rows.map(r=>({id:r.id,linkType:r.link_type,linkValue:r.link_value,note:r.note,date:r.date,createdBy:r.created_by,createdAt:r.created_at,dismissed:r.dismissed,dismissedBy:r.dismissed_by,dismissedAt:r.dismissed_at,deleted:!!r.deleted,deletedBy:r.deleted_by,deletedAt:r.deleted_at}));
   }catch(e){ALERTS=[];}
 }
 async function alertsSave(alert){
@@ -9080,10 +9095,10 @@ async function dismissAlert(id){
 
 async function hardDeleteAlert(id){
   if(curUser?.role!=='super'){notif('⚠ Only Super Admin can delete alerts');return;}
-  await sb('DELETE','alerts?id=eq.'+encodeURIComponent(id));
+  await sb('PATCH','alerts?id=eq.'+encodeURIComponent(id),{deleted:true,deleted_by:curUser?.u||'',deleted_at:new Date().toISOString()});
   await alertsLoad();alertsUpdateBadge();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
-  notif('Alert deleted');
+  notif('Alert removed');
 }
 
 function rbFilterCompleted(){
@@ -9097,16 +9112,16 @@ function rbFilterCompleted(){
 
 function alertsGetActive(){
   alertsLoad();
-  return ALERTS.filter(a=>!a.dismissed);
+  return ALERTS.filter(a=>!a.deleted&&!a.dismissed);
 }
 
 function alertsForRow(linkType, linkValue){
   if(!ALERTS.length)alertsLoad();
-  return ALERTS.filter(a=>!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
+  return ALERTS.filter(a=>!a.deleted&&!a.dismissed&&a.linkType===linkType&&a.linkValue&&a.linkValue.toLowerCase()===linkValue.toLowerCase());
 }
 
 function alertsUpdateBadge(){
-  const count=ALERTS.filter(a=>!a.dismissed).length;
+  const count=ALERTS.filter(a=>!a.deleted&&!a.dismissed).length;
   const badge=document.getElementById('rb-alert-badge');
   if(badge){badge.style.display=count>0?'':'none';badge.textContent=count;}
 }
@@ -9402,8 +9417,8 @@ function rbRenderOutreach(){
   function custBell(name){return getBellHtml('customer',name);}
 
   // Active alerts section
-  const active=ALERTS.filter(a=>!a.dismissed);
-  const dismissed=ALERTS.filter(a=>a.dismissed);
+  const active=ALERTS.filter(a=>!a.deleted&&!a.dismissed);
+  const dismissed=ALERTS.filter(a=>!a.deleted&&a.dismissed);
   const isSuper=curUser?.role==='super';
   const alertsHtml=`
     <div class="rb-card" style="margin-bottom:12px;">
@@ -9671,6 +9686,7 @@ function alertOpenMessage(alertId){
   }
   if(!custName){notif('⚠ No customer linked to this alert');return;}
   rbOpenOutreachCust(custName);
+  RB.activeAlert={id:a.id,note:a.note}; // set after rbOpenC so it isn't cleared by the "different customer" guard
 }
 
 let _bulkMsgList=[];
