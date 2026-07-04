@@ -107,17 +107,61 @@ function rbActClearCardFilterAndRender(){
   rbRenderAct();
 }
 
-function rbActRowHTML(l,nested){
-  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>':'';
+// kind: '' (top-level parent row, unchanged look), 'edit' (existing EDITED
+// styling), or 'child' (parent_id follow-up -- same indent/border styling
+// as an edit, but tagged distinctly so the two threading mechanisms don't
+// look identical).
+function rbActRowHTML(l,kind){
+  const nested=kind==='edit'||kind==='child';
+  const tag=kind==='edit'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>'
+    :kind==='child'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">↳ FOLLOW-UP</span>'
+    :'';
   const firstTd=nested?'border-left:2px solid var(--acc);padding-left:9px;':'';
+  // A follow-up added from this row attaches to the same thread root as this
+  // row's own follow-up, if any (l.parentId), rather than nesting a level
+  // deeper -- so threads stay one level deep regardless of which row within
+  // a thread the button is clicked on.
+  const fuTarget=l.parentId||l.id;
   return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
     <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${firstTd}">${rbFt(l.ts)}</td>
     <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
     <td style="font-weight:500;color:var(--txt);cursor:pointer;text-decoration:underline;" onclick="goToDashboardCustomer('${esc(l.customerName)}','Raabta Activity Report')">${esc(l.customerName)}</td>
-    <td style="color:var(--txt)">${editTag}${esc(l.action)}</td>
+    <td style="color:var(--txt)">${tag}${esc(l.action)}</td>
     <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
-    <td><button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;white-space:nowrap;">Edit</button></td>
+    <td style="white-space:nowrap;">
+      <button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;">Edit</button>
+      <button onclick="rbOpenFollowUp('${fuTarget}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;margin-left:4px;">↳ Follow-up</button>
+    </td>
   </tr>`;
+}
+
+// Attaches parent_id follow-ups onto their parent thread, the same way
+// rbGroupLogsWithEdits attaches EDITED rows onto their original -- except
+// keyed on parent_id instead of edited_from, and applied only within
+// whatever set of threads is currently being rendered (post date/CSR/
+// client/type/outcome filtering). A thread whose parent_id points outside
+// that set (date filter cut it off, or the parent didn't match the current
+// table filters) is left as a plain top-level row instead of vanishing.
+function rbActNestChildren(threads){
+  const byId=new Map(threads.map(t=>[t.id,t]));
+  const nested=new Set();
+  threads.forEach(t=>{
+    if(t.parentId&&t.parentId!==t.id&&byId.has(t.parentId)){
+      const parent=byId.get(t.parentId);
+      (parent.children=parent.children||[]).push(t);
+      nested.add(t.id);
+    }
+  });
+  threads.forEach(t=>{if(t.children)t.children.sort((a,b)=>new Date(a.ts)-new Date(b.ts));});
+  return threads.filter(t=>!nested.has(t.id));
+}
+
+function rbActThreadRowsHTML(t){
+  let html=rbActRowHTML(t,'')+(t.edits||[]).map(e=>rbActRowHTML(e,'edit')).join('');
+  (t.children||[]).forEach(c=>{
+    html+=rbActRowHTML(c,'child')+(c.edits||[]).map(e=>rbActRowHTML(e,'edit')).join('');
+  });
+  return html;
 }
 
 // Calls the shared kpi() helper directly (same markup/CSS as the
@@ -185,7 +229,7 @@ async function rbRenderAct(){
     const rows=await dbGet('raabta_log',qp);
     const remoteIds=new Set(rows.map(l=>l.id));
     const localOnly=RB.alog.filter(l=>!remoteIds.has(l.id));
-    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,interactionType:l.interaction_type,category:l.category,editedFrom:l.edited_from,isEdit:!!l.is_edit})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,interactionType:l.interaction_type,category:l.category,editedFrom:l.edited_from,isEdit:!!l.is_edit,parentId:l.parent_id||'',alertId:l.alert_id||''})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
 
     const af=document.getElementById('rb-af');
     if(af){
@@ -233,7 +277,8 @@ async function rbRenderAct(){
     });
 
     if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';return;}
-    tb.innerHTML=tableFiltered.map(l=>rbActRowHTML(l,false)+(l.edits||[]).map(e=>rbActRowHTML(e,true)).join('')).join('');
+    const topLevel=rbActNestChildren(tableFiltered);
+    tb.innerHTML=topLevel.map(rbActThreadRowsHTML).join('');
   }catch(e){
     if(summaryEl)summaryEl.innerHTML='';
     tb.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';

@@ -8049,6 +8049,50 @@ async function rbSaveLogEdit(rootId,cid,cname){
   if(document.getElementById('rb-act-body'))await rbRenderAct();
 }
 
+// ── FOLLOW-UP ON A LOGGED INTERACTION ───────────────────────────────────────
+// Unlike an edit, this always inserts a brand-new row (is_edit stays false,
+// edited_from stays empty) with parent_id pointing at the thread it's
+// following up on. parentId is resolved by the caller (rbActRowHTML) to the
+// clicked row's own parent if it's already a follow-up itself, so threads
+// never nest more than one level deep.
+function rbOpenFollowUp(parentId,cid,cname){
+  const overlay=document.createElement('div');
+  overlay.id='rb-followup-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;width:360px;max-width:95vw;box-sizing:border-box;">
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--acc);margin-bottom:12px;">↳ Follow-up</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+      <select class="rb-osel" id="rb-fu-type" style="flex:1;min-width:130px;">
+        <option value="">Select type…</option>
+        <option value="call">📞 Call</option>
+        <option value="message">💬 Message</option>
+      </select>
+      <select class="rb-osel" id="rb-fu-outcome" style="flex:1;min-width:130px;"></select>
+    </div>
+    <textarea id="rb-fu-note" placeholder="Add a note about this follow-up…" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;min-height:65px;resize:vertical;outline:none;margin-bottom:10px;box-sizing:border-box;"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+      <button onclick="document.getElementById('rb-followup-overlay').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button>
+      <button onclick="rbSaveFollowUp('${parentId}','${cid}','${esc(cname)}')" style="padding:7px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);border-radius:var(--r2);color:var(--grn);font-size:12px;font-weight:600;cursor:pointer;">Save Follow-up</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('rb-fu-outcome').innerHTML=rbBuildOutcomeOptionsHTML();
+}
+
+async function rbSaveFollowUp(parentId,cid,cname){
+  const outcome=document.getElementById('rb-fu-outcome').value;
+  const note=document.getElementById('rb-fu-note').value.trim();
+  const itype=document.getElementById('rb-fu-type').value;
+  if(!itype){notif('⚠ Please select Call or Message');return;}
+  await rbLogA(cid,cname,'Interaction logged',outcome,note,itype,'',false,parentId);
+  document.getElementById('rb-followup-overlay')?.remove();
+  notif('Follow-up saved');
+  if(RB.acid===cid){const c=RB.custs.find(x=>x.id===cid);if(c)rbRenderMH(c);}
+  if(document.getElementById('rb-comm-overlay'))await rbRefreshCommHistory(cid,cname);
+  if(document.getElementById('rb-act-body'))await rbRenderAct();
+}
+
 function rbGoToDash(name){
   rbCloseCM();
   goToDashboardCustomer(name,'Raabta');
