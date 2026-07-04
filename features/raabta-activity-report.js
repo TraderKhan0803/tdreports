@@ -111,17 +111,16 @@ function rbActClearCardFilterAndRender(){
 // styling), or 'child' (parent_id follow-up -- same indent/border styling
 // as an edit, but tagged distinctly so the two threading mechanisms don't
 // look identical).
-function rbActRowHTML(l,kind){
+// fuTarget is resolved by the caller (rbActThreadRowsHTML), not derived from
+// l itself -- an EDITED row has no parent_id of its own, so its Follow-up
+// must resolve through its edited_from row (the row it's nested under here)
+// rather than targeting the edit row directly.
+function rbActRowHTML(l,kind,fuTarget){
   const nested=kind==='edit'||kind==='child';
   const tag=kind==='edit'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>'
     :kind==='child'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">↳ FOLLOW-UP</span>'
     :'';
   const firstTd=nested?'border-left:2px solid var(--acc);padding-left:9px;':'';
-  // A follow-up added from this row attaches to the same thread root as this
-  // row's own follow-up, if any (l.parentId), rather than nesting a level
-  // deeper -- so threads stay one level deep regardless of which row within
-  // a thread the button is clicked on.
-  const fuTarget=l.parentId||l.id;
   return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
     <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${firstTd}">${rbFt(l.ts)}</td>
     <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
@@ -157,9 +156,16 @@ function rbActNestChildren(threads){
 }
 
 function rbActThreadRowsHTML(t){
-  let html=rbActRowHTML(t,'')+(t.edits||[]).map(e=>rbActRowHTML(e,'edit')).join('');
+  // Every row within a thread -- the original, its edits, its parent_id
+  // children, and each child's own edits -- shares one Follow-up target:
+  // that sub-thread's root (child or original) parent_id if it has one,
+  // else its own id. This keeps follow-ups one level deep no matter which
+  // row in the thread the button was clicked on.
+  const tTarget=t.parentId||t.id;
+  let html=rbActRowHTML(t,'',tTarget)+(t.edits||[]).map(e=>rbActRowHTML(e,'edit',tTarget)).join('');
   (t.children||[]).forEach(c=>{
-    html+=rbActRowHTML(c,'child')+(c.edits||[]).map(e=>rbActRowHTML(e,'edit')).join('');
+    const cTarget=c.parentId||c.id;
+    html+=rbActRowHTML(c,'child',cTarget)+(c.edits||[]).map(e=>rbActRowHTML(e,'edit',cTarget)).join('');
   });
   return html;
 }
