@@ -252,7 +252,7 @@ async function rbRenderAct(){
     const remoteIds=new Set(rows.map(l=>l.id));
     const localOnly=RB.alog.filter(l=>{
       if(remoteIds.has(l.id))return false;
-      const t=new Date(l.timestamp);
+      const t=new Date(l.ts||l.timestamp);
       if(fromDate&&t<fromDate)return false;
       if(toDate&&t>toDate)return false;
       return true;
