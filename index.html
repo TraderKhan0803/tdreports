@@ -1345,9 +1345,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           </select>
           <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="rb-act-system" onchange="rbRenderAct()" style="accent-color:var(--acc);"> Show system events too</label>
         </div>
+        <div id="rb-act-bulk-actions"></div>
         <div style="overflow-x:auto;">
           <table class="rb-act-table">
-            <thead><tr><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th></tr></thead>
+            <thead><tr id="rb-act-thead-row"><th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th></tr></thead>
             <tbody id="rb-act-body"></tbody>
           </table>
         </div>

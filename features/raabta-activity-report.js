@@ -3,10 +3,11 @@
 // (date range, CSR, client, interaction type, outcome, outreach/system)
 // and summary cards that recompute from whatever's currently filtered.
 // Kept in its own file per the plan's ground rules; depends on globals
-// defined in index.html (RB, dbGet, esc, rbFt, rbGroupLogsWithEdits,
-// rbOpenEditLog), so it must load after that script. Card markup is
-// built locally (not via the shared kpi() helper) since these need
-// click handlers and an active-state highlight that kpi() doesn't support.
+// defined in index.html (RB, dbGet, dbDelete, esc, rbFt, rbSave, notif,
+// curUser, rbGroupLogsWithEdits, rbOpenEditLog), so it must load after that
+// script. Card markup is built locally (not via the shared kpi() helper)
+// since these need click handlers and an active-state highlight that kpi()
+// doesn't support.
 //
 // Filter layering: date/CSR/client/system-toggle are "general" filters —
 // the summary cards always reflect just those, so clicking one card to
@@ -16,6 +17,16 @@
 
 let _rbActCardFilter=null; // null | 'call' | 'message' | 'positive' | 'complaint-total' | 'complaint-resolved' | 'complaint-outstanding'
 let _rbActPendingCsr=null,_rbActPendingOutcome=null; // set by rbActRestoreFilters(), consumed by the next rbRenderAct()
+
+// Super-admin bulk delete. _rbActSelectableIds/_rbActDeleteMap are rebuilt
+// every render (rbRenderAct) from whatever's currently on screen.
+// _rbActSelected persists across renders but is pruned (rbActPruneSelected)
+// down to whatever's still selectable after each render, so re-filtering
+// to hide a row also drops it from the selection -- a destructive bulk
+// delete shouldn't be able to reach something the user can no longer see.
+let _rbActSelected=new Set(); // ids the user has checked
+let _rbActSelectableIds=[]; // ids of currently-rendered, checkable rows (excludes dimmed context-parent rows)
+let _rbActDeleteMap={}; // id -> full list of row ids a delete of that row should cascade to
 
 // Phase 4: captures everything needed to reproduce the current view, used
 // when navigating away (e.g. clicking a customer or CSR name) so goBack()
@@ -123,8 +134,17 @@ function rbActRowHTML(l,kind,fuTarget){
   const ctxTag=l.isContext?'<span style="font-size:9px;color:var(--t3);background:rgba(148,163,184,.15);border-radius:8px;padding:1px 6px;margin-right:5px;">outside date range</span>':'';
   const firstTd=nested?'border-left:2px solid var(--acc);padding-left:9px;':'';
   const trStyle=(nested?'background:rgba(249,115,22,.04);':'')+(l.isContext?'opacity:.55;':'');
+  // Bulk-delete checkboxes are super-admin only. A context-parent row is
+  // dimmed reference material from outside the current date range, not
+  // part of the filtered result set, so it never gets one -- only its
+  // in-range children (rendered separately, not via this row's l) do.
+  const isSuper=curUser?.role==='super';
+  const selectable=isSuper&&!l.isContext;
+  if(selectable)_rbActSelectableIds.push(l.id);
+  const selCell=isSuper?`<td style="text-align:center;${firstTd}" onclick="event.stopPropagation();">${selectable?`<input type="checkbox" class="rb-act-sel-cb" data-id="${l.id}"${_rbActSelected.has(l.id)?' checked':''} onchange="rbActToggleSelect('${l.id}',this.checked)" style="accent-color:var(--acc);cursor:pointer;">`:''}</td>`:'';
   return`<tr${trStyle?` style="${trStyle}"`:''}>
-    <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${firstTd}">${rbFt(l.ts)}</td>
+    ${selCell}
+    <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${isSuper?'':firstTd}">${rbFt(l.ts)}</td>
     <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
     <td style="font-weight:500;color:var(--txt);cursor:pointer;text-decoration:underline;" onclick="goToDashboardCustomer('${esc(l.customerName)}','Raabta Activity Report')">${esc(l.customerName)}</td>
     <td style="color:var(--txt)">${tag}${ctxTag}${esc(l.action)}</td>
@@ -171,9 +191,18 @@ function rbActThreadRowsHTML(t){
   // else its own id. This keeps follow-ups one level deep no matter which
   // row in the thread the button was clicked on.
   const tTarget=t.parentId||t.id;
+  // Delete cascade: checking the parent deletes it plus every edit and
+  // every child (and each child's own edits); checking a child or a lone
+  // edit only deletes that one record. A context parent (t.isContext) has
+  // no checkbox of its own, so it gets no map entry -- but its children are
+  // real in-range rows and still need theirs.
+  if(!t.isContext)_rbActDeleteMap[t.id]=[t.id,...(t.edits||[]).map(e=>e.id),...(t.children||[]).flatMap(c=>[c.id,...(c.edits||[]).map(e=>e.id)])];
+  (t.edits||[]).forEach(e=>{_rbActDeleteMap[e.id]=[e.id];});
   let html=rbActRowHTML(t,'',tTarget)+(t.edits||[]).map(e=>rbActRowHTML(e,'edit',tTarget)).join('');
   (t.children||[]).forEach(c=>{
     const cTarget=c.parentId||c.id;
+    _rbActDeleteMap[c.id]=[c.id,...(c.edits||[]).map(e=>e.id)];
+    (c.edits||[]).forEach(e=>{_rbActDeleteMap[e.id]=[e.id];});
     html+=rbActRowHTML(c,'child',cTarget)+(c.edits||[]).map(e=>rbActRowHTML(e,'edit',cTarget)).join('');
   });
   return html;
@@ -229,7 +258,12 @@ function rbActSummaryCardsHTML(threads,resolvedThreads,outstandingThreads){
 
 async function rbRenderAct(){
   const tb=document.getElementById('rb-act-body');if(!tb)return;
-  tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
+  const isSuper=curUser?.role==='super';
+  const theadRow=document.getElementById('rb-act-thead-row');
+  if(theadRow)theadRow.innerHTML=(isSuper?'<th style="width:26px;"><input type="checkbox" id="rb-act-selall" title="Select all" onchange="rbActToggleSelectAll(this.checked)" style="accent-color:var(--acc);cursor:pointer;"></th>':'')+'<th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th>';
+  const colspan=isSuper?7:6;
+  tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
+  _rbActSelectableIds=[];_rbActDeleteMap={};
   const summaryEl=document.getElementById('rb-act-summary');
   try{
     // Only the date range is filtered server-side -- everything else is
@@ -318,11 +352,68 @@ async function rbRenderAct(){
       return true;
     });
 
-    if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';return;}
+    if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';rbActPruneSelected();rbActRenderBulkBar();rbActSyncSelectAllCheckbox();return;}
     const topLevel=rbActNestChildren(tableFiltered,contextParents);
     tb.innerHTML=topLevel.map(rbActThreadRowsHTML).join('');
+    rbActPruneSelected();
+    rbActRenderBulkBar();
+    rbActSyncSelectAllCheckbox();
   }catch(e){
     if(summaryEl)summaryEl.innerHTML='';
-    tb.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';
+    tb.innerHTML='<tr><td colspan="'+colspan+'" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';
   }
+}
+
+// ── SUPER-ADMIN BULK DELETE ──────────────────────────────────────────────────
+// Drops any selected id that isn't among this render's selectable rows --
+// called after every render so a selection never silently outlives the
+// filter view it was made in.
+function rbActPruneSelected(){
+  const visible=new Set(_rbActSelectableIds);
+  [..._rbActSelected].forEach(id=>{if(!visible.has(id))_rbActSelected.delete(id);});
+}
+
+function rbActToggleSelect(id,checked){
+  if(checked)_rbActSelected.add(id);else _rbActSelected.delete(id);
+  rbActRenderBulkBar();
+  rbActSyncSelectAllCheckbox();
+}
+
+function rbActToggleSelectAll(checked){
+  _rbActSelectableIds.forEach(id=>checked?_rbActSelected.add(id):_rbActSelected.delete(id));
+  document.querySelectorAll('.rb-act-sel-cb').forEach(cb=>{cb.checked=_rbActSelected.has(cb.dataset.id);});
+  rbActRenderBulkBar();
+}
+
+function rbActSyncSelectAllCheckbox(){
+  const cb=document.getElementById('rb-act-selall');if(!cb)return;
+  const total=_rbActSelectableIds.length;
+  const n=_rbActSelectableIds.filter(id=>_rbActSelected.has(id)).length;
+  cb.checked=total>0&&n===total;
+  cb.indeterminate=n>0&&n<total;
+}
+
+function rbActRenderBulkBar(){
+  const el=document.getElementById('rb-act-bulk-actions');if(!el)return;
+  const n=_rbActSelected.size;
+  el.innerHTML=n?`<div style="padding:0 14px 10px;"><button onclick="rbActDeleteSelected()" style="padding:6px 14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:var(--r2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete selected (${n})</button></div>`:'';
+}
+
+// Expands each checked row through _rbActDeleteMap (parent -> itself + all
+// edits + all children + children's edits; child/lone edit -> itself + its
+// own edits only) and de-dupes before hitting the DB, so selecting both a
+// parent and one of its own children doesn't send that child's id twice.
+async function rbActDeleteSelected(){
+  const ids=[...new Set([..._rbActSelected].flatMap(id=>_rbActDeleteMap[id]||[id]))];
+  if(!ids.length)return;
+  if(!confirm('Delete '+ids.length+' log record'+(ids.length===1?'':'s')+'? This cannot be undone.'))return;
+  try{
+    await dbDelete('raabta_log','id=in.('+ids.join(',')+')');
+  }catch(e){notif('⚠ Failed to delete: '+e.message);return;}
+  const idSet=new Set(ids);
+  RB.alog=RB.alog.filter(l=>!idSet.has(l.id));
+  rbSave();
+  _rbActSelected.clear();
+  await rbRenderAct();
+  notif('Deleted '+ids.length+' record'+(ids.length===1?'':'s'));
 }
