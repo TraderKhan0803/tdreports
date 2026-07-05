@@ -120,12 +120,14 @@ function rbActRowHTML(l,kind,fuTarget){
   const tag=kind==='edit'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>'
     :kind==='child'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">↳ FOLLOW-UP</span>'
     :'';
+  const ctxTag=l.isContext?'<span style="font-size:9px;color:var(--t3);background:rgba(148,163,184,.15);border-radius:8px;padding:1px 6px;margin-right:5px;">outside date range</span>':'';
   const firstTd=nested?'border-left:2px solid var(--acc);padding-left:9px;':'';
-  return`<tr${nested?' style="background:rgba(249,115,22,.04);"':''}>
+  const trStyle=(nested?'background:rgba(249,115,22,.04);':'')+(l.isContext?'opacity:.55;':'');
+  return`<tr${trStyle?` style="${trStyle}"`:''}>
     <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${firstTd}">${rbFt(l.ts)}</td>
     <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
     <td style="font-weight:500;color:var(--txt);cursor:pointer;text-decoration:underline;" onclick="goToDashboardCustomer('${esc(l.customerName)}','Raabta Activity Report')">${esc(l.customerName)}</td>
-    <td style="color:var(--txt)">${tag}${esc(l.action)}</td>
+    <td style="color:var(--txt)">${tag}${ctxTag}${esc(l.action)}</td>
     <td>${l.outcome?`<span style="color:var(--acc);font-family:'DM Mono',monospace;font-size:10px">${esc(l.outcome)}</span>${l.note?' — '+esc(l.note):''}`:esc(l.note)||'—'}</td>
     <td style="white-space:nowrap;">
       <button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;">Edit</button>
@@ -141,8 +143,14 @@ function rbActRowHTML(l,kind,fuTarget){
 // client/type/outcome filtering). A thread whose parent_id points outside
 // that set (date filter cut it off, or the parent didn't match the current
 // table filters) is left as a plain top-level row instead of vanishing.
-function rbActNestChildren(threads){
-  const byId=new Map(threads.map(t=>[t.id,t]));
+// contextParents are out-of-range parents fetched purely so an in-range
+// child isn't left floating with no thread context -- they're only
+// rendered if a passed-in child actually nests onto them, and are appended
+// to (not counted toward) the filtered set the caller passes in.
+function rbActNestChildren(threads,contextParents){
+  contextParents=contextParents||[];
+  const all=[...threads,...contextParents];
+  const byId=new Map(all.map(t=>[t.id,t]));
   const nested=new Set();
   threads.forEach(t=>{
     if(t.parentId&&t.parentId!==t.id&&byId.has(t.parentId)){
@@ -151,8 +159,9 @@ function rbActNestChildren(threads){
       nested.add(t.id);
     }
   });
-  threads.forEach(t=>{if(t.children)t.children.sort((a,b)=>new Date(a.ts)-new Date(b.ts));});
-  return threads.filter(t=>!nested.has(t.id));
+  all.forEach(t=>{if(t.children)t.children.sort((a,b)=>new Date(a.ts)-new Date(b.ts));});
+  const usedContext=contextParents.filter(cp=>cp.children&&cp.children.length);
+  return[...threads.filter(t=>!nested.has(t.id)),...usedContext];
 }
 
 function rbActThreadRowsHTML(t){
@@ -229,12 +238,25 @@ async function rbRenderAct(){
     // one is currently picked.
     const from=document.getElementById('rb-act-from')?.value||'';
     const to=document.getElementById('rb-act-to')?.value||'';
+    // from/to are local dates from a plain date input -- appending them to
+    // the query as raw strings would have PostgREST read them as UTC,
+    // shifting the effective range by the local UTC offset. Anchoring each
+    // to local midnight/end-of-day before converting to ISO keeps the
+    // range aligned with what the user actually picked.
+    const fromDate=from?new Date(from+'T00:00:00'):null;
+    const toDate=to?new Date(to+'T23:59:59.999'):null;
     let qp='order=timestamp.desc&limit=1000';
-    if(from)qp+='&timestamp=gte.'+encodeURIComponent(from+'T00:00:00');
-    if(to)qp+='&timestamp=lte.'+encodeURIComponent(to+'T23:59:59');
+    if(fromDate)qp+='&timestamp=gte.'+encodeURIComponent(fromDate.toISOString());
+    if(toDate)qp+='&timestamp=lte.'+encodeURIComponent(toDate.toISOString());
     const rows=await dbGet('raabta_log',qp);
     const remoteIds=new Set(rows.map(l=>l.id));
-    const localOnly=RB.alog.filter(l=>!remoteIds.has(l.id));
+    const localOnly=RB.alog.filter(l=>{
+      if(remoteIds.has(l.id))return false;
+      const t=new Date(l.timestamp);
+      if(fromDate&&t<fromDate)return false;
+      if(toDate&&t>toDate)return false;
+      return true;
+    });
     const allLogs=[...rows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,interactionType:l.interaction_type,category:l.category,editedFrom:l.edited_from,isEdit:!!l.is_edit,parentId:l.parent_id||'',alertId:l.alert_id||''})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
 
     const af=document.getElementById('rb-af');
@@ -251,6 +273,19 @@ async function rbRenderAct(){
     _rbActPendingCsr=null;_rbActPendingOutcome=null;
 
     const threads=rbGroupLogsWithEdits(allLogs);
+
+    // A child whose parent_id points outside the fetched date range would
+    // otherwise show as a bare top-level row with no context. Fetch those
+    // missing parents in one batch and render them dimmed, purely for
+    // context -- they're never counted in the cards below (those are
+    // computed from generalFiltered/tableFiltered only, not contextParents).
+    const inRangeIds=new Set(threads.map(t=>t.id));
+    const missingParentIds=[...new Set(threads.filter(t=>t.parentId&&t.parentId!==t.id&&!inRangeIds.has(t.parentId)).map(t=>t.parentId))];
+    let contextParents=[];
+    if(missingParentIds.length){
+      const cpRows=await dbGet('raabta_log','id=in.('+missingParentIds.map(id=>encodeURIComponent(id)).join(',')+')');
+      contextParents=cpRows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,interactionType:l.interaction_type,category:l.category,editedFrom:l.edited_from,isEdit:!!l.is_edit,parentId:l.parent_id||'',alertId:l.alert_id||'',edits:[],isContext:true}));
+    }
 
     // General filters -- what the summary cards reflect.
     const csr=document.getElementById('rb-af')?.value||'';
@@ -283,7 +318,7 @@ async function rbRenderAct(){
     });
 
     if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';return;}
-    const topLevel=rbActNestChildren(tableFiltered);
+    const topLevel=rbActNestChildren(tableFiltered,contextParents);
     tb.innerHTML=topLevel.map(rbActThreadRowsHTML).join('');
   }catch(e){
     if(summaryEl)summaryEl.innerHTML='';
