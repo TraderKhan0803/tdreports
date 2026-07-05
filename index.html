@@ -9516,8 +9516,16 @@ function rbRenderOutreach(){
   // Use persistent filter state
   const{welcomeDays,quietDays,reactMin,reactMax,vipMin}=_otFilters;
 
-  // Use selected period end as reference, filtered orders for data scope
-  const today=getMktToday();today.setHours(0,0,0,0);
+  // Use selected period end as reference, filtered orders for data scope --
+  // but getMktToday() returns the end of the selected period, which is a
+  // future date when the current month is selected. Cap it at the real
+  // "today" so lapsed/reactivation windows aren't computed against a date
+  // that hasn't happened yet. getMktToday() itself is left alone -- other
+  // screens rely on its actual (uncapped) behavior.
+  let today=getMktToday();
+  const real=new Date();
+  if(today>real)today=real;
+  today.setHours(0,0,0,0);
   const ctype=fSt?.ctype||'all';
   // Use S.orders (all-time) for accurate customer history
   const cm={};
@@ -9536,7 +9544,11 @@ function rbRenderOutreach(){
   // Welcome: use IsFirstOrder field
   const _delStatuses=new Set(['delivered','collected','assigned']);
   const firstOrderSet=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW&&_delStatuses.has((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
-  const welcome=all.filter(c=>firstOrderSet.has(c.name)).sort((a,b)=>b.firstOrder-a.firstOrder);
+  // IsFirstOrder is set per-order, not per-customer -- a data correction or
+  // re-import can leave it true on a recent order for a customer whose real
+  // first order (from the all-time map) is years old. Require the
+  // customer's actual firstOrder to also fall within the welcome window.
+  const welcome=all.filter(c=>firstOrderSet.has(c.name)&&c.firstOrder&&c.firstOrder>=cutoffW).sort((a,b)=>b.firstOrder-a.firstOrder);
   // Lapsed: replaces quiet + react
   const lapsedMin=_otFilters.lapsedMin||30;
   const lapsedMax=_otFilters.lapsedMax||60;
