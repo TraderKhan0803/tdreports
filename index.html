@@ -7907,12 +7907,20 @@ function rbToggleHistory(){
   p.style.overflow=open?'hidden':'auto';
 }
 
-function rbCommLogEntryHTML(l,nested){
-  const editTag=nested?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;">EDITED</span>':'';
+// kind: '' (thread root, unchanged look), 'edit' (EDITED styling), or
+// 'child' (parent_id follow-up -- same indent/border as an edit, tagged
+// distinctly), matching the Activity Report's row styling. selected drives
+// the tap-to-select highlight used for picking a reply's parent.
+function rbCommLogEntryHTML(l,kind,selected){
+  const nested=kind==='edit'||kind==='child';
+  const tag=kind==='edit'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;">EDITED</span>'
+    :kind==='child'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;">↳ FOLLOW-UP</span>'
+    :'';
+  const selStyle=selected?'box-shadow:inset 0 0 0 2px var(--acc);background:rgba(249,115,22,.08);':'';
   return`
-    <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);${nested?'margin-left:14px;border-left:2px solid var(--acc);':''}">
+    <div onclick="rbToggleCommSelect('${l.id}')" style="padding:10px 12px;border-bottom:1px solid var(--bdr);cursor:pointer;${nested?'margin-left:14px;border-left:2px solid var(--acc);':''}${selStyle}">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-        ${editTag}
+        ${tag}
         <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
         <span style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;">${new Date(l.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} ${getTzAbbr()}</span>
         <span style="font-weight:600;font-size:11px;color:var(--acc);">${esc(l.user)}</span>
@@ -7924,16 +7932,38 @@ function rbCommLogEntryHTML(l,nested){
 }
 
 async function rbOpenCommHistory(cid, cname){
-  const grouped=await rbFetchGroupedLogs(cid);
+  const grouped=await rbFetchCommHistoryLogs(cid,cname);
 
   const overlay=document.createElement('div');
   overlay.id='rb-comm-overlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;';
   overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay._selectedRowId=null;
 
+  // Every row in a thread -- the root, its edits, its parent_id children,
+  // and each child's own edits -- maps to one Save-Reply target: that
+  // sub-thread's root (child or root) parent_id if it has one, else its
+  // own id. Same one-level-deep resolution as the Activity Report's
+  // Follow-up button, just keyed by row id here since selection is by tap.
   function renderLogs(grp){
     if(!grp.length)return'<div style="color:var(--t3);font-size:12px;padding:20px;text-align:center;font-family:\'DM Mono\',monospace;">No interactions found.</div>';
-    return grp.map(l=>rbCommLogEntryHTML(l,false)+(l.edits||[]).map(e=>rbCommLogEntryHTML(e,true)).join('')).join('');
+    const selId=overlay._selectedRowId;
+    const fuMap={};
+    const html=grp.map(t=>{
+      const tTarget=t.parentId||t.id;
+      fuMap[t.id]=tTarget;
+      let h=rbCommLogEntryHTML(t,'',t.id===selId);
+      (t.edits||[]).forEach(e=>{fuMap[e.id]=tTarget;h+=rbCommLogEntryHTML(e,'edit',e.id===selId);});
+      (t.children||[]).forEach(c=>{
+        const cTarget=c.parentId||c.id;
+        fuMap[c.id]=cTarget;
+        h+=rbCommLogEntryHTML(c,'child',c.id===selId);
+        (c.edits||[]).forEach(e=>{fuMap[e.id]=cTarget;h+=rbCommLogEntryHTML(e,'edit',e.id===selId);});
+      });
+      return h;
+    }).join('');
+    overlay._fuTargetMap=fuMap;
+    return html;
   }
 
   overlay.innerHTML=`
@@ -7945,9 +7975,10 @@ async function rbOpenCommHistory(cid, cname){
         </div>
         <button onclick="document.getElementById('rb-comm-overlay').remove()" style="background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;">✕</button>
       </div>
-      <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;">
-        <input type="text" id="comm-search" placeholder="Search by content, action, date…" oninput="rbFilterCommHistory()" style="flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
-        <input type="date" id="comm-date" oninput="rbFilterCommHistory()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="comm-search" placeholder="Search by content, action, date…" oninput="rbFilterCommHistory()" style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+        <input type="date" id="comm-from" title="From" oninput="rbFilterCommHistory()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
+        <input type="date" id="comm-to" title="To" oninput="rbFilterCommHistory()" style="background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;">
       </div>
       <div id="comm-log-body" style="max-height:60vh;overflow-y:auto;">
         ${renderLogs(grouped)}
@@ -7955,13 +7986,15 @@ async function rbOpenCommHistory(cid, cname){
       <div style="padding:12px 18px;border-top:1px solid var(--bdr);">
         <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Log a reply from customer (paste from WhatsApp):</div>
         <textarea id="comm-reply-text" placeholder="Paste customer reply here…" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:7px 10px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:vertical;min-height:60px;box-sizing:border-box;"></textarea>
+        <div id="comm-reply-hint" style="font-size:10px;color:var(--t3);margin-top:4px;">tap the message this reply belongs to</div>
         <div style="display:flex;justify-content:flex-end;margin-top:6px;">
-          <button onclick="rbSaveCommReply('${cid}','${esc(cname)}')" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save Reply</button>
+          <button id="comm-reply-save-btn" disabled onclick="rbSaveCommReply('${cid}','${esc(cname)}')" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;opacity:.5;">Save Reply</button>
         </div>
       </div>
     </div>`;
 
-  // Store grouped threads (original + its edits, as a unit) for search
+  // Store grouped threads (original + its edits + follow-up children, as a
+  // unit) for search/date filtering.
   overlay._allGrouped=grouped;
   overlay._renderLogs=renderLogs;
   document.body.appendChild(overlay);
@@ -7969,30 +8002,68 @@ async function rbOpenCommHistory(cid, cname){
 
 function rbLogMatches(l,q){return(l.action||'').toLowerCase().includes(q)||(l.note||'').toLowerCase().includes(q)||(l.outcome||'').toLowerCase().includes(q)||(l.user||'').toLowerCase().includes(q);}
 
+function rbToggleCommSelect(rowId){
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  overlay._selectedRowId=(overlay._selectedRowId===rowId)?null:rowId;
+  rbFilterCommHistory();
+}
+
+function rbUpdateCommSaveBtn(){
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  // The selected row may have fallen out of the currently filtered/visible
+  // set (search or date range changed) -- treat that as no selection.
+  if(overlay._selectedRowId&&!(overlay._fuTargetMap&&(overlay._selectedRowId in overlay._fuTargetMap)))overlay._selectedRowId=null;
+  const has=!!overlay._selectedRowId;
+  const btn=document.getElementById('comm-reply-save-btn');
+  const hint=document.getElementById('comm-reply-hint');
+  if(btn){btn.disabled=!has;btn.style.opacity=has?'1':'.5';btn.style.cursor=has?'pointer':'not-allowed';}
+  if(hint)hint.textContent=has?'':'tap the message this reply belongs to';
+}
+
 function rbFilterCommHistory(){
   const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
   const q=(document.getElementById('comm-search')?.value||'').toLowerCase();
-  const d=document.getElementById('comm-date')?.value||'';
+  const from=document.getElementById('comm-from')?.value||'';
+  const to=document.getElementById('comm-to')?.value||'';
+  // Local dates from plain date inputs, anchored to local midnight/
+  // end-of-day before comparing -- same timezone handling as the Activity
+  // Report's date filter, so a picked day isn't shifted by UTC offset.
+  const fromDate=from?new Date(from+'T00:00:00'):null;
+  const toDate=to?new Date(to+'T23:59:59.999'):null;
+  const inRange=l=>{
+    const t=new Date(l.ts);
+    if(isNaN(t))return false;
+    if(fromDate&&t<fromDate)return false;
+    if(toDate&&t>toDate)return false;
+    return true;
+  };
   let grouped=overlay._allGrouped||[];
-  // Filtering operates on whole threads -- a match in an edit keeps the
-  // original (and the rest of its edits) visible too, not just that row.
-  if(q)grouped=grouped.filter(l=>rbLogMatches(l,q)||(l.edits||[]).some(e=>rbLogMatches(e,q)));
-  if(d)grouped=grouped.filter(l=>(l.ts&&l.ts.startsWith(d))||(l.edits||[]).some(e=>e.ts&&e.ts.startsWith(d)));
+  // Filtering operates on whole threads -- a match anywhere in the thread
+  // (the root, an edit, a follow-up child, or a child's own edit) keeps
+  // the whole thread visible, not just that one row.
+  const threadMatches=(l,pred)=>pred(l)||(l.edits||[]).some(pred)||(l.children||[]).some(c=>pred(c)||(c.edits||[]).some(pred));
+  if(q)grouped=grouped.filter(l=>threadMatches(l,x=>rbLogMatches(x,q)));
+  if(fromDate||toDate)grouped=grouped.filter(l=>threadMatches(l,inRange));
   const body=document.getElementById('comm-log-body');
   if(body)body.innerHTML=overlay._renderLogs(grouped);
+  rbUpdateCommSaveBtn();
 }
 
 async function rbRefreshCommHistory(cid,cname){
   const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
-  overlay._allGrouped=await rbFetchGroupedLogs(cid);
+  overlay._allGrouped=await rbFetchCommHistoryLogs(cid,cname);
   rbFilterCommHistory();
 }
 
 async function rbSaveCommReply(cid,cname){
+  const overlay=document.getElementById('rb-comm-overlay');if(!overlay)return;
+  const target=overlay._selectedRowId?overlay._fuTargetMap?.[overlay._selectedRowId]:null;
+  if(!target){notif('⚠ Tap the message this reply belongs to');return;}
   const txt=document.getElementById('comm-reply-text')?.value.trim();
   if(!txt){notif('⚠ Enter reply text');return;}
-  await rbLogA(cid,cname,'Customer reply logged','',txt,'message');
+  await rbLogA(cid,cname,'Customer reply logged','',txt,'message','',false,target);
   document.getElementById('comm-reply-text').value='';
+  overlay._selectedRowId=null;
   await rbRefreshCommHistory(cid,cname);
   notif('Reply saved');
 }
@@ -8121,6 +8192,34 @@ async function rbFetchGroupedLogs(cid,limit=500){
     return rbGroupLogsWithEdits(flat);
   }catch(e){
     return rbGroupLogsWithEdits(RB.alog.filter(l=>l.customerId===cid));
+  }
+}
+
+// Communication History modal needs to catch messages saved under a
+// duplicate contact card for the same person (matched by name), unlike
+// rbFetchGroupedLogs above (used by the compact sidebar history) which is
+// keyed only on customer_id. Also nests parent_id follow-ups via
+// rbActNestChildren (shared with the Activity Report) so threads show here.
+async function rbFetchCommHistoryLogs(cid,cname,limit=500){
+  const nameLower=(cname||'').toLowerCase();
+  try{
+    const qp='order=timestamp.desc&limit='+limit;
+    const[byId,byName]=await Promise.all([
+      dbGet('raabta_log','customer_id=eq.'+encodeURIComponent(cid)+'&'+qp),
+      dbGet('raabta_log','customer_name=ilike.'+encodeURIComponent(cname)+'&'+qp)
+    ]);
+    const byRowId=new Map();
+    [...byId,...byName].forEach(l=>{if(!byRowId.has(l.id))byRowId.set(l.id,l);});
+    const remoteIds=new Set(byRowId.keys());
+    const localOnly=RB.alog.filter(l=>{
+      if(remoteIds.has(l.id))return false;
+      return l.customerId===cid||(l.customerName||'').toLowerCase()===nameLower;
+    });
+    const flat=[...[...byRowId.values()].map(l=>({id:l.id,ts:l.timestamp,user:l.username,action:l.action,outcome:l.outcome,note:l.note,editedFrom:l.edited_from,isEdit:!!l.is_edit,parentId:l.parent_id||''})),...localOnly].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    return rbActNestChildren(rbGroupLogsWithEdits(flat));
+  }catch(e){
+    const local=RB.alog.filter(l=>l.customerId===cid||(l.customerName||'').toLowerCase()===nameLower);
+    return rbActNestChildren(rbGroupLogsWithEdits(local));
   }
 }
 
