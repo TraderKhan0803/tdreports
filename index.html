@@ -1547,6 +1547,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <span id="rb-mss-display" style="font-size:11px;padding:2px 8px;border-radius:10px;font-family:\'DM Mono\',monospace;font-weight:600;"></span>
         <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;margin-left:6px;">Language:</span>
         <span id="rb-mls-display" style="font-size:12px;"></span>
+        <span id="rb-mvip-display" onclick="rbToggleVip()" title="Click to toggle VIP status" style="font-size:11px;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer;margin-left:6px;"></span>
       </div>
       <div class="rb-dvd"></div>
       <div class="rb-sec" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
@@ -7754,6 +7755,7 @@ function rbOpenC(id){
   if(mssEl){mssEl.className='rb-bdg '+rbBc(autoStatus);mssEl.textContent=autoStatus;}
   const mlsEl=document.getElementById('rb-mls-display');
   if(mlsEl)mlsEl.textContent=c.lang==='ur'?'🇵🇰 Urdu':c.lang==='en'?'🇬🇧 English':'❓ Unknown';
+  rbRenderVipBadge(id,c.name);
   const mig=document.getElementById('rb-mig');
   if(mig)mig.innerHTML=
     '<div class="rb-ii"><div class="rb-il">Location</div><div class="rb-iv">'+(mapsUrl?'<a href="'+mapsUrl+'" target="_blank" style="color:var(--acc);text-decoration:none;word-break:break-word;">📍 '+esc(rbShortenAddress(latestAddress))+'</a>':'📍 —')+'</div></div>'+
@@ -8342,6 +8344,50 @@ function rbUpdLang(){
   const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
   const nl=document.getElementById('rb-mls').value;
   if(nl!==c.lang){rbLogA(c.id,c.name,`Language set: ${nl}`,'','');c.lang=nl;rbSave();rbOpenC(RB.acid);}
+}
+
+// ── MANUAL VIP (vip_customers table) ────────────────────────────────────────
+// vip_customers is keyed by customer_name (not customer id) so duplicate
+// contact cards for the same person share one VIP status, same as how
+// Communication History matches by name. Checked fresh per customer here
+// (single-row lookup by primary key) rather than kept in a shared cache --
+// only the Outreach panel's list needs "load once for everyone on screen".
+function rbRenderVipBadge(cid,cname){
+  const el=document.getElementById('rb-mvip-display');if(!el)return;
+  el.textContent='VIP: …';el.style.cssText+='background:transparent;color:var(--t3);border:1px solid var(--bdr);';
+  dbGet('vip_customers','customer_name=eq.'+encodeURIComponent(cname)+'&select=customer_name').then(rows=>{
+    if(RB.acid!==cid)return; // modal moved to a different customer before this resolved
+    rbApplyVipBadge(!!rows.length);
+  }).catch(()=>{if(RB.acid===cid)el.textContent='VIP: ?';});
+}
+
+function rbApplyVipBadge(isVip){
+  const el=document.getElementById('rb-mvip-display');if(!el)return;
+  el._isVip=isVip;
+  el.textContent=isVip?'★ VIP':'+ Add VIP';
+  el.style.background=isVip?'rgba(249,115,22,.15)':'transparent';
+  el.style.color=isVip?'var(--acc)':'var(--t3)';
+  el.style.border=isVip?'1px solid rgba(249,115,22,.3)':'1px solid var(--bdr)';
+}
+
+async function rbToggleVip(){
+  if(curUser?.role==='viewer'){notif('⚠ Read-only access');return;}
+  const c=RB.custs.find(x=>x.id===RB.acid);if(!c)return;
+  const el=document.getElementById('rb-mvip-display');if(!el)return;
+  const wasVip=!!el._isVip;
+  try{
+    if(wasVip){
+      await dbDelete('vip_customers','customer_name=eq.'+encodeURIComponent(c.name));
+      rbLogA(c.id,c.name,'VIP removed','','');
+    }else{
+      await dbInsert('vip_customers',[{customer_name:c.name,added_by:curUser?.u||'system'}]);
+      rbLogA(c.id,c.name,'VIP added','','');
+    }
+  }catch(e){notif('⚠ Failed to update VIP: '+e.message);return;}
+  rbApplyVipBadge(!wasVip);
+  notif(wasVip?'Removed from VIP':'Added to VIP');
+  if(document.getElementById('rb-act-body'))rbRenderAct();
+  if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
 async function rbSaveLog(){
@@ -9498,7 +9544,7 @@ function renderProdOrders(p){
 
 // ── OUTREACH TAB — full rebuild with filters, counts, alerts, sorting ──────────
 // Persistent filter state — survives re-renders
-const _otFilters={welcomeDays:14,quietDays:14,reactMin:30,reactMax:60,lapsedMin:30,lapsedMax:60,vipMin:50000};
+const _otFilters={welcomeDays:14,quietDays:14,reactMin:30,reactMax:60,lapsedMin:30,lapsedMax:60};
 
 function otSetFilter(key,val){
   const n=parseInt(val);
@@ -9506,7 +9552,7 @@ function otSetFilter(key,val){
   rbRenderOutreach();
 }
 
-function rbRenderOutreach(){
+async function rbRenderOutreach(){
   alertsLoad();
   const el=document.getElementById('rb-outreach-body');if(!el)return;
   if(!S.orders||!S.orders.length){
@@ -9514,7 +9560,7 @@ function rbRenderOutreach(){
   }
 
   // Use persistent filter state
-  const{welcomeDays,quietDays,reactMin,reactMax,vipMin}=_otFilters;
+  const{welcomeDays,quietDays,reactMin,reactMax}=_otFilters;
 
   // Use selected period end as reference, filtered orders for data scope --
   // but getMktToday() returns the end of the selected period, which is a
@@ -9526,10 +9572,18 @@ function rbRenderOutreach(){
   const real=new Date();
   if(today>real)today=real;
   today.setHours(0,0,0,0);
+  // fSt.ctype (the B2B/B2C toggle) was read but never actually applied to
+  // any of this tab's data -- Welcome/Lapsed/Never Converted/Bulk & VIP all
+  // silently mixed both types regardless of the selection. Applied here, at
+  // the customer map, so everything derived from it (all/welcome/lapsed)
+  // respects it; the Sets built straight from S.orders below need the same
+  // guard so they stay consistent with what the map actually counted.
   const ctype=fSt?.ctype||'all';
+  const ctypeMatch=o=>ctype==='all'||o.Customer_Type===ctype;
   // Use S.orders (all-time) for accurate customer history
   const cm={};
   S.orders.forEach(o=>{
+    if(!ctypeMatch(o))return;
     const n=resolveCustomerName(o.Customer);
     if(!cm[n])cm[n]={name:n,type:o.Customer_Type,phone:o.Phone||'',orders:0,sales:0,firstOrder:null,lastOrder:null};
     cm[n].orders++;cm[n].sales+=o.Total_Sales;
@@ -9543,7 +9597,7 @@ function rbRenderOutreach(){
   const cutoffW=new Date(today.getTime()-welcomeDays*86400000);
   // Welcome: use IsFirstOrder field
   const _delStatuses=new Set(['delivered','collected','assigned']);
-  const firstOrderSet=new Set(S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW&&_delStatuses.has((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
+  const firstOrderSet=new Set(S.orders.filter(o=>ctypeMatch(o)&&o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoffW&&_delStatuses.has((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
   // IsFirstOrder is set per-order, not per-customer -- a data correction or
   // re-import can leave it true on a recent order for a customer whose real
   // first order (from the all-time map) is years old. Require the
@@ -9552,12 +9606,24 @@ function rbRenderOutreach(){
   // Lapsed: replaces quiet + react
   const lapsedMin=_otFilters.lapsedMin||30;
   const lapsedMax=_otFilters.lapsedMax||60;
-  const _hasDelivered=new Set(S.orders.filter(o=>['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
+  const _hasDelivered=new Set(S.orders.filter(o=>ctypeMatch(o)&&['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
   const lapsed=all.filter(c=>{if(!c.lastOrder||!_hasDelivered.has(c.name))return false;const d=Math.floor((today-c.lastOrder)/86400000);return d>=lapsedMin&&d<=lapsedMax;}).sort((a,b)=>Math.floor((today-a.lastOrder)/86400000)-Math.floor((today-b.lastOrder)/86400000));
-  const vip=all.filter(c=>c.orders>=2&&(c.sales/c.orders)>=vipMin).sort((a,b)=>(b.sales/b.orders)-(a.sales/a.orders));
+  // Manual VIP -- vip_customers (added/removed via the customer window's VIP
+  // toggle) is the source of truth now, not a spend threshold. Loaded once
+  // for the whole panel; columns are still computed from order data (cm),
+  // so they respect the ctype filter above the same way Welcome/Lapsed do.
+  // A manually-added customer with no matching orders under the current
+  // filter still appears (list membership is exactly vip_customers), just
+  // with zeroed-out stats.
+  let vipRows=[];
+  try{vipRows=await dbGet('vip_customers','select=customer_name,added_by,added_at');}catch(e){}
+  const vip=vipRows.map(v=>{
+    const stats=cm[v.customer_name];
+    return{name:v.customer_name,type:stats?.type||'',phone:stats?.phone||'',orders:stats?.orders||0,sales:stats?.sales||0,addedBy:v.added_by,addedAt:v.added_at};
+  }).sort((a,b)=>(b.sales/(b.orders||1))-(a.sales/(a.orders||1)));
   // Never converted — in Raabta use S.orders directly
   const _neverCustStatus={};
-  S.orders.forEach(o=>{const n=resolveCustomerName(o.Customer);if(!_neverCustStatus[n])_neverCustStatus[n]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'',type:o.Customer_Type};_neverCustStatus[n].attempts++;if(['delivered','collected','assigned'].includes((o.Status||'').toLowerCase()))_neverCustStatus[n].hasDelivered=true;if(o.Order_Date&&(!_neverCustStatus[n].lastAttempt||o.Order_Date>_neverCustStatus[n].lastAttempt))_neverCustStatus[n].lastAttempt=o.Order_Date;});
+  S.orders.forEach(o=>{if(!ctypeMatch(o))return;const n=resolveCustomerName(o.Customer);if(!_neverCustStatus[n])_neverCustStatus[n]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'',type:o.Customer_Type};_neverCustStatus[n].attempts++;if(['delivered','collected','assigned'].includes((o.Status||'').toLowerCase()))_neverCustStatus[n].hasDelivered=true;if(o.Order_Date&&(!_neverCustStatus[n].lastAttempt||o.Order_Date>_neverCustStatus[n].lastAttempt))_neverCustStatus[n].lastAttempt=o.Order_Date;});
   const neverConverted=Object.entries(_neverCustStatus).filter(([,v])=>!v.hasDelivered&&v.attempts>0).map(([name,v])=>({name,type:v.type,phone:v.phone,lastAttempt:v.lastAttempt,attempts:v.attempts})).sort((a,b)=>(b.lastAttempt||0)-(a.lastAttempt||0));
 
   function actionTag(name){
@@ -9719,9 +9785,9 @@ function rbRenderOutreach(){
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Attempt',align:'right'},{label:'Attempts',align:'right'},{label:'Phone'}],
      filterHtml:''},
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
-     rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--blu)">${fmtFull(Math.round(c.sales/c.orders))}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td>`})),
+     rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td>${c.type?`<span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span>`:'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--blu)">${c.orders?fmtFull(Math.round(c.sales/c.orders)):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
-     filterHtml:filterInput('ot-vip-min','vipMin','Avg ≥ PKR','')},
+     filterHtml:''},
   ];
 
   // ── Campaigns card ────────────────────────────────────────────────────────
