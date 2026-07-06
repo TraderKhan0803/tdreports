@@ -28,6 +28,20 @@ let _rbActSelected=new Set(); // ids the user has checked
 let _rbActSelectableIds=[]; // ids of currently-rendered, checkable rows (excludes dimmed context-parent rows)
 let _rbActDeleteMap={}; // id -> full list of row ids a delete of that row should cascade to
 
+// Nearly every filter input calls rbRenderAct() directly (oninput/onchange),
+// and each call awaits 1-2 fetches -- so rapid filter changes (or the tab's
+// initial render racing an immediate user edit) can have an OLDER call's
+// fetch resolve after a NEWER one's. Without this guard, that stale call
+// would overwrite the table body with its own (differently-filtered) rows
+// and, worse, push its own row ids into _rbActSelectableIds/_rbActDeleteMap
+// on top of whatever the newer, correctly-filtered render had already put
+// there (those only get reset at the *start* of a call, not before a late
+// finisher writes) -- corrupting "Select all" with rows outside the filter
+// actually shown on screen. Each call captures the generation counter at
+// invocation and checks it again after its awaits; if a newer call has
+// since started, it discards its own (stale) results instead of applying them.
+let _rbActRenderGen=0;
+
 // Phase 4: captures everything needed to reproduce the current view, used
 // when navigating away (e.g. clicking a customer or CSR name) so goBack()
 // can restore the exact same filtered view, not just the tab.
@@ -258,12 +272,12 @@ function rbActSummaryCardsHTML(threads,resolvedThreads,outstandingThreads){
 
 async function rbRenderAct(){
   const tb=document.getElementById('rb-act-body');if(!tb)return;
+  const gen=++_rbActRenderGen;
   const isSuper=curUser?.role==='super';
   const theadRow=document.getElementById('rb-act-thead-row');
   if(theadRow)theadRow.innerHTML=(isSuper?'<th style="width:26px;"><input type="checkbox" id="rb-act-selall" title="Select all" onchange="rbActToggleSelectAll(this.checked)" style="accent-color:var(--acc);cursor:pointer;"></th>':'')+'<th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th>';
   const colspan=isSuper?7:6;
   tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
-  _rbActSelectableIds=[];_rbActDeleteMap={};
   const summaryEl=document.getElementById('rb-act-summary');
   try{
     // Only the date range is filtered server-side -- everything else is
@@ -322,6 +336,14 @@ async function rbRenderAct(){
       contextParents=cpRows.map(l=>({id:l.id,ts:l.timestamp,user:l.username,customerId:l.customer_id,customerName:l.customer_name,action:l.action,outcome:l.outcome,note:l.note,interactionType:l.interaction_type,category:l.category,editedFrom:l.edited_from,isEdit:!!l.is_edit,parentId:l.parent_id||'',alertId:l.alert_id||'',edits:[],isContext:true}));
     }
 
+    // All awaits are behind us -- if a newer rbRenderAct() call has started
+    // since this one began, its result (or in-flight fetch) supersedes ours.
+    // Bail out without touching the table body or the selection-tracking
+    // state below; applying a stale response here is exactly what let
+    // "Select all" pick up rows outside the currently-applied filters.
+    if(gen!==_rbActRenderGen)return;
+    _rbActSelectableIds=[];_rbActDeleteMap={};
+
     // General filters -- what the summary cards reflect.
     const csr=document.getElementById('rb-af')?.value||'';
     const client=(document.getElementById('rb-act-client')?.value||'').trim().toLowerCase();
@@ -359,6 +381,7 @@ async function rbRenderAct(){
     rbActRenderBulkBar();
     rbActSyncSelectAllCheckbox();
   }catch(e){
+    if(gen!==_rbActRenderGen)return;
     if(summaryEl)summaryEl.innerHTML='';
     tb.innerHTML='<tr><td colspan="'+colspan+'" style="color:var(--red);padding:12px;">Failed to load: '+esc(e.message)+'</td></tr>';
   }
@@ -399,14 +422,30 @@ function rbActRenderBulkBar(){
   el.innerHTML=n?`<div style="padding:0 14px 10px;"><button onclick="rbActDeleteSelected()" style="padding:6px 14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:var(--r2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete selected (${n})</button></div>`:'';
 }
 
+const RB_ACT_DELETE_CAP=500;
+
 // Expands each checked row through _rbActDeleteMap (parent -> itself + all
 // edits + all children + children's edits; child/lone edit -> itself + its
 // own edits only) and de-dupes before hitting the DB, so selecting both a
 // parent and one of its own children doesn't send that child's id twice.
+// The id=in.(...) sent to dbDelete is built solely from this expansion of
+// _rbActSelected/_rbActDeleteMap -- never from allLogs/tableFiltered/the
+// full log list -- so it can only ever reach rows the user explicitly
+// checked plus their own cascade.
 async function rbActDeleteSelected(){
-  const ids=[...new Set([..._rbActSelected].flatMap(id=>_rbActDeleteMap[id]||[id]))];
+  const selectedIds=[..._rbActSelected];
+  const selectedSet=new Set(selectedIds);
+  const ids=[...new Set(selectedIds.flatMap(id=>_rbActDeleteMap[id]||[id]))];
   if(!ids.length)return;
-  if(!confirm('Delete '+ids.length+' log record'+(ids.length===1?'':'s')+'? This cannot be undone.'))return;
+  if(ids.length>RB_ACT_DELETE_CAP){
+    notif('⚠ That selection would delete '+ids.length+' records (limit '+RB_ACT_DELETE_CAP+'). Narrow your filters and try again.');
+    return;
+  }
+  const cascadeCount=ids.filter(id=>!selectedSet.has(id)).length;
+  const msg=cascadeCount>0
+    ?'Delete '+ids.length+' records? '+selectedIds.length+' selected + '+cascadeCount+' follow-ups/edits. This cannot be undone.'
+    :'Delete '+ids.length+' log record'+(ids.length===1?'':'s')+'? This cannot be undone.';
+  if(!confirm(msg))return;
   try{
     await dbDelete('raabta_log','id=in.('+ids.join(',')+')');
   }catch(e){notif('⚠ Failed to delete: '+e.message);return;}
