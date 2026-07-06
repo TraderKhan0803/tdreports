@@ -2458,6 +2458,18 @@ async function _loadHistoryInBackground(currentMk){
     S.orders=[...S.orders,...newOrders];
     S.prods=allProds.map(parseProduct);
 
+    // rbInit() (via launchApp()) already ran rbSyncFromOrders() once, but
+    // only against the current month's orders -- a customer whose most
+    // recent order is from an earlier month wouldn't have been picked up.
+    // Re-run now that S.orders holds full history, and refresh whatever
+    // Raabta view is currently on screen so the update is visible without
+    // switching tabs.
+    rbSyncFromOrders();
+    if(currentMode==='raabta'){
+      rbRenderAll();
+      if(rbCurTab==='rb-outreach')rbRenderOutreach();
+    }
+
     showHistoryProgress(100,'Full history loaded');
   }catch(e){
     console.error('History load failed:',e);
@@ -7619,8 +7631,14 @@ function rbSyncFromOrders(){
   S.orders.forEach(o=>{
     const name=resolveCustomerName(o.Customer);
     if(!custMap[name])custMap[name]={name,phone:o.Phone||'',city:o.City||'',lastOrder:null};
-    if(o.Order_Date&&(!custMap[name].lastOrder||o.Order_Date>custMap[name].lastOrder))
+    // Track phone/city alongside lastOrder (not just whichever order for
+    // this name was encountered first) so both reflect the customer's most
+    // recent order, not an arbitrary earlier one.
+    if(o.Order_Date&&(!custMap[name].lastOrder||o.Order_Date>custMap[name].lastOrder)){
       custMap[name].lastOrder=o.Order_Date;
+      custMap[name].phone=o.Phone||custMap[name].phone;
+      custMap[name].city=o.City||custMap[name].city;
+    }
   });
   Object.values(custMap).forEach(c=>{
     if(!seen.has(c.name.toLowerCase())){
@@ -7635,8 +7653,11 @@ function rbSyncFromOrders(){
   // Existing cards otherwise go stale -- a returning customer's new order
   // wouldn't move their lastOrder (and so their auto status/queue
   // placement) until someone happened to open their card manually. Refresh
-  // it from the order data on every sync; only fill phone/city if currently
-  // blank, and never touch notes/lang/status -- those are manually curated.
+  // it from the order data on every sync, and never touch notes/lang/status
+  // -- those are manually curated. Phone/city: a system-created card has no
+  // manual edit to protect, so keep those in sync with the customer's most
+  // recent order outright; a manually-added card only gets them filled in
+  // if currently blank.
   const custMapByLower={};
   Object.values(custMap).forEach(c=>{custMapByLower[c.name.toLowerCase()]=c;});
   let changed=false;
@@ -7645,8 +7666,13 @@ function rbSyncFromOrders(){
     if(!m)return;
     const latest=m.lastOrder?m.lastOrder.toISOString().split('T')[0]:'';
     if(latest&&latest!==c.lastOrder){c.lastOrder=latest;changed=true;}
-    if(!c.phone&&m.phone){c.phone=m.phone;changed=true;}
-    if(!c.city&&m.city){c.city=m.city;changed=true;}
+    if(c.addedBy==='system'){
+      if(m.phone&&m.phone!==c.phone){c.phone=m.phone;changed=true;}
+      if(m.city&&m.city!==c.city){c.city=m.city;changed=true;}
+    }else{
+      if(!c.phone&&m.phone){c.phone=m.phone;changed=true;}
+      if(!c.city&&m.city){c.city=m.city;changed=true;}
+    }
   });
   if(newCusts.length){RB.custs=[...RB.custs,...newCusts];changed=true;}
   if(changed)rbSave();
