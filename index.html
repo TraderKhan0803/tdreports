@@ -6605,12 +6605,10 @@ function rbSave(){
   localStorage.setItem('rb_custs',JSON.stringify(RB.custs));
   localStorage.setItem('rb_alog',JSON.stringify(RB.alog));
   localStorage.setItem('rb_wa',JSON.stringify(RB.waNumbers));
-  localStorage.setItem('rb_campaigns',JSON.stringify(RB.campaigns||[]));
 }
 function rbLoad(){
   try{RB.custs=JSON.parse(localStorage.getItem('rb_custs'))||[];}catch(e){RB.custs=[];}
   try{RB.alog=JSON.parse(localStorage.getItem('rb_alog'))||[];}catch(e){RB.alog=[];}
-  try{RB.campaigns=JSON.parse(localStorage.getItem('rb_campaigns'))||[];}catch(e){RB.campaigns=[];}
   RB.waNumbers=[];
 }
 function rbUid(){return Math.random().toString(36).substr(2,9);}
@@ -6623,6 +6621,7 @@ async function rbInit(){
   await alertsLoad();
   await rbLoadWANumbers();
   await rbLoadOutcomes();
+  await rbLoadCampaigns();
   rbSyncFromOrders();
   let changed=false;
   RB.custs.forEach(c=>{
@@ -8360,11 +8359,11 @@ function rbSTplBtn(btn){
   if(!cid||!tid||!lnk)return;
   window.open(lnk,'_blank');
   rbSTpl(cid,tid,lnk);
-  // Auto-save 1:1 sends as single-recipient campaigns so they appear in attribution
+  // Auto-save 1:1 sends as campaigns (grouped per template+day+sender) so they appear in attribution
   const c=RB.custs.find(x=>x.id===cid);
   const t=RB_TEMPLATES.find(x=>x.id===tid);
   if(c&&t&&tid!=='00'){
-    rbSaveCampaign(t.name+' → '+c.name,tid,t.name,[{name:c.name,phone:c.phone||''}],7);
+    rbAutoSaveTemplateSend(c.name,c.phone||'',tid,t.name);
   }
 }
 
@@ -9696,8 +9695,8 @@ async function rbRenderOutreach(){
           <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Bulk Message</span>
           <select id="bulk-msg-filter" onchange="rbBulkFilter(this.value)" style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:4px 8px;border-radius:var(--r2);font-family:\'DM Sans\',sans-serif;font-size:11px;outline:none;cursor:pointer;">
             <option value="">— Select target group —</option>
-            <option value="new-week">New users this week</option>
-            <option value="new-month">New users this month</option>
+            <option value="new-week">New users (last 7 days)</option>
+            <option value="new-month">New users (since 1st of month)</option>
             <option value="active-quarter">Active users this quarter</option>
             <option value="active-year">Active users this year</option>
             <option value="lapsed-30">Not ordered in last 30 days</option>
@@ -9993,10 +9992,10 @@ function rbBulkFilter(val){
 
   if(val==='new-week'){
     filtered=custs.filter(c=>c.firstOrder&&(now-c.firstOrder.getTime())<=7*86400000);
-    label='New users this week';
+    label='New users (last 7 days)';
   }else if(val==='new-month'){
     filtered=custs.filter(c=>c.firstOrder&&c.firstOrder.getTime()>=startOfMonth);
-    label='New users this month';
+    label='New users (since 1st of month)';
   }else if(val==='active-quarter'){
     filtered=custs.filter(c=>c.lastOrder&&(now-c.lastOrder.getTime())<=90*86400000);
     label='Active users this quarter';
@@ -10093,10 +10092,64 @@ function rbBulkSendMessage(){
   window.open('https://web.whatsapp.com/','_blank');
 }
 
-function rbDeleteCampaign(id){
+// ── CAMPAIGNS (campaigns table) ─────────────────────────────────────────────
+// Campaigns used to live only in localStorage (RB.campaigns); Phase 6A moves
+// them to the campaigns table. The in-memory shape (date/sentBy/
+// attributionDays/templateName/name/id/recipients) is kept as-is so
+// attribution math and rendering elsewhere don't need to change -- only
+// these load/save/delete functions know about the DB column names.
+function rbCampaignFromRow(row){
+  return{
+    id:row.id,
+    name:row.name,
+    templateId:null,
+    templateName:row.template||null,
+    date:row.created_at,
+    sentBy:row.created_by||'system',
+    recipients:Array.isArray(row.recipients)?row.recipients:[],
+    attributionDays:row.day_window||7
+  };
+}
+function rbCampaignToRow(camp){
+  return{
+    id:camp.id,
+    name:camp.name,
+    template:camp.templateName||null,
+    created_by:camp.sentBy||'system',
+    created_at:camp.date,
+    day_window:camp.attributionDays||7,
+    recipients:camp.recipients||[]
+  };
+}
+
+async function rbLoadCampaigns(){
+  let rows=[];
+  try{rows=await dbGet('campaigns','select=*');}catch(e){rows=[];}
+  RB.campaigns=rows.map(rbCampaignFromRow).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  // One-time migration: campaigns saved locally before this table existed.
+  // Insert whichever ones the DB doesn't already have (by id), then clear
+  // the local copy -- that clearing is what makes this run only once.
+  let legacy=[];
+  try{legacy=JSON.parse(localStorage.getItem('rb_campaigns'))||[];}catch(e){legacy=[];}
+  if(legacy.length){
+    const existingIds=new Set(RB.campaigns.map(c=>c.id));
+    const missing=legacy.filter(c=>c.id&&!existingIds.has(c.id));
+    if(missing.length){
+      try{
+        await dbInsert('campaigns',missing.map(rbCampaignToRow));
+        RB.campaigns=[...missing,...RB.campaigns].sort((a,b)=>new Date(b.date)-new Date(a.date));
+      }catch(e){console.error('Campaign migration failed:',e);}
+    }
+    localStorage.removeItem('rb_campaigns');
+  }
+}
+
+async function rbDeleteCampaign(id){
   if(!RB.campaigns)return;
+  try{await dbDelete('campaigns','id=eq.'+encodeURIComponent(id));}
+  catch(e){notif('⚠ Failed to delete campaign: '+e.message);return;}
   RB.campaigns=RB.campaigns.filter(c=>c.id!==id);
-  rbSave();
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
@@ -10110,7 +10163,7 @@ function rbBulkSaveCampaign(){
   if(nameEl)nameEl.value='';
 }
 
-function rbSaveCampaign(name,templateId,templateName,recipients,attributionDays){
+async function rbSaveCampaign(name,templateId,templateName,recipients,attributionDays){
   if(!RB.campaigns)RB.campaigns=[];
   const camp={
     id:rbUid(),
@@ -10122,10 +10175,37 @@ function rbSaveCampaign(name,templateId,templateName,recipients,attributionDays)
     recipients:recipients.map(c=>({name:c.name,phone:c.phone||''})),
     attributionDays:attributionDays||7
   };
+  try{await dbInsert('campaigns',[rbCampaignToRow(camp)]);}
+  catch(e){notif('⚠ Failed to save campaign: '+e.message);return;}
   RB.campaigns.unshift(camp);
-  rbSave();
   notif(`✓ Campaign "${name}" saved (${recipients.length} recipients, ${attributionDays}d window)`);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
+}
+
+function rbLocalDayKey(d){
+  d=d||new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// Auto-saved 1:1 template sends group into one campaign row per
+// template+day+sender instead of one row per send -- otherwise sending the
+// same template to 20 customers in a day would flood the campaign list
+// with 20 near-identical single-recipient rows. Bulk campaigns are
+// unaffected: they always pass templateName=null, so they can never match
+// here (only auto-saves ever set a real template name).
+async function rbAutoSaveTemplateSend(cname,phone,tid,tname){
+  const user=curUser?.u||'system';
+  const dayKey=rbLocalDayKey();
+  const existing=(RB.campaigns||[]).find(c=>c.templateName===tname&&c.sentBy===user&&rbLocalDayKey(new Date(c.date))===dayKey);
+  if(existing){
+    if(existing.recipients.some(r=>r.name===cname))return; // already logged today
+    existing.recipients.push({name:cname,phone:phone||''});
+    try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(existing.id),{recipients:existing.recipients});}
+    catch(e){console.error('Failed to append campaign recipient:',e);}
+    if(rbCurTab==='rb-outreach')rbRenderOutreach();
+    return;
+  }
+  await rbSaveCampaign(tname+' → '+cname,tid,tname,[{name:cname,phone:phone||''}],7);
 }
 
 function rbGetCampaignAttribution(camp){
