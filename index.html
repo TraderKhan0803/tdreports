@@ -7632,7 +7632,24 @@ function rbSyncFromOrders(){
       });
     }
   });
-  if(newCusts.length){RB.custs=[...RB.custs,...newCusts];rbSave();}
+  // Existing cards otherwise go stale -- a returning customer's new order
+  // wouldn't move their lastOrder (and so their auto status/queue
+  // placement) until someone happened to open their card manually. Refresh
+  // it from the order data on every sync; only fill phone/city if currently
+  // blank, and never touch notes/lang/status -- those are manually curated.
+  const custMapByLower={};
+  Object.values(custMap).forEach(c=>{custMapByLower[c.name.toLowerCase()]=c;});
+  let changed=false;
+  RB.custs.forEach(c=>{
+    const m=custMapByLower[c.name.toLowerCase()];
+    if(!m)return;
+    const latest=m.lastOrder?m.lastOrder.toISOString().split('T')[0]:'';
+    if(latest&&latest!==c.lastOrder){c.lastOrder=latest;changed=true;}
+    if(!c.phone&&m.phone){c.phone=m.phone;changed=true;}
+    if(!c.city&&m.city){c.city=m.city;changed=true;}
+  });
+  if(newCusts.length){RB.custs=[...RB.custs,...newCusts];changed=true;}
+  if(changed)rbSave();
 }
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
