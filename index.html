@@ -5638,7 +5638,11 @@ function downloadAtRiskExcel(){
 // ═══════════════════════════════════════════════
 // MARKETING TAB
 // ═══════════════════════════════════════════════
-function renderMarketing(){
+async function renderMarketing(){
+  // One shared fetch for this whole render cycle -- rbActionedBadge() (used
+  // by all four panels below via mktRow) reads _rbSentLookup directly
+  // rather than each row querying raabta_log itself.
+  await rbRefreshSentLookup();
   renderMktWelcome();
   renderMktLapsed();
   renderMktNeverConverted();
@@ -8537,20 +8541,25 @@ function rbQr(c){
 }
 function rbQdc(c){return{winback:'rb-qh',silent:'rb-qm',new:'rb-ql'}[c.status]||'rb-ql';}
 
-function rbRenderQueue(){
+async function rbRenderQueue(){
+  // One shared fetch for this render cycle -- see rbRefreshSentLookup.
+  await rbRefreshSentLookup();
   const q=rbBuildQueue();
   const qb=document.getElementById('rb-qc');if(qb)qb.textContent=q.length;
   const qd=document.getElementById('rb-qdate');
   if(qd)qd.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const el=document.getElementById('rb-queue-body');if(!el)return;
+  const todayStr=new Date().toISOString().slice(0,10);
   el.innerHTML=q.length?q.map(c=>{
-    // Check if already actioned today
-    const todayStr=new Date().toISOString().slice(0,10);
-    const todayLogs=RB.alog.filter(l=>l.customerId===c.id&&l.action.includes('Template')&&l.ts.slice(0,10)===todayStr);
-    const actionedBadge=todayLogs.length
-      ?`<span class="actioned-badge" title="Already contacted today">✓ ${esc(todayLogs[0].user)} · ${rbFt(todayLogs[0].ts)}</span>`
+    // Check if already actioned today -- matched by name (rbMergedSentInfo,
+    // shared with the Outreach/Marketing badges) rather than customer id,
+    // since raabta_log itself only carries the name.
+    const info=rbMergedSentInfo(c.name);
+    const contactedToday=!!(info&&info.ts&&String(info.ts).slice(0,10)===todayStr);
+    const actionedBadge=contactedToday
+      ?`<span class="actioned-badge" title="Already contacted today">✓ ${esc(info.user)} · ${rbFt(info.ts)}</span>`
       :'';
-    return`<div class="rb-qi" style="${todayLogs.length?'opacity:.65;':''}">
+    return`<div class="rb-qi" style="${contactedToday?'opacity:.65;':''}">
       <div class="rb-qdot ${rbQdc(c)}"></div>
       <div class="rb-av" style="width:30px;height:30px;font-size:12px;">${c.name[0]}</div>
       <div style="flex:1;min-width:80px;">
@@ -8559,7 +8568,7 @@ function rbRenderQueue(){
         ${actionedBadge?`<div style="margin-top:4px;">${actionedBadge}</div>`:''}
       </div>
       <span class="rb-bdg ${rbBc(c.status)}">${c.status}</span>
-      ${todayLogs.length
+      ${contactedToday
         ?`<button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--sur3);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;white-space:nowrap;">View</button>`
         :`<button onclick="rbOpenC('${c.id}')" style="padding:5px 11px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Contact →</button>`
       }
@@ -8857,14 +8866,50 @@ function tplAddNew(){
 }
 
 // ── ACTIONED INDICATOR ────────────────────────────────────────────────────────
+// The ✓ "already contacted" badges used to read only local RB.alog, so a
+// CSR's send was invisible to anyone else until it synced. _rbSentLookup is
+// a shared, name-keyed cache of recent "Sent Template" rows from
+// raabta_log -- refreshed once per render cycle (rbRenderOutreach,
+// renderMarketing, rbRenderQueue) via rbRefreshSentLookup(), not once per
+// row, and merged with RB.alog so a message sent just now by the current
+// user still shows instantly even before the next refresh.
+let _rbSentLookup={};
+async function rbRefreshSentLookup(){
+  const cutoff=new Date(Date.now()-30*86400000).toISOString();
+  let rows=[];
+  try{
+    // outcome is included alongside user/time so actionTag()'s color-coding
+    // (complaint/no-response/positive) still works for a match that only
+    // came from another user's send, not just ones already in local RB.alog.
+    rows=await dbGet('raabta_log','action=ilike.*Template*&timestamp=gte.'+encodeURIComponent(cutoff)+'&order=timestamp.desc&select=customer_name,username,timestamp,outcome');
+  }catch(e){rows=[];}
+  const lookup={};
+  rows.forEach(r=>{
+    const key=(r.customer_name||'').toLowerCase();
+    // Already ordered newest-first, so the first hit per name is the latest.
+    if(key&&!lookup[key])lookup[key]={user:r.username,ts:r.timestamp,outcome:r.outcome||''};
+  });
+  _rbSentLookup=lookup;
+  return _rbSentLookup;
+}
+
+// Merges the shared DB-backed lookup with local RB.alog and returns
+// whichever is more recent for this customer.
+function rbMergedSentInfo(customerName){
+  const key=(customerName||'').toLowerCase();
+  const localLogs=RB&&RB.alog?RB.alog.filter(l=>l.customerName?.toLowerCase()===key&&l.action.includes('Template')):[];
+  const local=localLogs.length?{user:localLogs[0].user,ts:localLogs[0].ts,outcome:localLogs[0].outcome||''}:null; // RB.alog is unshift-ordered, newest first
+  const shared=_rbSentLookup[key]||null;
+  if(local&&shared)return new Date(local.ts)>=new Date(shared.ts)?local:shared;
+  return local||shared;
+}
+
 // Returns HTML badge if this customer has been contacted recently via Raabta
 function rbActionedBadge(customerName){
-  if(!RB||!RB.alog)return'';
-  const logs=RB.alog.filter(l=>l.customerName&&l.customerName.toLowerCase()===customerName.toLowerCase()&&l.action.includes('Template'));
-  if(!logs.length)return'';
-  const last=logs[0];
-  const when=rbFt(last.ts);
-  return`<span class="actioned-badge" data-cust="${esc(customerName)}" style="cursor:pointer;" title="Click to preview message" onclick="rbShowSentPreview(this.dataset.cust,event)">✓ ${esc(last.user)} · ${esc(when)}</span>`;
+  const info=rbMergedSentInfo(customerName);
+  if(!info)return'';
+  const when=rbFt(info.ts);
+  return`<span class="actioned-badge" data-cust="${esc(customerName)}" style="cursor:pointer;" title="Click to preview message" onclick="rbShowSentPreview(this.dataset.cust,event)">✓ ${esc(info.user)} · ${esc(when)}</span>`;
 }
 
 function rbShowSentPreview(custName,evt){
@@ -9639,6 +9684,11 @@ async function rbRenderOutreach(){
     el.innerHTML='<div class="rb-empty" style="padding:40px;">Load analytics data first.</div>';return;
   }
 
+  // One shared fetch for this whole render cycle -- actionTag() below reads
+  // _rbSentLookup directly rather than each row querying raabta_log itself.
+  // Kept sequential (not Promise.all'd alongside the fetches further down).
+  await rbRefreshSentLookup();
+
   // Use persistent filter state
   const{welcomeDays,quietDays,reactMin,reactMax}=_otFilters;
 
@@ -9707,13 +9757,13 @@ async function rbRenderOutreach(){
   const neverConverted=Object.entries(_neverCustStatus).filter(([,v])=>!v.hasDelivered&&v.attempts>0).map(([name,v])=>({name,type:v.type,phone:v.phone,lastAttempt:v.lastAttempt,attempts:v.attempts})).sort((a,b)=>(b.lastAttempt||0)-(a.lastAttempt||0));
 
   function actionTag(name){
-    const logs=RB.alog.filter(l=>l.customerName?.toLowerCase()===name.toLowerCase()&&l.action.includes('Template'));
-    if(!logs.length)return'';
-    const l=logs[0];const o=l.outcome||'';
+    const info=rbMergedSentInfo(name);
+    if(!info)return'';
+    const o=info.outcome||'';
     let col='var(--grn)',bg='rgba(34,197,94,.12)',bdr='rgba(34,197,94,.25)';
     if(o.includes('Complaint')){col='var(--red)';bg='rgba(239,68,68,.12)';bdr='rgba(239,68,68,.25)';}
     else if(!o||o==='No Response'){col='var(--acc)';bg='rgba(249,115,22,.1)';bdr='rgba(249,115,22,.25)';}
-    return`<span style="background:${bg};border:1px solid ${bdr};border-radius:10px;padding:2px 7px;font-size:10px;color:${col};font-family:\'DM Mono\',monospace;white-space:nowrap;">✓ ${esc(l.user)} · ${rbFt(l.ts)}</span>`;
+    return`<span style="background:${bg};border:1px solid ${bdr};border-radius:10px;padding:2px 7px;font-size:10px;color:${col};font-family:\'DM Mono\',monospace;white-space:nowrap;">✓ ${esc(info.user)} · ${rbFt(info.ts)}</span>`;
   }
 
   function custBell(name){return getBellHtml('customer',name);}
