@@ -1134,8 +1134,15 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               <span style="font-size:11px;color:var(--t3);">Last</span>
               <input type="number" id="mkt-welcome-days" value="14" min="1" max="90" onchange="renderMarketing()" style="width:48px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
               <span style="font-size:11px;color:var(--t3);">days</span>
+              <button onclick="document.getElementById('mkt-welcome-guide').style.display=document.getElementById('mkt-welcome-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? Guide</button>
               <button onclick="downloadMktList('welcome')" style="padding:3px 10px;background:var(--grn);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
             </div>
+          </div>
+          <div id="mkt-welcome-guide" style="display:none;padding:10px 14px;background:rgba(34,197,94,.06);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.7;">
+            <strong style="color:var(--grn);">How to use this table:</strong><br>
+            Shows customers whose very first order landed within the selected window (based on the IsFirstOrder flag on delivered orders). A prompt, personal welcome message in the first few days strongly influences whether they come back.<br>
+            Sorted by most recent first order. <strong>Value</strong> is what that first order was worth.<br>
+            <strong>Tip:</strong> Widen "Last N days" after time away to catch anyone missed; narrow it to focus only on the freshest arrivals.
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">First Order</th><th style="text-align:right">Value</th><th>Phone</th></tr></thead>
@@ -1184,8 +1191,15 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
               <div class="hint">Placed an order but it was cancelled — never received a delivery</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="document.getElementById('mkt-never-guide').style.display=document.getElementById('mkt-never-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? Guide</button>
               <button onclick="downloadMktList('never')" style="padding:3px 10px;background:var(--red);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;">⬇</button>
             </div>
+          </div>
+          <div id="mkt-never-guide" style="display:none;padding:10px 14px;background:rgba(239,68,68,.06);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.7;">
+            <strong style="color:var(--red);">How to use this table:</strong><br>
+            These customers have placed at least one order, but none of them were ever successfully delivered — every attempt was cancelled or otherwise fell through.<br>
+            <strong>Attempts</strong> counts every order placed regardless of outcome; <strong>Last Attempt</strong> is the most recent one.<br>
+            <strong>Tip:</strong> Multiple attempts with zero deliveries often points to an address, payment, or availability issue worth resolving directly rather than a generic follow-up.
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Attempt</th><th style="text-align:right">Attempts</th><th style="text-align:right">Phone</th></tr></thead>
@@ -1204,8 +1218,14 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:11px;color:var(--t3);">Avg order ≥ PKR</span>
               <input type="number" id="mkt-vip-threshold" value="50000" min="1000" step="5000" onchange="renderMarketing()" style="width:72px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:11px;text-align:center;">
+              <button onclick="document.getElementById('mkt-vip-guide').style.display=document.getElementById('mkt-vip-guide').style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? Guide</button>
               <button onclick="downloadMktList('vip')" style="padding:3px 10px;background:var(--blu);border:none;border-radius:4px;color:#fff;font-size:10px;cursor:pointer;margin-left:4px;">⬇</button>
             </div>
+          </div>
+          <div id="mkt-vip-guide" style="display:none;padding:10px 14px;background:rgba(59,130,246,.06);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.7;">
+            <strong style="color:var(--blu);">How to use this table:</strong><br>
+            Customers whose average order value meets or exceeds the threshold, with at least 2 orders on record. Raise the threshold to focus on your very highest spenders; lower it to see a broader high-value segment.<br>
+            <strong>Tip:</strong> Sort by Last Order to spot high-value customers who've gone quiet — they're worth a personal follow-up before they lapse entirely.
           </div>
           <div style="flex:1;overflow-y:auto;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Avg Order</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th><th style="text-align:right">Last Order</th></tr></thead>
@@ -5638,6 +5658,36 @@ function downloadAtRiskExcel(){
 // ═══════════════════════════════════════════════
 // MARKETING TAB
 // ═══════════════════════════════════════════════
+// Shared "? Guide" explanatory content -- used by both the Marketing tab's
+// panels and the Raabta Outreach tab's matching sections, so the two stay
+// in sync rather than drifting into two different explanations of the same
+// list. vip has two variants since the two tabs' VIP lists work
+// differently: Marketing's is still a spend threshold, Outreach's is the
+// manually-curated vip_customers list.
+const RB_LIST_GUIDES={
+  welcome:'<strong style="color:var(--grn);">How to use this table:</strong><br>'
+    +'Shows customers whose very first order landed within the selected window (based on the IsFirstOrder flag on delivered orders). A prompt, personal welcome message in the first few days strongly influences whether they come back.<br>'
+    +'Sorted by most recent first order. <strong>Value</strong> is what that first order was worth.<br>'
+    +'<strong>Tip:</strong> Widen "Last N days" after time away to catch anyone missed; narrow it to focus only on the freshest arrivals.',
+  lapsed:'<strong style="color:var(--pur);">How to use this table:</strong><br>'
+    +'Set the day range to find customers who haven\'t reordered. Sort by <strong>Signal</strong> to prioritise who to contact first.<br>'
+    +'<span style="color:var(--red);">● Overdue</span> — last order was longer ago than their usual gap. Contact now.<br>'
+    +'<span style="color:var(--acc);">● Slightly overdue</span> — approaching their usual gap. Send a gentle nudge.<br>'
+    +'<span style="color:var(--grn);">● On schedule</span> — within their normal reorder cycle. May not need contact yet.<br>'
+    +'<strong>Examples:</strong> 30–60 days = customers lost last month (highest priority) · 60–90 days = drifting away · 90+ days = long-term lapsed',
+  never:'<strong style="color:var(--red);">How to use this table:</strong><br>'
+    +'These customers have placed at least one order, but none of them were ever successfully delivered — every attempt was cancelled or otherwise fell through.<br>'
+    +'<strong>Attempts</strong> counts every order placed regardless of outcome; <strong>Last Attempt</strong> is the most recent one.<br>'
+    +'<strong>Tip:</strong> Multiple attempts with zero deliveries often points to an address, payment, or availability issue worth resolving directly rather than a generic follow-up.',
+  vipManual:'<strong style="color:var(--blu);">How to use this table:</strong><br>'
+    +'This list is manually curated — customers are marked VIP (or removed) from their customer window in Raabta, not by an automatic spend threshold.<br>'
+    +'<strong>Avg Order / Orders / Total Sales</strong> are still computed live from their order history, so you can check whether a flagged VIP\'s activity still backs up the label.<br>'
+    +'<strong>Tip:</strong> Recency matters as much as spend — a VIP who\'s gone quiet is a priority follow-up, not just your highest lifetime spender.',
+  vipThreshold:'<strong style="color:var(--blu);">How to use this table:</strong><br>'
+    +'Customers whose average order value meets or exceeds the threshold, with at least 2 orders on record. Raise the threshold to focus on your very highest spenders; lower it to see a broader high-value segment.<br>'
+    +'<strong>Tip:</strong> Sort by Last Order to spot high-value customers who\'ve gone quiet — they\'re worth a personal follow-up before they lapse entirely.'
+};
+
 async function renderMarketing(){
   // One shared fetch for this whole render cycle -- rbActionedBadge() (used
   // by all four panels below via mktRow) reads _rbSentLookup directly
@@ -9855,7 +9905,7 @@ async function rbRenderOutreach(){
       </div>
     </div>`;
 
-  function outreachSection(id, title, color, rows, cols, filterHtml){
+  function outreachSection(id, title, color, rows, cols, filterHtml, subtitle, guide){
     const tbId='ot-tbody-'+id;
     // Store rows in global map so onclick can reach them
     window._rbOtData=window._rbOtData||{};
@@ -9870,14 +9920,17 @@ async function rbRenderOutreach(){
 
     const hdrCells=cols.map((c,i)=>`<th class="sortable" style="${c.align==='right'?'text-align:right;':''}" onclick="rbOtSort('${id}',${i})">${c.label}</th>`).join('');
     const bodyRows=buildRows(rows);
+    const guideBtn=guide?`<button onclick="const g=document.getElementById('ot-guide-${id}');g.style.display=g.style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? Guide</button>`:'';
     return`<div class="rb-card" style="margin-bottom:12px;">
       <div class="rb-card-hd">
         <div>
           <div class="rb-card-title" style="color:${color}">${title}</div>
+          ${subtitle?`<div style="font-size:10px;color:var(--t3);margin-top:2px;">${subtitle}</div>`:''}
           <div style="font-size:10px;color:var(--t3);margin-top:2px;font-family:\'DM Mono\',monospace;">${rows.length} customer${rows.length!==1?'s':''}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${filterHtml}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${filterHtml}${guideBtn}</div>
       </div>
+      ${guide?`<div id="ot-guide-${id}" style="display:none;padding:10px 14px;background:color-mix(in srgb, ${color} 8%, transparent);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.7;">${guide}</div>`:''}
       <div style="overflow-x:auto;max-height:300px;overflow-y:auto;">
         <table class="dt" style="width:100%;" id="ot-tbl-${id}">
           <thead><tr>${hdrCells}<th></th></tr></thead>
@@ -9891,10 +9944,14 @@ async function rbRenderOutreach(){
 
   const sections=[
     {id:'welcome',title:'🎉 Welcome Queue',color:'var(--grn)',
+     subtitle:'New customers — send a welcome note',
+     guide:RB_LIST_GUIDES.welcome,
      rows:welcome.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td><span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span></td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace">${c.firstOrder?fmtDate(c.firstOrder):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td><td style="font-size:11px">${esc(c.phone)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'First Order',align:'right'},{label:'Value',align:'right'},{label:'Phone'}],
      filterHtml:filterInput('ot-welcome-days','welcomeDays','Last','days')},
     {id:'lapsed',title:'⏸ Lapsed Customers',color:'var(--pur)',
+     subtitle:'Customers who haven\'t reordered — prioritise by Signal column',
+     guide:RB_LIST_GUIDES.lapsed,
      rows:lapsed.map(c=>{
        const d=Math.floor((today-c.lastOrder)/86400000);
        const custOrds=S.orders.filter(o=>resolveCustomerName(o.Customer)===c.name);
@@ -9915,6 +9972,8 @@ async function rbRenderOutreach(){
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Order',align:'right'},{label:'Days',align:'right'},{label:'Avg Gap',align:'right'},{label:'Signal'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:'<span style="font-size:10px;color:var(--t3);">Inactive</span>'+filterInput('ot-lapsed-min','lapsedMin','','')+'<span style="font-size:10px;color:var(--t3);">–</span>'+filterInput('ot-lapsed-max','lapsedMax','','days')},
         {id:'never',title:'✕ Never Converted',color:'var(--red)',
+     subtitle:'Placed an order but it was cancelled — never received a delivery',
+     guide:RB_LIST_GUIDES.never,
      rows:neverConverted.map(c=>({name:c.name,cells:'<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust(\''+esc(c.name)+'\')">'
        +esc(c.name)+'</span>'+actionTag(c.name)+'</td>'
        +'<td><span class="bdg '+(c.type==='B2B'?'b-b2b':'b-b2c')+'">'+c.type+'</span></td>'
@@ -9924,6 +9983,8 @@ async function rbRenderOutreach(){
      cols:[{label:'Customer'},{label:'Type'},{label:'Last Attempt',align:'right'},{label:'Attempts',align:'right'},{label:'Phone'}],
      filterHtml:''},
         {id:'vip',title:'💎 Bulk & VIP',color:'var(--blu)',
+     subtitle:'Manually flagged VIP customers',
+     guide:RB_LIST_GUIDES.vipManual,
      rows:vip.map(c=>({name:c.name,cells:`<td><span style="color:var(--acc);text-decoration:underline" onclick="rbOpenOutreachCust('${esc(c.name)}')">${esc(c.name)}</span>${actionTag(c.name)}</td><td>${c.type?`<span class="bdg ${c.type==='B2B'?'b-b2b':'b-b2c'}">${c.type}</span>`:'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--blu)">${c.orders?fmtFull(Math.round(c.sales/c.orders)):'—'}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.sales)}</td>`})),
      cols:[{label:'Customer'},{label:'Type'},{label:'Avg Order',align:'right'},{label:'Orders',align:'right'},{label:'Total Sales',align:'right'}],
      filterHtml:''},
@@ -9975,7 +10036,7 @@ async function rbRenderOutreach(){
     </div>`;
   }
 
-  el.innerHTML=alertsHtml+sections.map(s=>outreachSection(s.id,s.title,s.color,s.rows,s.cols,s.filterHtml)).join('')+campaignsHtml;
+  el.innerHTML=alertsHtml+sections.map(s=>outreachSection(s.id,s.title,s.color,s.rows,s.cols,s.filterHtml,s.subtitle,s.guide)).join('')+campaignsHtml;
 
   // Wire row click for customer modal (not on bell clicks)
   sections.forEach(s=>{
