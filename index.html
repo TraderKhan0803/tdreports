@@ -1612,7 +1612,8 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
     </div>
     <div style="max-height:min(380px,50vh);overflow-y:auto;border-bottom:1px solid var(--bdr);" id="bulk-modal-list"></div>
     <div style="padding:10px 18px;border-top:1px solid var(--bdr);display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="bulk-campaign-name" placeholder="Campaign name (optional)…" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;">
+      <input type="text" id="bulk-campaign-name" list="bulk-campaign-datalist" placeholder="Campaign name (optional)…" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;">
+      <datalist id="bulk-campaign-datalist"></datalist>
       <input type="number" id="bulk-campaign-days" value="7" min="1" max="90" title="Attribution window (days)" style="width:46px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 6px;border-radius:var(--r2);font-size:11px;text-align:center;outline:none;">
       <span style="font-size:10px;color:var(--t3);white-space:nowrap;">day window</span>
       <button onclick="rbBulkSaveCampaign()" style="padding:5px 12px;background:transparent;border:1px solid var(--acc);border-radius:var(--r2);color:var(--acc);font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600;">💾 Save Campaign</button>
@@ -10057,7 +10058,25 @@ function rbBulkRenderResults(custs,label){
     </div>`;
   }).join('');
 
+  rbBulkRefreshCampaignSuggestions();
   const _bm=document.getElementById('bulk-msg-modal');_bm.style.display='';_bm.classList.add('open');
+}
+
+// Suggests campaigns worth appending to: still within their attribution
+// window, or recent enough (last 7 days) that the name is probably still
+// top of mind even if that particular window already lapsed. Newest first,
+// de-duped by name (case-insensitive) since a name can recur once an older
+// instance has expired.
+function rbBulkRefreshCampaignSuggestions(){
+  const dl=document.getElementById('bulk-campaign-datalist');
+  if(!dl)return;
+  const cutoff=Date.now()-7*86400000;
+  const matches=(RB.campaigns||[]).filter(c=>rbCampaignIsActive(c)||new Date(c.date).getTime()>=cutoff);
+  matches.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const seen=new Set();
+  const names=[];
+  matches.forEach(c=>{const key=c.name.toLowerCase();if(!seen.has(key)){seen.add(key);names.push(c.name);}});
+  dl.innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
 }
 
 function rbBulkGoToProfile(name){
@@ -10153,13 +10172,46 @@ async function rbDeleteCampaign(id){
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
 
-function rbBulkSaveCampaign(){
+// A campaign is "active" while today still falls inside its own
+// attribution window (date + attributionDays) -- used both to decide
+// whether "Save Campaign" should append to it and to build the name
+// autocomplete's suggestion list.
+function rbCampaignIsActive(camp){
+  const sentAt=new Date(camp.date).getTime();
+  return Date.now()<=sentAt+camp.attributionDays*86400000;
+}
+
+async function rbBulkSaveCampaign(){
   if(!_bulkMsgList.length){notif('⚠ No customers in current list');return;}
   const nameEl=document.getElementById('bulk-campaign-name');
   const daysEl=document.getElementById('bulk-campaign-days');
   const name=(nameEl?.value.trim())||('Campaign '+new Date().toLocaleDateString('en-PK'));
   const days=Math.max(1,parseInt(daysEl?.value)||7);
-  rbSaveCampaign(name,null,null,[..._bulkMsgList],days);
+  const recipients=[..._bulkMsgList];
+
+  // Same name (case-insensitive) and still within its window -> append to
+  // it instead of creating a duplicate row. A same-named campaign whose
+  // window already expired is left alone -- a fresh row keeps that past
+  // campaign's results clean rather than reviving it with new sends.
+  const nameLower=name.toLowerCase();
+  const existing=(RB.campaigns||[]).find(c=>c.name.toLowerCase()===nameLower&&rbCampaignIsActive(c));
+  if(existing){
+    const existingNames=new Set(existing.recipients.map(r=>r.name.toLowerCase()));
+    const toAdd=recipients.filter(r=>!existingNames.has(r.name.toLowerCase())).map(r=>({name:r.name,phone:r.phone||''}));
+    if(!toAdd.length){
+      notif(`No new recipients — all ${recipients.length} already in "${existing.name}"`);
+    }else{
+      existing.recipients=[...existing.recipients,...toAdd];
+      try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(existing.id),{recipients:existing.recipients});}
+      catch(e){notif('⚠ Failed to update campaign: '+e.message);return;}
+      notif(`✓ Added ${toAdd.length} recipient${toAdd.length!==1?'s':''} to "${existing.name}"`);
+      if(rbCurTab==='rb-outreach')rbRenderOutreach();
+    }
+    if(nameEl)nameEl.value='';
+    return;
+  }
+
+  await rbSaveCampaign(name,null,null,recipients,days);
   if(nameEl)nameEl.value='';
 }
 
