@@ -5704,11 +5704,28 @@ function getMktToday(){
   return allDates.length?new Date(Math.max(...allDates)):new Date();
 }
 
+// getMktToday() returns the end of the selected period, which is a future
+// date while the current period (e.g. this month) is still ongoing -- same
+// bug already fixed in the Raabta Outreach tab. Cap it at the real current
+// date the same way; getMktToday() itself is left alone since other
+// screens rely on its actual (uncapped) behavior.
+function mktTodayCapped(){
+  const real=new Date();
+  let t=getMktToday();
+  if(t>real)t=real;
+  t.setHours(0,0,0,0);
+  return t;
+}
+
 function getMktCustMap(){
   // Always use full S.orders for customer history — not filtered period data
-  // This ensures first-order detection and last-order dates are accurate across all time
+  // This ensures first-order detection and last-order dates are accurate across all time.
+  // fSt.ctype (B2B/B2C) is still applied, though -- that's a type filter, not
+  // a time-period one, so it should narrow this the same as everywhere else.
+  const ctype=fSt?.ctype||'all';
   const m={};
   S.orders.forEach(o=>{
+    if(ctype!=='all'&&o.Customer_Type!==ctype)return;
     const name=resolveCustomerName(o.Customer);
     if(!m[name])m[name]={Customer:name,Type:o.Customer_Type,Orders:0,Sales:0,FirstOrder:null,LastOrder:null,Phone:o.Phone||'—',Address:o.Address||'—'};
     m[name].Orders++;m[name].Sales+=o.Total_Sales;
@@ -5736,15 +5753,19 @@ function mktRow(cells,custName,isB2B){
 
 function renderMktWelcome(){
   const days=parseInt(document.getElementById('mkt-welcome-days')?.value)||14;
-  const today=getMktToday();
+  const today=mktTodayCapped();
   const cutoff=new Date(today.getTime()-days*86400000);
+  const ctype=fSt?.ctype||'all';
   // Use IsFirstOrder field — only customers with at least one delivered/collected order
   const deliveredStatuses=new Set(['delivered','collected','assigned']);
   const firstOrderCusts=new Set(
-    S.orders.filter(o=>o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoff&&deliveredStatuses.has((o.Status||'').toLowerCase()))
+    S.orders.filter(o=>(ctype==='all'||o.Customer_Type===ctype)&&o.IsFirstOrder==='New Customer'&&o.Order_Date&&o.Order_Date>=cutoff&&deliveredStatuses.has((o.Status||'').toLowerCase()))
     .map(o=>resolveCustomerName(o.Customer))
   );
-  const custs=getMktCustMap().filter(c=>firstOrderCusts.has(c.Customer)).sort((a,b)=>b.FirstOrder-a.FirstOrder);
+  // IsFirstOrder is set per-order, not per-customer -- require the
+  // customer's actual (all-time) first order to also fall within the
+  // window so a stray/incorrect flag can't resurrect a years-old customer.
+  const custs=getMktCustMap().filter(c=>firstOrderCusts.has(c.Customer)&&c.FirstOrder&&c.FirstOrder>=cutoff).sort((a,b)=>b.FirstOrder-a.FirstOrder);
   const frag=document.createDocumentFragment();
   custs.forEach(c=>{frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-size:11px">${fmtDate(c.FirstOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="font-size:11px">${esc(c.Phone)}</td>`,c.Customer,c.Type==='B2B'));});
   const tb=document.getElementById('mkt-welcome-body');if(!tb)return;tb.innerHTML='';
@@ -5757,11 +5778,12 @@ function renderMktWelcome(){
 function renderMktLapsed(){
   const minD=parseInt(document.getElementById('mkt-lapsed-min')?.value)||30;
   const maxD=parseInt(document.getElementById('mkt-lapsed-max')?.value)||60;
-  const today=getMktToday();
+  const today=mktTodayCapped();
+  const ctype=fSt?.ctype||'all';
   // All customers (any order count) whose last order was between minD and maxD days ago
   // Uses S.orders (all-time) via getMktCustMap so history is accurate regardless of filter
   // Customers with at least one delivered order
-  const hasDelivered=new Set(S.orders.filter(o=>['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
+  const hasDelivered=new Set(S.orders.filter(o=>(ctype==='all'||o.Customer_Type===ctype)&&['delivered','collected','assigned'].includes((o.Status||'').toLowerCase())).map(o=>resolveCustomerName(o.Customer)));
   const custs=getMktCustMap().filter(c=>{
     if(!c.LastOrder)return false;
     if(!hasDelivered.has(c.Customer))return false; // skip cancelled-only
@@ -5799,11 +5821,13 @@ function renderMktQuiet(){renderMktLapsed();}
 function renderMktChurn(){renderMktLapsed();}
 
 function renderMktNeverConverted(){
-  const today=getMktToday();
+  const today=mktTodayCapped();
+  const ctype=fSt?.ctype||'all';
   const deliveredStatuses=new Set(['delivered','collected','assigned']);
   // Customers who have ONLY cancelled/pending orders — never had a successful delivery
   const custStatus={};
   S.orders.forEach(o=>{
+    if(ctype!=='all'&&o.Customer_Type!==ctype)return;
     const name=resolveCustomerName(o.Customer);
     if(!custStatus[name])custStatus[name]={hasDelivered:false,attempts:0,lastAttempt:null,phone:o.Phone||'—',type:o.Customer_Type};
     custStatus[name].attempts++;
@@ -5836,7 +5860,7 @@ function renderMktReactivation(){renderMktLapsed();}
 
 function renderMktVIP(){
   const threshold=parseInt(document.getElementById('mkt-vip-threshold')?.value)||50000;
-  const today=getMktToday();
+  const today=mktTodayCapped();
   const custs=getMktCustMap().filter(c=>c.AvgOrder>=threshold&&c.Orders>=2)
     .sort((a,b)=>b.AvgOrder-a.AvgOrder);
   const frag=document.createDocumentFragment();
@@ -9431,7 +9455,18 @@ function _applySortToBody(tbody,col,dir,idx,type){
       const an=parseFloat(String(av).replace(/[^0-9.-]/g,''))||0;
       const bn=parseFloat(String(bv).replace(/[^0-9.-]/g,''))||0;
       cmp=an-bn;
-    } else if(type==='date'){cmp=new Date(av)-new Date(bv);}
+    } else if(type==='date'){
+      // data-sort on date columns is sometimes a raw epoch-ms number (as a
+      // string, e.g. from Order_Date.getTime()) and sometimes a formatted
+      // date string (e.g. "5 Jul 2026") when no data-sort was set at all.
+      // new Date("1751673600000") is Invalid Date -- Date() only parses
+      // that as ISO/RFC text, not as epoch millis -- so every comparison
+      // came out NaN and the sort silently did nothing. Parse pure-digit
+      // values as a plain number instead of routing them through Date().
+      const an=/^-?\d+$/.test(String(av))?Number(av):new Date(av).getTime();
+      const bn=/^-?\d+$/.test(String(bv))?Number(bv):new Date(bv).getTime();
+      cmp=(an||0)-(bn||0);
+    }
     else{cmp=String(av).localeCompare(String(bv));}
     return dir==='asc'?cmp:-cmp;
   });
