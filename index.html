@@ -612,9 +612,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   /* Alert card buttons: wrap to next line on small screens */
   .alert-card{flex-wrap:wrap;}
   .alert-card>div:last-child{flex-wrap:wrap;gap:4px;}
-  /* Bulk modal campaign row: stack inputs */
-  #bulk-msg-modal .rb-modal>div:nth-child(3){flex-direction:column;align-items:stretch;}
-  #bulk-campaign-name{min-width:0 !important;}
   /* rbSentPreview popover: full width on mobile */
   #rb-sent-preview{left:8px !important;right:8px;max-width:calc(100vw - 16px);}
   /* Outreach card tables: horizontal scroll */
@@ -1631,17 +1628,50 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div><div class="rb-mname">📨 Bulk Message</div><div class="rb-mphone" id="bulk-modal-sub"></div></div>
       <button class="rb-mcls" onclick="document.getElementById('bulk-msg-modal').classList.remove('open')">✕</button>
     </div>
-    <div style="max-height:min(380px,50vh);overflow-y:auto;border-bottom:1px solid var(--bdr);" id="bulk-modal-list"></div>
-    <div style="padding:10px 18px;border-top:1px solid var(--bdr);display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="bulk-campaign-name" list="bulk-campaign-datalist" placeholder="Campaign name (optional)…" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;">
-      <datalist id="bulk-campaign-datalist"></datalist>
-      <input type="number" id="bulk-campaign-days" value="7" min="1" max="90" title="Attribution window (days)" style="width:46px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 6px;border-radius:var(--r2);font-size:11px;text-align:center;outline:none;">
-      <span style="font-size:10px;color:var(--t3);white-space:nowrap;">day window</span>
-      <button onclick="rbBulkSaveCampaign()" style="padding:5px 12px;background:transparent;border:1px solid var(--acc);border-radius:var(--r2);color:var(--acc);font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600;">💾 Save Campaign</button>
+
+    <!-- Step 1: Recipients -->
+    <div style="padding:12px 18px 10px;border-bottom:1px solid var(--bdr);">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">1 · Recipients (<span id="bulk-step1-count">0</span>)</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="bulk-step1-input" list="bulk-step1-datalist" placeholder="Search customer to add…" onkeydown="if(event.key==='Enter'){event.preventDefault();rbBulkCustomAdd('bulk-step1-input');}" style="flex:1;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;">
+        <datalist id="bulk-step1-datalist"></datalist>
+        <button onclick="rbBulkCustomAdd('bulk-step1-input')" style="padding:5px 12px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">+ Add</button>
+      </div>
+      <div id="bulk-step1-notice" style="display:none;font-size:10px;color:var(--acc);margin-top:5px;"></div>
     </div>
-    <div style="padding:8px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <span style="font-size:10px;color:var(--t3);flex:1;line-height:1.5;" id="bulk-modal-hint"></span>
-      <button onclick="rbBulkCopyNumbers()" style="padding:6px 13px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Copy Numbers</button>
+    <div style="max-height:min(240px,36vh);overflow-y:auto;border-bottom:1px solid var(--bdr);" id="bulk-modal-list"></div>
+
+    <!-- Step 2: Message -->
+    <div style="padding:12px 18px;border-bottom:1px solid var(--bdr);">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">2 · Message</div>
+      <select id="bulk-send-template" onchange="rbBulkTemplateChange()" style="width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;margin-bottom:6px;cursor:pointer;">
+        <option value="">No template — custom message</option>
+      </select>
+      <textarea id="bulk-send-text" placeholder="Message to send — [Name] resolves to each recipient automatically…" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);padding:7px 9px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+    </div>
+
+    <!-- Step 3: Send -->
+    <div style="padding:12px 18px;">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">3 · Send</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="bulk-send-btn" onclick="rbBulkSendNext()" style="flex:1;min-width:180px;padding:8px 16px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Send to next →</button>
+        <span id="bulk-send-progress" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;"></span>
+      </div>
+      <div style="height:4px;background:var(--sur3);border-radius:2px;overflow:hidden;margin-top:8px;">
+        <div id="bulk-send-progress-bar" style="height:100%;width:0%;background:var(--acc);transition:width .25s ease;"></div>
+      </div>
+    </div>
+
+    <div style="padding:10px 18px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--t3);line-height:1.8;">
+        Saves to "<input type="text" id="bulk-campaign-name" list="bulk-campaign-datalist" oninput="rbBulkCampaignNameInput()" placeholder="Campaign name…" style="background:transparent;border:none;border-bottom:1px dashed var(--bdr);color:var(--txt);font-size:11px;font-family:inherit;outline:none;width:120px;padding:0 2px;">"
+        · <input type="number" id="bulk-campaign-days" value="7" min="1" max="90" title="Attribution window (days)" style="background:transparent;border:none;border-bottom:1px dashed var(--bdr);color:var(--txt);font-size:11px;font-family:inherit;outline:none;width:26px;text-align:center;padding:0;">-day window
+        <datalist id="bulk-campaign-datalist"></datalist>
+      </span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="rbBulkCopyNumbers()" style="padding:6px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Copy Numbers</button>
+        <button onclick="rbBulkSaveCampaign()" style="padding:6px 12px;background:transparent;border:1px solid var(--acc);border-radius:var(--r2);color:var(--acc);font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600;">💾 Save Campaign</button>
+      </div>
     </div>
   </div>
 </div>
@@ -9854,6 +9884,7 @@ async function rbRenderOutreach(){
             <datalist id="bulk-custom-datalist"></datalist>
             <button onclick="rbBulkCustomAdd()" style="padding:5px 12px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">+ Add</button>
           </div>
+          <div id="bulk-custom-notice" style="display:none;font-size:10px;color:var(--acc);margin-top:5px;"></div>
           <div id="bulk-custom-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
         </div>
         <div id="bulk-msg-results" style="margin-top:8px;"></div>
@@ -10113,7 +10144,35 @@ function alertOpenMessage(alertId){
 }
 
 let _bulkMsgList=[];
-let _bulkCustomList=[]; // hand-picked recipients for the "Custom list" target group
+let _bulkCustomList=[]; // hand-picked recipients, added from either the external "Custom list" box or the modal's own Step 1 search -- merged into whatever _bulkMsgList holds via rbBulkCombinedList()
+let _bulkSentAt={}; // name (lowercased) -> ISO timestamp, stepped-through-sent in this modal session
+let _bulkActiveCampaignMatch=null; // active existing campaign matching the typed name, if any
+let _bulkLastLabel=''; // remembered so a re-render (send/custom-add) can redraw without losing the group label
+
+// Switching to a new target group starts a fresh step-through session --
+// progress and hand-picked additions from a previous group shouldn't carry
+// over and look like they apply to different people.
+function rbBulkResetSendProgress(){
+  _bulkSentAt={};
+  _bulkCustomList=[];
+  rbBulkRenderCustomChips();
+}
+
+// The base list from whichever picker is active (preset group/client/
+// custom mode) plus anything hand-added on top of it, deduped by name.
+function rbBulkCombinedList(){
+  const seen=new Set();
+  const combined=[];
+  [..._bulkMsgList,..._bulkCustomList].forEach(c=>{
+    const key=c.name.toLowerCase();
+    if(!seen.has(key)){seen.add(key);combined.push(c);}
+  });
+  return combined;
+}
+
+function rbHHMM(ts){
+  return new Date(ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
 
 function rbBulkFilter(val){
   const srch=document.getElementById('bulk-client-search');
@@ -10121,6 +10180,7 @@ function rbBulkFilter(val){
   const res=document.getElementById('bulk-msg-results');
   if(srch)srch.style.display=val==='client'?'block':'none';
   if(customBox)customBox.style.display=val==='custom'?'block':'none';
+  rbBulkResetSendProgress();
   if(val==='client'){
     if(res)res.innerHTML='';
     const dl=document.getElementById('bulk-client-datalist');
@@ -10132,14 +10192,8 @@ function rbBulkFilter(val){
   }
   if(val==='custom'){
     if(res)res.innerHTML='';
-    const dl=document.getElementById('bulk-custom-datalist');
-    if(dl){
-      const names=[...new Set(S.orders.map(o=>resolveCustomerName(o.Customer)))].sort();
-      dl.innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
-    }
-    _bulkCustomList=[];
-    _bulkMsgList=[];
-    rbBulkRenderCustomChips();
+    rbBulkPopulateCustomDatalists();
+    _bulkMsgList=[]; // _bulkCustomList already cleared by rbBulkResetSendProgress() above
     return;
   }
   if(!val){if(res)res.innerHTML='';return;}
@@ -10191,47 +10245,121 @@ function rbBulkFilter(val){
   rbBulkRenderResults(filtered,label);
 }
 
+// Recipients already present in the matched active campaign (existing-
+// campaign awareness) are excluded from the sendable queue -- they're
+// shown for reference only, not re-addable and not re-sent by default.
+function rbBulkQueueExcludingCampaign(){
+  const existingNames=new Set((_bulkActiveCampaignMatch?.recipients||[]).map(r=>r.name.toLowerCase()));
+  return rbBulkCombinedList().filter(c=>!existingNames.has(c.name.toLowerCase()));
+}
+function rbBulkSendableQueue(){
+  return rbBulkQueueExcludingCampaign().filter(c=>rbNormalizePhone(c.phone));
+}
+
+function rbBulkUpdateSendProgress(){
+  const progEl=document.getElementById('bulk-send-progress');
+  const btn=document.getElementById('bulk-send-btn');
+  const bar=document.getElementById('bulk-send-progress-bar');
+  const queue=rbBulkSendableQueue();
+  const sentCount=queue.filter(c=>c.name.toLowerCase() in _bulkSentAt).length;
+  if(progEl)progEl.textContent=queue.length?`${sentCount} of ${queue.length} sent`:'';
+  const next=queue.find(c=>!(c.name.toLowerCase() in _bulkSentAt));
+  if(btn){
+    btn.textContent=next?`Send to ${next.name} →`:(queue.length?'All sent ✓':'Send to next →');
+    btn.disabled=!next;
+    btn.style.opacity=next?'1':'.6';
+    btn.style.cursor=next?'pointer':'not-allowed';
+  }
+  if(bar)bar.style.width=(queue.length?Math.round(sentCount/queue.length*100):0)+'%';
+}
+
+// Header context line replaces the old orange "matches an active campaign"
+// paragraph -- shows what Save Campaign would do right now: the name
+// that'll be used (typed, or today's default), who owns it, and whether
+// it's an existing active campaign or a brand-new one.
+function rbBulkRenderHeaderContext(){
+  const sub=document.getElementById('bulk-modal-sub');if(!sub)return;
+  const nameEl=document.getElementById('bulk-campaign-name');
+  const typedName=(nameEl?.value||'').trim();
+  const name=typedName||('Campaign '+new Date().toLocaleDateString('en-PK'));
+  const match=_bulkActiveCampaignMatch;
+  const creator=match?match.sentBy:(curUser?.u||'system');
+  sub.textContent=`${name} · ${creator} · ${match?'Active':'New'}`;
+}
+
 function rbBulkRenderResults(custs,label,openModal){
   if(openModal===undefined)openModal=true;
   _bulkMsgList=custs;
+  _bulkLastLabel=label;
 
-  // Show summary in the inline strip
+  // Show summary in the inline strip (outside the modal, in the alerts card)
   const res=document.getElementById('bulk-msg-results');
   if(res){
-    if(!custs.length){
-      res.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 0;">No customers found for this filter.</div>';
-      return;
-    }
-    res.innerHTML=`<div style="font-size:11px;color:var(--t2);padding:4px 0;">
+    res.innerHTML=custs.length?`<div style="font-size:11px;color:var(--t2);padding:4px 0;">
       <strong style="color:var(--txt);">${custs.length}</strong> customer${custs.length!==1?'s':''} found
       — <span style="color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="const m=document.getElementById('bulk-msg-modal');m.style.display='';m.classList.add('open')">view list</span>
-    </div>`;
+    </div>`:'<div style="font-size:11px;color:var(--t3);padding:4px 0;">No customers found for this filter.</div>';
   }
 
-  // Populate modal
-  const sub=document.getElementById('bulk-modal-sub');
-  const list=document.getElementById('bulk-modal-list');
-  const hint=document.getElementById('bulk-modal-hint');
-  if(!list)return;
-  if(sub)sub.textContent=`${label} — ${custs.length} customer${custs.length!==1?'s':''}`;
-  const withPhone=custs.filter(c=>rbNormalizePhone(c.phone));
-  if(hint)hint.textContent=`${withPhone.length} of ${custs.length} have a phone number on file.`;
+  rbBulkPopulateTemplateSelect();
+  rbBulkPopulateCustomDatalists();
+  rbBulkRenderHeaderContext();
 
-  list.innerHTML=custs.map((c,i)=>{
+  const list=document.getElementById('bulk-modal-list');
+  if(!list)return;
+
+  const queue=rbBulkQueueExcludingCampaign();
+  const existingRecipients=_bulkActiveCampaignMatch?.recipients||[];
+
+  const stepCount=document.getElementById('bulk-step1-count');
+  if(stepCount)stepCount.textContent=existingRecipients.length+queue.length;
+
+  // The one recipient rbBulkSendNext() would actually message right now.
+  const nextKey=rbBulkSendableQueue().find(c=>!(c.name.toLowerCase() in _bulkSentAt))?.name.toLowerCase()||null;
+
+  const rows=[
+    ...existingRecipients.map(r=>({kind:'existing',data:r})),
+    ...queue.map(c=>({kind:'queue',data:c}))
+  ];
+
+  const rowsHtml=rows.map((row,i)=>{
+    const borderStyle=i<rows.length-1?'border-bottom:1px solid var(--bdr);':'';
+    if(row.kind==='existing'){
+      const r=row.data;
+      const norm=rbNormalizePhone(r.phone);
+      const display=norm?'+'+norm:r.phone||'—';
+      return`<div style="display:flex;align-items:center;gap:8px;padding:9px 18px;opacity:.6;${borderStyle}">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--txt);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.name)}</div>
+          <div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">${esc(display)}</div>
+        </div>
+        <span style="font-size:10px;color:var(--t3);white-space:nowrap;">already in campaign</span>
+      </div>`;
+    }
+    const c=row.data;
     const norm=rbNormalizePhone(c.phone);
     const display=norm?'+'+norm:c.phone||'—';
-    return`<div style="display:flex;align-items:center;gap:8px;padding:9px 18px;${i<custs.length-1?'border-bottom:1px solid var(--bdr)':''}">
+    const key=c.name.toLowerCase();
+    const sentAt=_bulkSentAt[key];
+    const isNext=!sentAt&&key===nextKey;
+    let statusHtml='';
+    if(sentAt)statusHtml=`<span style="font-size:10px;color:var(--grn);font-weight:700;white-space:nowrap;">✓ sent ${rbHHMM(sentAt)}</span>`;
+    else if(isNext)statusHtml='<span style="font-size:10px;color:var(--acc);font-weight:700;white-space:nowrap;">next up</span>';
+    else if(!norm)statusHtml='<span style="font-size:10px;color:var(--t3);padding:3px 4px;white-space:nowrap;">no number</span>';
+    return`<div style="display:flex;align-items:center;gap:8px;padding:9px 18px;${borderStyle}${sentAt?'opacity:.55;':''}${isNext?'background:rgba(249,115,22,.05);':''}">
       <div style="flex:1;min-width:0;">
-        <div onclick="rbBulkGoToProfile(this.dataset.name)" data-name="${esc(c.name)}" style="font-size:12px;color:var(--acc);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-decoration:underline;" title="View dashboard profile">${esc(c.name)}</div>
+        <div onclick="rbBulkGoToProfile(this.dataset.name)" data-name="${esc(c.name)}" style="font-size:12px;color:var(--acc);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-decoration:underline;${sentAt?'text-decoration:line-through;':''}" title="View dashboard profile">${esc(c.name)}</div>
         <div style="font-size:11px;color:${norm?'var(--t2)':'var(--t3)'};font-family:'DM Mono',monospace;">${esc(display)}</div>
       </div>
-      <div style="display:flex;gap:5px;flex-shrink:0;">
-        ${!norm?'<span style="font-size:10px;color:var(--t3);padding:3px 4px;">no number</span>':''}
+      <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;">
+        ${statusHtml}
         <button onclick="rbBulkOpenCust(this.dataset.name)" data-name="${esc(c.name)}" style="padding:3px 8px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:11px;cursor:pointer;white-space:nowrap;" title="Pick a template">💬 Message</button>
       </div>
     </div>`;
   }).join('');
+  list.innerHTML=rowsHtml||'<div style="padding:20px;text-align:center;color:var(--t3);font-size:12px;">No recipients yet.</div>';
 
+  rbBulkUpdateSendProgress();
   rbBulkRefreshCampaignSuggestions();
   if(openModal){
     const _bm=document.getElementById('bulk-msg-modal');_bm.style.display='';_bm.classList.add('open');
@@ -10255,6 +10383,78 @@ function rbBulkRefreshCampaignSuggestions(){
   dl.innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
 }
 
+// Same match rule as the campaign-save merge logic: case-insensitive name
+// match, still within its own attribution window. Shared so "existing-
+// campaign awareness" and the actual save/merge never disagree about which
+// campaign is "the" active one for a given name.
+function rbFindActiveCampaignByName(name){
+  const nameLower=(name||'').trim().toLowerCase();
+  if(!nameLower)return null;
+  return (RB.campaigns||[]).find(c=>c.name.toLowerCase()===nameLower&&rbCampaignIsActive(c))||null;
+}
+
+function rbBulkCampaignNameInput(){
+  const nameEl=document.getElementById('bulk-campaign-name');
+  _bulkActiveCampaignMatch=rbFindActiveCampaignByName(nameEl?.value||'');
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
+}
+
+// Same template list as the customer window (rbGetTemplates(), which
+// merges any custom-edited templates over the defaults). Selection is
+// preserved across re-renders (add/remove/send all call this again).
+function rbBulkPopulateTemplateSelect(){
+  const sel=document.getElementById('bulk-send-template');if(!sel)return;
+  const cur=sel.value;
+  const tpls=rbGetTemplates();
+  sel.innerHTML='<option value="">No template — custom message</option>'+tpls.map(t=>`<option value="${esc(t.id)}"${t.id===cur?' selected':''}>${esc(t.id)}. ${esc(t.name)}</option>`).join('');
+}
+
+function rbBulkTemplateChange(){
+  const tid=document.getElementById('bulk-send-template')?.value||'';
+  const ta=document.getElementById('bulk-send-text');
+  if(!tid||!ta)return;
+  const t=rbGetTemplates().find(x=>x.id===tid);
+  if(t)ta.value=t.en;
+}
+
+// Opens one WhatsApp link at a time, for the first not-yet-sent recipient
+// with a phone number, on user click only -- no auto-advancing loop.
+// Logged the same way an individual template send is today (rbLogA +
+// rbAutoSaveTemplateSend) so ✓ badges, the activity log, and campaign
+// attribution all pick it up exactly like a 1:1 send from the customer
+// window would.
+function rbBulkSendNext(){
+  const queue=rbBulkSendableQueue();
+  const next=queue.find(c=>!(c.name.toLowerCase() in _bulkSentAt));
+  if(!next){
+    notif(queue.length?'✓ Everyone in this list has already been sent to':'⚠ No recipients with a phone number to send to');
+    return;
+  }
+  const rawMsg=document.getElementById('bulk-send-text')?.value||'';
+  if(!rawMsg.trim()){notif('⚠ Enter a message first');return;}
+  const tid=document.getElementById('bulk-send-template')?.value||'';
+  const tpl=tid?rbGetTemplates().find(t=>t.id===tid):null;
+  // [Name] (and its Urdu equivalent) resolves per recipient at send time --
+  // other template placeholders aren't recipient-specific in a bulk list,
+  // so they're left as-is for the user to have already customized.
+  const msg=rawMsg.replace(/\[Name\]/gi,next.name).replace(/\[نام\]/g,next.name);
+  const norm=rbNormalizePhone(next.phone);
+  window.open('https://wa.me/'+norm+'?text='+encodeURIComponent(msg),'_blank');
+  _bulkSentAt[next.name.toLowerCase()]=new Date().toISOString();
+  rbBulkLogSend(next,tid,tpl?tpl.name:'');
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
+}
+
+async function rbBulkLogSend(recipient,tid,tname){
+  const effTid=tid||'custom';
+  const effTname=tname||'Custom Message';
+  const custRecord=RB.custs.find(c=>c.name.toLowerCase()===recipient.name.toLowerCase());
+  const cid=custRecord?.id||'';
+  await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'','','message');
+  await rbAutoSaveTemplateSend(recipient.name,recipient.phone||'',effTid,effTname);
+  if(rbCurTab==='rb-outreach')rbRenderOutreach();
+}
+
 function rbBulkGoToProfile(name){
   document.getElementById('bulk-msg-modal').classList.remove('open');
   goToDashboardCustomer(name,'Bulk Message list');
@@ -10267,22 +10467,18 @@ function rbBulkOpenCust(name){
 }
 
 function rbBulkCopyNumbers(){
-  const nums=_bulkMsgList.map(c=>rbNormalizePhone(c.phone)).filter(Boolean).map(n=>'+'+n);
+  const nums=rbBulkCombinedList().map(c=>rbNormalizePhone(c.phone)).filter(Boolean).map(n=>'+'+n);
   if(!nums.length){notif('⚠ No phone numbers available in this list');return;}
   navigator.clipboard.writeText(nums.join('\n')).then(()=>{
     notif(`✓ ${nums.length} number${nums.length!==1?'s':''} copied to clipboard`);
-    const hint=document.getElementById('bulk-modal-hint');
-    if(hint)hint.textContent=`${nums.length} number${nums.length!==1?'s':''} copied! On WhatsApp: New Broadcast → Add recipients → paste.`;
   }).catch(()=>notif('⚠ Could not copy — try manually'));
 }
 
 function rbBulkSendMessage(){
-  const nums=_bulkMsgList.map(c=>rbNormalizePhone(c.phone)).filter(Boolean).map(n=>'+'+n);
+  const nums=rbBulkCombinedList().map(c=>rbNormalizePhone(c.phone)).filter(Boolean).map(n=>'+'+n);
   if(!nums.length){notif('⚠ No phone numbers in this list to send to');return;}
   navigator.clipboard.writeText(nums.join('\n')).then(()=>{
     notif(`✓ ${nums.length} number${nums.length!==1?'s':''} copied — opening WhatsApp`);
-    const hint=document.getElementById('bulk-modal-hint');
-    if(hint)hint.textContent=`Numbers copied! On WhatsApp Web: click ✏️ New Chat → New Broadcast → search each contact to add them.`;
   }).catch(()=>{});
   window.open('https://web.whatsapp.com/','_blank');
 }
@@ -10426,19 +10622,19 @@ function rbCampaignIsActive(camp){
 }
 
 async function rbBulkSaveCampaign(){
-  if(!_bulkMsgList.length){notif('⚠ No customers in current list');return;}
+  const combined=rbBulkCombinedList();
+  if(!combined.length){notif('⚠ No customers in current list');return;}
   const nameEl=document.getElementById('bulk-campaign-name');
   const daysEl=document.getElementById('bulk-campaign-days');
   const name=(nameEl?.value.trim())||('Campaign '+new Date().toLocaleDateString('en-PK'));
   const days=Math.max(1,parseInt(daysEl?.value)||7);
-  const recipients=[..._bulkMsgList];
+  const recipients=[...combined];
 
   // Same name (case-insensitive) and still within its window -> append to
   // it instead of creating a duplicate row. A same-named campaign whose
   // window already expired is left alone -- a fresh row keeps that past
   // campaign's results clean rather than reviving it with new sends.
-  const nameLower=name.toLowerCase();
-  const existing=(RB.campaigns||[]).find(c=>c.name.toLowerCase()===nameLower&&rbCampaignIsActive(c));
+  const existing=rbFindActiveCampaignByName(name);
   if(existing){
     const existingNames=new Set(existing.recipients.map(r=>r.name.toLowerCase()));
     const toAdd=recipients.filter(r=>!existingNames.has(r.name.toLowerCase())).map(r=>({name:r.name,phone:r.phone||''}));
@@ -10452,11 +10648,15 @@ async function rbBulkSaveCampaign(){
       if(rbCurTab==='rb-outreach')rbRenderOutreach();
     }
     if(nameEl)nameEl.value='';
+    _bulkActiveCampaignMatch=null;
+    rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
     return;
   }
 
   await rbSaveCampaign(name,null,null,recipients,days);
   if(nameEl)nameEl.value='';
+  _bulkActiveCampaignMatch=null;
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
 }
 
 async function rbSaveCampaign(name,templateId,templateName,recipients,attributionDays){
@@ -10532,6 +10732,7 @@ function rbBulkClientInput(q){
   const names=[...new Set(S.orders.map(o=>resolveCustomerName(o.Customer)))];
   const match=names.find(n=>n.toLowerCase()===q.toLowerCase());
   if(!match)return;
+  rbBulkResetSendProgress();
   const orders=S.orders.filter(o=>resolveCustomerName(o.Customer)===match);
   const phone=orders.find(o=>o.Phone)?.Phone||'';
   const dated=orders.filter(o=>o.Order_Date);
@@ -10539,21 +10740,40 @@ function rbBulkClientInput(q){
   rbBulkRenderResults([{name:match,phone,lastOrder}],'Selected client');
 }
 
-// "Custom list" target group -- unlike the preset groups (computed fresh on
-// every selection) this is built up one customer at a time. Kept in sync
-// with _bulkMsgList after every add/remove (via rbBulkRenderResults with
-// openModal=false) so Copy Numbers/Save Campaign/Message work on it exactly
-// like any other group without needing their own special-casing; the modal
-// itself only pops open when the user explicitly asks via the button below.
-function rbBulkCustomAdd(){
-  const inp=document.getElementById('bulk-custom-input');
+function rbBulkShowCustomNotice(msg,inputId){
+  const noticeId=inputId==='bulk-step1-input'?'bulk-step1-notice':'bulk-custom-notice';
+  const el=document.getElementById(noticeId);if(!el)return;
+  el.textContent=msg;
+  el.style.display='block';
+  clearTimeout(el._hideTimer);
+  el._hideTimer=setTimeout(()=>{el.style.display='none';},3000);
+}
+
+function rbBulkPopulateCustomDatalists(){
+  const names=[...new Set(S.orders.map(o=>resolveCustomerName(o.Customer)))].sort();
+  const html=names.map(n=>`<option value="${esc(n)}">`).join('');
+  const dl1=document.getElementById('bulk-custom-datalist');if(dl1)dl1.innerHTML=html;
+  const dl2=document.getElementById('bulk-step1-datalist');if(dl2)dl2.innerHTML=html;
+}
+
+// Hand-picked additions on top of whatever _bulkMsgList already holds
+// (preset group/client/empty-for-custom-mode) -- callable from either the
+// external "Custom list" box or the modal's own Step 1 search (inputId
+// tells it which input/notice to use). Never touches _bulkMsgList itself;
+// rbBulkCombinedList() merges the two at render/queue/save time.
+function rbBulkCustomAdd(inputId){
+  inputId=inputId||'bulk-custom-input';
+  const inp=document.getElementById(inputId);
   const q=(inp?.value||'').trim();
   if(!q)return;
   const names=[...new Set(S.orders.map(o=>resolveCustomerName(o.Customer)))];
   const match=names.find(n=>n.toLowerCase()===q.toLowerCase());
   if(!match){notif('⚠ No matching customer found');return;}
-  if(_bulkCustomList.some(c=>c.name.toLowerCase()===match.toLowerCase())){
-    notif('Already in the list');
+  const key=match.toLowerCase();
+  const inCampaign=(_bulkActiveCampaignMatch?.recipients||[]).some(r=>r.name.toLowerCase()===key);
+  const alreadyIn=rbBulkCombinedList().some(c=>c.name.toLowerCase()===key);
+  if(alreadyIn||inCampaign){
+    rbBulkShowCustomNotice(inCampaign?'Already in the selected campaign':'Already added',inputId);
     if(inp)inp.value='';
     return;
   }
@@ -10564,13 +10784,13 @@ function rbBulkCustomAdd(){
   _bulkCustomList.push({name:match,phone,lastOrder});
   if(inp)inp.value='';
   rbBulkRenderCustomChips();
-  rbBulkRenderResults([..._bulkCustomList],'Custom list',false);
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
 }
 
 function rbBulkCustomRemove(name){
   _bulkCustomList=_bulkCustomList.filter(c=>c.name!==name);
   rbBulkRenderCustomChips();
-  rbBulkRenderResults([..._bulkCustomList],'Custom list',false);
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
 }
 
 function rbBulkRenderCustomChips(){
