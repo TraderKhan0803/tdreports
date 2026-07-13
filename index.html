@@ -6211,6 +6211,24 @@ async function loadFinancials(){
   try{
     const rows=await dbGet('financials','select=month,category,amount,type&order=month.asc');
     if(!rows.length){_financialsLoaded=true;return;}
+
+    // Supabase data must fully override the hardcoded EX_HISTORICAL.pkr
+    // fallback per month/type -- otherwise a month present in both gets
+    // double-counted (DB amounts added on top of the hardcoded ones).
+    // Reset just the revCats/expCats buckets that actually have DB rows
+    // before accumulating, so months with nothing in the DB keep their
+    // hardcoded fallback untouched.
+    const revMonths=new Set(rows.filter(r=>r.type==='revenue').map(r=>r.month));
+    const expMonths=new Set(rows.filter(r=>r.type==='expense').map(r=>r.month));
+    revMonths.forEach(mk=>{
+      if(!EX_HISTORICAL.pkr[mk])EX_HISTORICAL.pkr[mk]={revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+      EX_HISTORICAL.pkr[mk].revCats={};
+    });
+    expMonths.forEach(mk=>{
+      if(!EX_HISTORICAL.pkr[mk])EX_HISTORICAL.pkr[mk]={revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+      EX_HISTORICAL.pkr[mk].expCats={};
+    });
+
     rows.forEach(r=>{
       const mk=r.month;
       if(r.type==='fx_rate'){
