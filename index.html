@@ -2474,31 +2474,7 @@ async function loadAllData(){
 async function _loadHistoryInBackground(currentMk){
   try{
     showHistoryProgress(5,'Loading full history…');
-    const BATCH=5000;let allOrders=[],from=0,totalFetched=0;
-    // Fetch all orders except current month (already loaded)
-    const [,mm]=currentMk.split('-').map(Number);
-    const yr=new Date().getFullYear();
-
-    while(true){
-      const to=from+BATCH-1;
-      const opts={method:'GET',headers:{
-        'Authorization':'Bearer '+authToken,
-        'Content-Type':'application/json','Range':from+'-'+to,
-        'Range-Unit':'items','Prefer':'count=none'
-      }};
-      // Exclude current month
-      const url=GATEWAY_URL+'/orders?select=*&not.and=(year.eq.'+yr+',month.eq.'+mm+')';
-      const res=await fetch(url,opts);
-      if(!res.ok)break;
-      const t=await res.text();
-      const rows=t?JSON.parse(t):[];
-      allOrders=allOrders.concat(rows);
-      totalFetched+=rows.length;
-      const pct=Math.min(90,5+(totalFetched/16000)*85);
-      showHistoryProgress(pct,'Loading full history… '+totalFetched.toLocaleString()+' orders');
-      if(rows.length<BATCH)break;
-      from+=BATCH;
-    }
+    const allOrders=await fetchAllRows('orders');
 
     // Load all products in background
     showHistoryProgress(90,'Loading product history…');
