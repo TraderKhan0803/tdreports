@@ -5730,7 +5730,8 @@ function renderMktCampaigns(){
   document.getElementById('mkt-campaigns-count').textContent=camps.length+' campaign'+(camps.length!==1?'s':'');
   tb.innerHTML=camps.map(camp=>{
     const attr=rbGetCampaignAttribution(camp);
-    const conv=camp.recipients.length?Math.round(attr.orders/camp.recipients.length*100):0;
+    const sentCount=camp.recipients.filter(rbRecipSent).length;
+    const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
     const convColor=conv>=20?'var(--grn)':conv>=10?'var(--pur)':'var(--t3)';
     const d=new Date(camp.date);
     const dateStr=d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'2-digit'});
@@ -5739,7 +5740,7 @@ function renderMktCampaigns(){
       <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${dateStr}</td>
       <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
       <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;">${camp.recipients.length}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--grn);font-weight:${attr.orders?'600':'400'};">${attr.orders}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtFull(attr.revenue)}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;color:${convColor};font-weight:600;">${conv}%</td>
@@ -10021,14 +10022,15 @@ async function rbRenderOutreach(){
   if(camps.length){
     const rows=camps.map(camp=>{
       const attr=rbGetCampaignAttribution(camp);
-      const conv=camp.recipients.length?Math.round(attr.orders/camp.recipients.length*100):0;
+      const sentCount=camp.recipients.filter(rbRecipSent).length;
+      const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
       const sentDate=new Date(camp.date);
       return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
         <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(camp.name)}</td>
         <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'2-digit'})}</td>
         <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
         <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;">${camp.recipients.length}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
         <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--grn);">${attr.orders}</td>
         <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtFull(attr.revenue)}</td>
         <td style="text-align:right;font-family:'DM Mono',monospace;color:${conv>=20?'var(--grn)':conv>=10?'var(--pur)':'var(--t3)'};">${conv}%</td>
@@ -10140,6 +10142,7 @@ function alertOpenMessage(alertId){
 let _bulkMsgList=[];
 let _bulkCustomList=[]; // hand-picked recipients, added from either the external "Custom list" box or the modal's own Step 1 search -- merged into whatever _bulkMsgList holds via rbBulkCombinedList()
 let _bulkSentAt={}; // name (lowercased) -> ISO timestamp, stepped-through-sent in this modal session
+let _bulkReopenCampId=null; // when set, bulk sends tick sent=true on this campaign (reopen/edit mode)
 let _bulkActiveCampaignMatch=null; // active existing campaign matching the typed name, if any
 let _bulkLastLabel=''; // remembered so a re-render (send/custom-add) can redraw without losing the group label
 
@@ -10147,6 +10150,7 @@ let _bulkLastLabel=''; // remembered so a re-render (send/custom-add) can redraw
 // progress and hand-picked additions from a previous group shouldn't carry
 // over and look like they apply to different people.
 function rbBulkResetSendProgress(){
+  _bulkReopenCampId=null;
   _bulkSentAt={};
   _bulkCustomList=[];
   rbBulkRenderCustomChips();
@@ -10435,6 +10439,7 @@ function rbBulkSendNext(){
   const norm=rbNormalizePhone(next.phone);
   window.open('https://wa.me/'+norm+'?text='+encodeURIComponent(msg),'_blank');
   _bulkSentAt[next.name.toLowerCase()]=new Date().toISOString();
+  if(_bulkReopenCampId)rbMarkCampaignRecipientSent(_bulkReopenCampId,next.name,next.phone);
   rbBulkLogSend(next,tid,tpl?tpl.name:'');
   rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
 }
@@ -10589,7 +10594,8 @@ function rbOpenCampaignRecipients(campId){
       <button onclick="document.getElementById('rb-camp-recip-overlay').remove()" style="background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;">✕</button>
     </div>
     <div id="rb-camp-recip-body" style="max-height:50vh;overflow-y:auto;"></div>
-    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;">
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;gap:8px;">
+      <button onclick="rbReopenCampaignInBulk('${camp.id}')" style="padding:6px 14px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">✏️ Edit / Send</button>
       <button onclick="rbDeleteCampaign('${camp.id}')" style="padding:6px 14px;background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">🗑 Delete entire campaign</button>
     </div>
   </div>`;
@@ -10617,6 +10623,34 @@ async function rbToggleCampaignRecipientSent(campId,name,checked){
   try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(campId),{recipients:c.recipients});}
   catch(e){notif('⚠ Failed to update: '+e.message);return;}
   if(document.getElementById('rb-camp-recip-overlay')?._campId===campId)rbOpenCampaignRecipients(campId);
+  if(rbCurTab==='rb-outreach')rbRenderOutreach();
+  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+}
+
+function rbReopenCampaignInBulk(campId){
+  const camp=(RB.campaigns||[]).find(c=>c.id===campId);
+  if(!camp)return;
+  document.getElementById('rb-camp-recip-overlay')?.remove();
+  rbBulkResetSendProgress();      // clears prior session and nulls _bulkReopenCampId
+  _bulkReopenCampId=campId;       // set AFTER reset so it survives
+  _bulkActiveCampaignMatch=null;  // don't exclude this campaign's own people from the send queue
+  const pending=camp.recipients.filter(r=>!rbRecipSent(r)).map(r=>({name:r.name,phone:r.phone||''}));
+  const nameEl=document.getElementById('bulk-campaign-name');
+  if(nameEl)nameEl.value=camp.name;
+  const daysEl=document.getElementById('bulk-campaign-days');
+  if(daysEl)daysEl.value=camp.attributionDays||7;
+  if(!pending.length)notif('✓ Everyone in "'+camp.name+'" is already marked sent — add people or close');
+  rbBulkRenderResults(pending,'Campaign: '+camp.name,true);
+}
+
+async function rbMarkCampaignRecipientSent(campId,name,phone){
+  const c=(RB.campaigns||[]).find(x=>x.id===campId);
+  if(!c)return;
+  const r=c.recipients.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(r){r.sent=true;}
+  else{c.recipients.push({name,phone:phone||'',sent:true});}
+  try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(campId),{recipients:c.recipients});}
+  catch(e){console.error('Failed to mark campaign recipient sent:',e);}
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
   if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
 }
