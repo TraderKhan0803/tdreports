@@ -5734,7 +5734,7 @@ function renderMktCampaigns(){
     const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
     const convColor=conv>=20?'var(--grn)':conv>=10?'var(--pur)':'var(--t3)';
     const d=new Date(camp.date);
-    const dateStr=d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'2-digit'});
+    const dateStr=d.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
     return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
       <td style="font-size:12px;max-width:160px;word-break:break-word;font-weight:500;">${esc(camp.name)}</td>
       <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${dateStr}</td>
@@ -10027,7 +10027,7 @@ async function rbRenderOutreach(){
       const sentDate=new Date(camp.date);
       return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
         <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(camp.name)}</td>
-        <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'2-digit'})}</td>
+        <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
         <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
         <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
         <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
