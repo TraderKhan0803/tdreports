@@ -10143,6 +10143,7 @@ let _bulkMsgList=[];
 let _bulkCustomList=[]; // hand-picked recipients, added from either the external "Custom list" box or the modal's own Step 1 search -- merged into whatever _bulkMsgList holds via rbBulkCombinedList()
 let _bulkSentAt={}; // name (lowercased) -> ISO timestamp, stepped-through-sent in this modal session
 let _bulkReopenCampId=null; // when set, bulk sends tick sent=true on this campaign (reopen/edit mode)
+let _bulkExcluded=new Set(); // lowercased names unchecked in the bulk box; no-number rows are always excluded
 let _bulkActiveCampaignMatch=null; // active existing campaign matching the typed name, if any
 let _bulkLastLabel=''; // remembered so a re-render (send/custom-add) can redraw without losing the group label
 
@@ -10151,6 +10152,7 @@ let _bulkLastLabel=''; // remembered so a re-render (send/custom-add) can redraw
 // over and look like they apply to different people.
 function rbBulkResetSendProgress(){
   _bulkReopenCampId=null;
+  _bulkExcluded=new Set();
   _bulkSentAt={};
   _bulkCustomList=[];
   rbBulkRenderCustomChips();
@@ -10250,8 +10252,16 @@ function rbBulkQueueExcludingCampaign(){
   const existingNames=new Set((_bulkActiveCampaignMatch?.recipients||[]).map(r=>r.name.toLowerCase()));
   return rbBulkCombinedList().filter(c=>!existingNames.has(c.name.toLowerCase()));
 }
+function rbBulkIsSelected(c){
+  return !!rbNormalizePhone(c.phone)&&!_bulkExcluded.has(c.name.toLowerCase());
+}
+function rbBulkToggleRecipient(name,checked){
+  const key=name.toLowerCase();
+  if(checked)_bulkExcluded.delete(key);else _bulkExcluded.add(key);
+  rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
+}
 function rbBulkSendableQueue(){
-  return rbBulkQueueExcludingCampaign().filter(c=>rbNormalizePhone(c.phone));
+  return rbBulkQueueExcludingCampaign().filter(rbBulkIsSelected);
 }
 
 function rbBulkUpdateSendProgress(){
@@ -10340,11 +10350,14 @@ function rbBulkRenderResults(custs,label,openModal){
     const key=c.name.toLowerCase();
     const sentAt=_bulkSentAt[key];
     const isNext=!sentAt&&key===nextKey;
+    const cbDisabled=!norm||!!sentAt;
+    const cbChecked=rbBulkIsSelected(c)||!!sentAt;
     let statusHtml='';
     if(sentAt)statusHtml=`<span style="font-size:10px;color:var(--grn);font-weight:700;white-space:nowrap;">✓ sent ${rbHHMM(sentAt)}</span>`;
     else if(isNext)statusHtml='<span style="font-size:10px;color:var(--acc);font-weight:700;white-space:nowrap;">next up</span>';
     else if(!norm)statusHtml='<span style="font-size:10px;color:var(--t3);padding:3px 4px;white-space:nowrap;">no number</span>';
     return`<div style="display:flex;align-items:center;gap:8px;padding:9px 18px;${borderStyle}${sentAt?'opacity:.55;':''}${isNext?'background:rgba(249,115,22,.05);':''}">
+      <input type="checkbox" ${cbChecked?'checked':''} ${cbDisabled?'disabled':''} data-name="${esc(c.name)}" onchange="rbBulkToggleRecipient(this.dataset.name,this.checked)" title="${!norm?'No phone number':(sentAt?'Already sent':'Send to this customer')}" style="width:15px;height:15px;accent-color:var(--acc);flex-shrink:0;cursor:${cbDisabled?'not-allowed':'pointer'};${cbDisabled?'opacity:.4;':''}">
       <div style="flex:1;min-width:0;">
         <div onclick="rbBulkGoToProfile(this.dataset.name)" data-name="${esc(c.name)}" style="font-size:12px;color:var(--acc);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-decoration:underline;${sentAt?'text-decoration:line-through;':''}" title="View dashboard profile">${esc(c.name)}</div>
         <div style="font-size:11px;color:${norm?'var(--t2)':'var(--t3)'};font-family:'DM Mono',monospace;">${esc(display)}</div>
