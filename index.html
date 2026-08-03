@@ -10565,7 +10565,9 @@ function rbOpenCampaignRecipients(campId){
     const body=document.getElementById('rb-camp-recip-body');
     if(body)body.innerHTML=c.recipients.length?c.recipients.map(r=>{
       const did=ordered.has(r.name.toLowerCase());
+      const sent=rbRecipSent(r);
       return`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--bdr);">
+        <input type="checkbox" ${sent?'checked':''} data-cid="${c.id}" data-name="${esc(r.name)}" onchange="rbToggleCampaignRecipientSent(this.dataset.cid,this.dataset.name,this.checked)" title="Message sent to this customer" style="width:15px;height:15px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;">
         <div style="flex:1;min-width:0;">
           <div style="font-size:12px;color:var(--txt);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.name)}</div>
           <div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;">${esc(r.phone||'—')}</div>
@@ -10606,6 +10608,28 @@ async function rbRemoveCampaignRecipient(campId,name){
   if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
 }
 
+async function rbToggleCampaignRecipientSent(campId,name,checked){
+  const c=(RB.campaigns||[]).find(x=>x.id===campId);
+  if(!c)return;
+  const r=c.recipients.find(x=>x.name===name);
+  if(!r)return;
+  r.sent=checked;
+  try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(campId),{recipients:c.recipients});}
+  catch(e){notif('⚠ Failed to update: '+e.message);return;}
+  if(document.getElementById('rb-camp-recip-overlay')?._campId===campId)rbOpenCampaignRecipients(campId);
+  if(rbCurTab==='rb-outreach')rbRenderOutreach();
+  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+}
+
+// Ticked = message sent. Explicit true/false wins. Legacy recipients (no
+// sent field) default to sent only if they have a valid phone — back-fills
+// existing campaigns with no migration.
+function rbRecipSent(r){
+  if(r.sent===true)return true;
+  if(r.sent===false)return false;
+  return !!rbNormalizePhone(r.phone);
+}
+
 // A campaign is "active" while today still falls inside its own
 // attribution window (date + attributionDays) -- used both to decide
 // whether "Save Campaign" should append to it and to build the name
@@ -10631,7 +10655,7 @@ async function rbBulkSaveCampaign(){
   const existing=rbFindActiveCampaignByName(name);
   if(existing){
     const existingNames=new Set(existing.recipients.map(r=>r.name.toLowerCase()));
-    const toAdd=recipients.filter(r=>!existingNames.has(r.name.toLowerCase())).map(r=>({name:r.name,phone:r.phone||''}));
+    const toAdd=recipients.filter(r=>!existingNames.has(r.name.toLowerCase())).map(r=>({name:r.name,phone:r.phone||'',sent:false}));
     if(!toAdd.length){
       notif(`No new recipients — all ${recipients.length} already in "${existing.name}"`);
     }else{
@@ -10662,7 +10686,7 @@ async function rbSaveCampaign(name,templateId,templateName,recipients,attributio
     templateName:templateName||null,
     date:new Date().toISOString(),
     sentBy:curUser?.u||'system',
-    recipients:recipients.map(c=>({name:c.name,phone:c.phone||''})),
+    recipients:recipients.map(c=>({name:c.name,phone:c.phone||'',sent:c.sent===true})),
     attributionDays:attributionDays||7
   };
   try{await dbInsert('campaigns',[rbCampaignToRow(camp)]);}
@@ -10689,13 +10713,13 @@ async function rbAutoSaveTemplateSend(cname,phone,tid,tname){
   const existing=(RB.campaigns||[]).find(c=>c.templateName===tname&&c.sentBy===user&&rbLocalDayKey(new Date(c.date))===dayKey);
   if(existing){
     if(existing.recipients.some(r=>r.name===cname))return; // already logged today
-    existing.recipients.push({name:cname,phone:phone||''});
+    existing.recipients.push({name:cname,phone:phone||'',sent:true});
     try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(existing.id),{recipients:existing.recipients});}
     catch(e){console.error('Failed to append campaign recipient:',e);}
     if(rbCurTab==='rb-outreach')rbRenderOutreach();
     return;
   }
-  await rbSaveCampaign(tname+' → '+cname,tid,tname,[{name:cname,phone:phone||''}],7);
+  await rbSaveCampaign(tname+' → '+cname,tid,tname,[{name:cname,phone:phone||'',sent:true}],7);
 }
 
 const RB_CAMP_DELIVERED_STATUSES=new Set(['delivered','collected','assigned']);
@@ -10704,7 +10728,7 @@ function rbGetCampaignAttribution(camp){
   if(!S.orders||!S.orders.length)return{orders:0,revenue:0,converters:[]};
   const sentAt=new Date(camp.date);
   const windowEnd=new Date(sentAt.getTime()+camp.attributionDays*86400000);
-  const recipientNames=new Set(camp.recipients.map(r=>r.name.toLowerCase()));
+  const recipientNames=new Set(camp.recipients.filter(rbRecipSent).map(r=>r.name.toLowerCase()));
   let revenue=0;const converters=new Set();
   S.orders.forEach(o=>{
     const n=resolveCustomerName(o.Customer).toLowerCase();
