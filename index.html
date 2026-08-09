@@ -4087,6 +4087,7 @@ async function runAdminUpload(){
   const ulog=m=>{log.innerHTML+=`<div>${m}</div>`;log.scrollTop=log.scrollHeight;};
   document.getElementById('adm-upload-btn').disabled=true;
   const zeroRowFiles=[];
+  let ordersRowsAdded=0;
   if(admOrdersFiles.length){
     ulog(`<span style="color:var(--acc)">━━ Processing ${admOrdersFiles.length} Orders file(s) ━━</span>`);
     let total=0;
@@ -4109,6 +4110,7 @@ async function runAdminUpload(){
     }
     if(total>0)ulog(`<span style="color:var(--grn)">✅ Orders complete — ${total} rows</span>`);
     logActivity('upload','Uploaded '+admOrdersFiles.length+' orders file(s): '+total+' rows');
+    ordersRowsAdded=total;
   }
   if(admProductsFiles.length){
     ulog(`<span style="color:var(--acc)">━━ Processing ${admProductsFiles.length} Products file(s) ━━</span>`);
@@ -4140,6 +4142,7 @@ async function runAdminUpload(){
   document.getElementById('adm-lbl-products').classList.remove('loaded');
   document.getElementById('adm-upload-btn').disabled=true;
   await reloadAllData();renderUploadHistory();
+  if(ordersRowsAdded>0){ await recalcNewCustomers(); }
   if(zeroRowFiles.length){
     alert('⚠️ No new rows were added from '+(zeroRowFiles.length===1?'this file':zeroRowFiles.length+' of the files')+':\n\n'+zeroRowFiles.map(n=>'• '+n).join('\n')+'\n\nEvery row already exists in the database, likely from a previous upload. If you intended to replace this data, delete the existing batch first, then re-upload.');
   }
