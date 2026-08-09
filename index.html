@@ -1985,6 +1985,17 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <div class="adm-card mb12">
           <div class="adm-title">✏ Monthly Data Entry</div>
           <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">Enter data for months not covered by the uploaded spreadsheet (Oct 2025 onwards).</div>
+          <details style="margin-bottom:12px;background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:10px 12px;">
+            <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--acc);">ℹ How Monthly Data Entry works</summary>
+            <div style="font-size:11px;color:var(--t2);margin-top:8px;line-height:1.6;">
+              1. Pick the Year and Month.<br>
+              2. The boxes fill in with that month's current figures.<br>
+              3. Change any box(es) you want — leave the rest as they are.<br>
+              4. Click Save and confirm.<br>
+              5. Only what's shown gets saved; untouched fields keep their existing values.<br>
+              <span style="color:var(--t3);">Tip: For a month from the uploaded spreadsheet, saving here overrides it. Use "Delete Entry" to restore the original spreadsheet numbers.</span>
+            </div>
+          </details>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
             <div>
               <div style="font-size:10px;color:var(--t3);font-family:\'DM Mono\',monospace;margin-bottom:4px;">YEAR</div>
@@ -3679,13 +3690,13 @@ function exRenderInputForm(){
   const year=document.getElementById('ex-input-year')?.value||'2025';
   const month=parseInt(document.getElementById('ex-input-month')?.value||'9');
   const mk=year+'-'+(String(month+1).padStart(2,'0'));
-  const existing=exData.manual[mk]||{revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+  const existing=exData.manual[mk]||EX_HISTORICAL.pkr[mk]||{revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
   const isHistorical=!!EX_HISTORICAL.pkr[mk];
   const rate=EX_HISTORICAL.rates[mk]||exData.settings.defaultRate;
   const el=document.getElementById('ex-input-form');
   if(!el)return;
   if(isHistorical){
-    el.innerHTML=`<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--acc);">⚠ ${MONTHS[month]} ${year} already exists in the historical spreadsheet data. To override, enter values below — they will take precedence.</div><br>`;
+    el.innerHTML=`<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--acc);">⚠ ${MONTHS[month]} ${year} already has data. The boxes below are pre-filled with those figures. Edit any you want and Save — fields you don't change stay the same.</div><br>`;
   }else{el.innerHTML='';}
   const revCats=exData.settings.revCats;
   const expCats=exData.settings.expCats;
@@ -3712,6 +3723,8 @@ function exRenderInputForm(){
 }
 
 function exSaveInputForm(mk){
+  const[_cy,_cm]=mk.split('-').map(Number);
+  if(!confirm('Save changes to '+MONTHS[_cm-1]+' '+_cy+'?\n\nThe values shown will be saved for this month. Any field you did not change keeps its current value.'))return;
   const revCats=exData.settings.revCats;
   const expCats=exData.settings.expCats;
   const revData={};let totalRev=0;
