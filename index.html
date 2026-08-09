@@ -3728,11 +3728,11 @@ function exRenderInputForm(){
     </div>
     <div style="margin-top:14px;display:flex;gap:10px;">
       <button onclick="exSaveInputForm('${mk}')" style="padding:8px 20px;background:var(--acc);border:none;border-radius:var(--r2);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Save ${MONTHS[month]} ${year}</button>
-      ${exData.manual[mk]?`<button onclick="exDeleteManual('${mk}')" style="padding:8px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">Delete Entry</button>`:''}
+      ${(exData.manual[mk]||EX_HISTORICAL.pkr[mk])?`<button onclick="exDeleteManual('${mk}')" style="padding:8px 14px;background:transparent;border:1px solid var(--red);border-radius:var(--r2);color:var(--red);font-size:12px;cursor:pointer;">Delete Entry</button>`:''}
     </div>`;
 }
 
-function exSaveInputForm(mk){
+async function exSaveInputForm(mk){
   const[_cy,_cm]=mk.split('-').map(Number);
   if(!confirm('Save changes to '+MONTHS[_cm-1]+' '+_cy+'?\n\nThe values shown will be saved for this month. Any field you did not change keeps its current value.'))return;
   const revCats=exData.settings.revCats;
@@ -3748,6 +3748,17 @@ function exSaveInputForm(mk){
     if(v)expData[cat]=v;totalExp+=v;
   });
   exData.manual[mk]={revenue:totalRev,expenses:totalExp,profit:totalRev-totalExp,revCats:revData,expCats:expData};
+  // Persist to Supabase so every device/user sees the same numbers
+  try{
+    await sb('DELETE','financials?month=eq.'+encodeURIComponent(mk)+'&type=eq.revenue').catch(()=>{});
+    await sb('DELETE','financials?month=eq.'+encodeURIComponent(mk)+'&type=eq.expense').catch(()=>{});
+    const _rows=[];
+    Object.entries(revData).forEach(([cat,amt])=>{if(amt>0)_rows.push({id:'r_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'revenue',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});});
+    Object.entries(expData).forEach(([cat,amt])=>{if(amt>0)_rows.push({id:'e_'+mk+'_'+cat.replace(/\s+/g,'_').slice(0,20)+'_'+Date.now(),month:mk,category:cat,amount:Math.round(amt),type:'expense',updated_by:curUser?.u||'admin',updated_at:new Date().toISOString()});});
+    for(let i=0;i<_rows.length;i+=50){await dbInsert('financials',_rows.slice(i,i+50));}
+    await loadFinancials();
+    delete exData.manual[mk];
+  }catch(e){notif('⚠ Database update failed — numbers may not sync to other devices');}
   // Save FX override
   const fxInp=document.getElementById('ex-in-fx-'+mk);
   const fxVal=parseFloat(fxInp?.value)||0;
@@ -3786,8 +3797,15 @@ function exSaveInputForm(mk){
   closeModal('super-overlay');
 }
 
-function exDeleteManual(mk){
+async function exDeleteManual(mk){
+  if(!confirm('Delete all saved figures for this month? This clears them for everyone.'))return;
   delete exData.manual[mk];exSaveData();
+  try{
+    await sb('DELETE','financials?month=eq.'+encodeURIComponent(mk)+'&type=eq.revenue').catch(()=>{});
+    await sb('DELETE','financials?month=eq.'+encodeURIComponent(mk)+'&type=eq.expense').catch(()=>{});
+    if(EX_HISTORICAL.pkr[mk])EX_HISTORICAL.pkr[mk]={revenue:0,expenses:0,profit:0,revCats:{},expCats:{}};
+    await loadFinancials();
+  }catch(e){notif('⚠ Database update failed');}
   const[y,m]=mk.split('-').map(Number);
   notif(`Entry for ${MONTHS[m-1]} ${y} deleted`);
   exRenderInputForm();exRenderAll();
