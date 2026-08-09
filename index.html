@@ -3686,6 +3686,15 @@ function switchExecTab(tab){
 
   if(tab==='settings')exRenderSettings();
 }
+function exRenderAll(){
+  try{exRenderInputForm();}catch(e){}
+  try{
+    if(typeof ecCurTab!=='undefined'&&ecCurTab==='growth'){grRender();}
+    else if(typeof ecCurTab!=='undefined'&&ecCurTab==='scenario'){spCalc();}
+    else{ecRenderUnified();}
+  }catch(e){}
+}
+
 function exRenderInputForm(){
   const year=document.getElementById('ex-input-year')?.value||'2025';
   const month=parseInt(document.getElementById('ex-input-month')?.value||'9');
@@ -3773,6 +3782,7 @@ function exSaveInputForm(mk){
     }
   }
   exRenderAll();
+  closeModal('super-overlay');
 }
 
 function exDeleteManual(mk){
