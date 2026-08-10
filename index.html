@@ -1119,6 +1119,12 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button class="ai-interpret-btn" style="margin-left:auto;" onclick="aiInterpretMkt()">✨ Interpret</button>
       </div>
       <div class="ai-interpret-panel" id="ai-panel-mkt" style="margin-bottom:10px;"></div>
+      <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:14px;">
+        <div class="tab active" id="nav-mkt-outreach" onclick="mktSwitchTab('outreach',this)">Outreach</div>
+        <div class="tab" id="nav-mkt-campaigns" onclick="mktSwitchTab('campaigns',this)">Campaigns</div>
+      </div>
+
+      <div id="mkt-panel-outreach">
       <div class="mkt-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 
         <!-- Panel 1: Welcome Queue -->
@@ -1232,62 +1238,14 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div style="padding:8px 14px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3);" id="mkt-vip-count"></div>
         </div>
 
+      </div>
+      </div>
+
+      <div id="mkt-panel-campaigns" style="display:none;">
         <!-- Panel 5: Campaigns -->
-        <div class="tw" style="display:flex;flex-direction:column;grid-column:span 2;" id="mkt-campaigns-panel">
-          <div class="panel-header" style="background:var(--sur2);padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:8px;">
-            <div>
-              <div class="stitle" style="color:var(--blu);">📊 Campaigns</div>
-              <div class="hint">Outreach campaigns · orders auto-attributed from uploaded data</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;" id="mkt-campaigns-count"></span>
-              <button onclick="const g=document.getElementById('mkt-camps-guide');g.style.display=g.style.display==='none'?'block':'none'" style="padding:3px 10px;background:var(--sur3);border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;">? How it works</button>
-            </div>
-          </div>
-          <div id="mkt-camps-guide" style="display:none;padding:14px 16px;background:rgba(59,130,246,.05);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.9;">
-            <strong style="color:var(--blu);display:block;margin-bottom:10px;font-size:12px;">How Campaign Attribution Works</strong>
-
-            <strong>How orders are matched</strong><br>
-            When you save a campaign, we record the recipient names and the moment it was saved. Every time you load this page, we scan your uploaded Excel orders and find any order from those customers placed within the <em>attribution window</em>. No manual tracking needed — results update automatically as you upload new data.<br><br>
-
-            <strong>How revenue is calculated</strong><br>
-            Revenue = total of the <em>Total Sales</em> column for all matched orders. It uses the same figures shown across your dashboard, taken directly from your Excel uploads. Orders not yet uploaded will not appear here.<br><br>
-
-            <strong>Conv% — Conversion rate</strong><br>
-            Unique customers who placed at least one matched order ÷ total recipients × 100.<br>
-            Example: 20 recipients, 4 ordered within 7 days → 20% conversion.<br>
-            <span style="color:var(--grn);">■</span> Green ≥20% &nbsp;·&nbsp; <span style="color:var(--pur);">■</span> Purple ≥10% &nbsp;·&nbsp; <span style="color:var(--t3);">■</span> Grey below 10%<br><br>
-
-            <strong>Attribution window</strong><br>
-            Set per campaign when you save it (1–90 days, default 7). Shorter windows give higher confidence that your message drove the order. 7 days works well for grocery and delivery businesses. The <em>Window</em> column shows what was set for each campaign.<br><br>
-
-            <strong>Does it work for Facebook or Instagram campaigns?</strong><br>
-            Not automatically. Attribution is name-based — only customers in your Raabta recipient list are tracked. If someone saw a social ad and ordered but wasn't in the campaign list, they won't appear here.<br>
-            <strong>Workaround:</strong> After running a social campaign, create a manual campaign in Raabta listing the customers you targeted, then check results after your window closes.<br><br>
-
-            <strong style="color:var(--acc);">Important caveats</strong><br>
-            · Only orders in your <strong>uploaded Excel data</strong> are counted — live or un-uploaded orders are invisible to this feature.<br>
-            · A customer in multiple overlapping campaigns is counted in all of them — there is no cross-campaign de-duplication.<br>
-            · Matching is name-based using the same normalisation as the rest of the dashboard. Name spelling variations in your data can cause missed matches.
-          </div>
-          <div style="flex:1;overflow-x:auto;overflow-y:auto;max-height:320px;-webkit-overflow-scrolling:touch;" id="mkt-campaigns-wrap">
-            <table class="dt" style="width:100%;min-width:520px;">
-              <thead><tr>
-                <th>Campaign</th>
-                <th>Date</th>
-                <th>Template</th>
-                <th>By</th>
-                <th style="text-align:right">Sent</th>
-                <th style="text-align:right">Orders</th>
-                <th style="text-align:right">Revenue</th>
-                <th style="text-align:right">Conv%</th>
-                <th style="text-align:right">Window</th>
-              </tr></thead>
-              <tbody id="mkt-campaigns-body"></tbody>
-            </table>
-          </div>
+        <div class="tw" style="display:flex;flex-direction:column;" id="mkt-campaigns-panel">
+          <div id="mkt-campaigns-view"></div>
         </div>
-
       </div>
     </div>
 
@@ -2693,7 +2651,7 @@ function switchTab(name,el,fromNav){
   if(name==='customer')renderCustomer();
   if(name==='product')renderProduct();
   if(name==='reports')renderReport();
-  if(name==='marketing')renderMarketing();
+  if(name==='marketing'){mktSwitchTab('outreach');renderMarketing();}
   if(name==='assistant'){aiInit();aiUpdateContextBar();}
   updateBackBar();
 }
@@ -5748,6 +5706,18 @@ const RB_LIST_GUIDES={
     +'<strong>Tip:</strong> Sort by Last Order to spot high-value customers who\'ve gone quiet — they\'re worth a personal follow-up before they lapse entirely.'
 };
 
+let _mktCurTab='outreach';
+function mktSwitchTab(name,el){
+  ['outreach','campaigns'].forEach(n=>{
+    const p=document.getElementById('mkt-panel-'+n);
+    if(p)p.style.display=(n===name)?'':'none';
+    const t=document.getElementById('nav-mkt-'+n);
+    if(t)t.classList.toggle('active',n===name);
+  });
+  _mktCurTab=name;
+  if(name==='campaigns')renderMktCampaigns();
+}
+
 async function renderMarketing(){
   // One shared fetch for this whole render cycle -- rbActionedBadge() (used
   // by all four panels below via mktRow) reads _rbSentLookup directly
@@ -5771,37 +5741,13 @@ async function renderMarketing(){
   };
 }
 
+// Marketing exists for users without Raabta access, so this must stay at
+// full parity with rbRenderCampaigns() -- same filters, totals, sorting.
+// Both call the shared buildCampaignsView() (features/raabta-campaigns.js)
+// with their own target/prefix so filter selections never leak between the
+// two views. The Window column (attribution days) is Marketing-only.
 function renderMktCampaigns(){
-  const tb=document.getElementById('mkt-campaigns-body');
-  const panel=document.getElementById('mkt-campaigns-panel');
-  if(!tb)return;
-  const camps=RB&&RB.campaigns?RB.campaigns:[];
-  if(!camps.length){
-    panel.style.display='none';
-    return;
-  }
-  panel.style.display='flex';
-  document.getElementById('mkt-campaigns-count').textContent=camps.length+' campaign'+(camps.length!==1?'s':'');
-  tb.innerHTML=camps.map(camp=>{
-    const attr=rbGetCampaignAttribution(camp);
-    const sentCount=camp.recipients.filter(rbRecipSent).length;
-    const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
-    const convColor=conv>=20?'var(--grn)':conv>=10?'var(--pur)':'var(--t3)';
-    const d=new Date(camp.date);
-    const dateStr=d.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-    return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
-      <td style="font-size:12px;max-width:160px;word-break:break-word;font-weight:500;">${esc(rbCampaignDisplayName(camp))}</td>
-      <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;" data-sort="${d.getTime()}">${dateStr}</td>
-      <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
-      <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--grn);font-weight:${attr.orders?'600':'400'};">${attr.orders}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtFull(attr.revenue)}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:${convColor};font-weight:600;">${conv}%</td>
-      <td style="text-align:right;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;">${camp.attributionDays}d</td>
-    </tr>`;
-  }).join('');
-  initSortableTable('mkt-campaigns-body',[{key:'camp',type:'text'},{key:'date',type:'date'},{key:'tpl',type:'text'},{key:'by',type:'text'},{key:'sent',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'rev',type:'num',align:'right'},{key:'conv',type:'num',align:'right'},{key:'win',type:'num',align:'right'}]);
+  buildCampaignsView({targetElId:'mkt-campaigns-view',tbodyId:'mkt-campaigns-body',prefix:'mkt',showWindow:true});
 }
 
 function getMktToday(){
@@ -10587,7 +10533,7 @@ async function rbDeleteCampaign(id){
   const recipOverlay=document.getElementById('rb-camp-recip-overlay');
   if(recipOverlay&&recipOverlay._campId===id)recipOverlay.remove();
   if(rbCurTab==='rb-campaigns')rbRenderCampaigns();
-  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+  if(document.getElementById('mkt-campaigns-view'))renderMktCampaigns();
 }
 
 // Clicking a campaign row opens this modal: every recipient, their phone,
@@ -10656,7 +10602,7 @@ async function rbRemoveCampaignRecipient(campId,name){
   catch(e){notif('⚠ Failed to update campaign: '+e.message);return;}
   if(document.getElementById('rb-camp-recip-overlay')?._campId===campId)rbOpenCampaignRecipients(campId);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
-  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+  if(document.getElementById('mkt-campaigns-view'))renderMktCampaigns();
 }
 
 async function rbToggleCampaignRecipientSent(campId,name,checked){
@@ -10669,7 +10615,7 @@ async function rbToggleCampaignRecipientSent(campId,name,checked){
   catch(e){notif('⚠ Failed to update: '+e.message);return;}
   if(document.getElementById('rb-camp-recip-overlay')?._campId===campId)rbOpenCampaignRecipients(campId);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
-  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+  if(document.getElementById('mkt-campaigns-view'))renderMktCampaigns();
 }
 
 function rbReopenCampaignInBulk(campId){
@@ -10697,7 +10643,7 @@ async function rbMarkCampaignRecipientSent(campId,name,phone){
   try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(campId),{recipients:c.recipients});}
   catch(e){console.error('Failed to mark campaign recipient sent:',e);}
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
-  if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
+  if(document.getElementById('mkt-campaigns-view'))renderMktCampaigns();
 }
 
 // Ticked = message sent. Explicit true/false wins. Legacy recipients (no
