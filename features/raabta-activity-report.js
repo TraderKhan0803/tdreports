@@ -53,6 +53,7 @@ function rbActSnapshotFilters(){
     client:document.getElementById('rb-act-client')?.value||'',
     itype:document.getElementById('rb-act-itype')?.value||'',
     outcome:document.getElementById('rb-act-outcome')?.value||'',
+    tpl:document.getElementById('rb-act-tpl')?.value||'',
     system:!!document.getElementById('rb-act-system')?.checked,
     cardFilter:_rbActCardFilter,
   };
@@ -72,6 +73,7 @@ function rbActRestoreFilters(snap){
   set('rb-act-to',snap.to||'');
   set('rb-act-client',snap.client||'');
   set('rb-act-itype',snap.itype||'');
+  set('rb-act-tpl',snap.tpl||'');
   const sysEl=document.getElementById('rb-act-system');if(sysEl)sysEl.checked=!!snap.system;
   _rbActCardFilter=snap.cardFilter||null;
   _rbActPendingCsr=snap.csr||'';
@@ -321,6 +323,16 @@ async function rbRenderAct(){
     }
     _rbActPendingCsr=null;_rbActPendingOutcome=null;
 
+    const tplEl=document.getElementById('rb-act-tpl');
+    if(tplEl){
+      const cur=tplEl.value;
+      tplEl.innerHTML='<option value="">All Templates</option>'+
+        (typeof RB_TEMPLATES!=='undefined'?RB_TEMPLATES:[])
+          .filter(t=>t.id!=='00')
+          .map(t=>`<option value="${t.id}">${t.id} — ${t.name}</option>`).join('');
+      tplEl.value=cur;
+    }
+
     const threads=rbGroupLogsWithEdits(allLogs);
 
     // A child whose parent_id points outside the fetched date range would
@@ -364,6 +376,7 @@ async function rbRenderAct(){
     const outstandingIds=new Set(outstanding.map(t=>t.id));
     const itype=document.getElementById('rb-act-itype')?.value||'';
     const outcome=document.getElementById('rb-act-outcome')?.value||'';
+    const tpl=document.getElementById('rb-act-tpl')?.value||'';
     const tableFiltered=generalFiltered.filter(t=>{
       const eff=rbActEffective(t);
       if(_rbActCardFilter==='complaint-resolved')return resolvedIds.has(t.id);
@@ -371,6 +384,7 @@ async function rbRenderAct(){
       if(_rbActCardFilter==='complaint-total')return(eff.outcome||'').includes('Complaint');
       if(itype&&rbActEffectiveType(eff)!==itype)return false;
       if(outcome&&eff.outcome!==outcome)return false;
+      if(tpl&&!String(eff.action||'').startsWith('Sent Template '+tpl+' —'))return false;
       return true;
     });
 
