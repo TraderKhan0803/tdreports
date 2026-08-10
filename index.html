@@ -5781,7 +5781,7 @@ function renderMktCampaigns(){
     const d=new Date(camp.date);
     const dateStr=d.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
     return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
-      <td style="font-size:12px;max-width:160px;word-break:break-word;font-weight:500;">${esc(camp.name)}</td>
+      <td style="font-size:12px;max-width:160px;word-break:break-word;font-weight:500;">${esc(rbCampaignDisplayName(camp))}</td>
       <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${dateStr}</td>
       <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
       <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
@@ -10070,7 +10070,7 @@ async function rbRenderOutreach(){
       const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
       const sentDate=new Date(camp.date);
       return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
-        <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(camp.name)}</td>
+        <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(rbCampaignDisplayName(camp))}</td>
         <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
         <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
         <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
@@ -10545,6 +10545,14 @@ function rbBulkSendMessage(){
 // attributionDays/templateName/name/id/recipients) is kept as-is so
 // attribution math and rendering elsewhere don't need to change -- only
 // these load/save/delete functions know about the DB column names.
+function rbCampaignDisplayName(camp){
+  if(!camp.templateName)return camp.name;           // user-named bulk campaign
+  const n=(camp.recipients||[]).length;
+  const d=new Date(camp.date);
+  const ds=isNaN(d)?'':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  return camp.templateName+' · '+ds+' · '+n+(n===1?' recipient':' recipients');
+}
+
 function rbCampaignFromRow(row){
   return{
     id:row.id,
