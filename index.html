@@ -2516,6 +2516,7 @@ async function _loadHistoryInBackground(currentMk){
     if(currentMode==='raabta'){
       rbRenderAll();
       if(rbCurTab==='rb-outreach')rbRenderOutreach();
+      if(rbCurTab==='rb-campaigns')rbRenderCampaigns();
     }
 
     showHistoryProgress(100,'Full history loaded');
