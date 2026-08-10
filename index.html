@@ -370,6 +370,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   }
   .bn-sub::-webkit-scrollbar{display:none;}
   .bn-sub .tab{height:38px;font-size:11px;padding:0 12px;white-space:nowrap;flex-shrink:0;}
+  /* Marketing's in-content sub-tab bar -- same .tab sizing/overflow
+     behavior as .bn-sub's, but NOT .bn-sub itself: that class is also the
+     fixed bottom-nav bar (position:fixed;bottom:56px;...), which would make
+     this in-panel bar float over the real bottom nav instead of just fixing
+     its tab sizing. */
+  .mkt-subtabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .mkt-subtabs::-webkit-scrollbar{display:none;}
+  .mkt-subtabs .tab{height:38px;font-size:11px;padding:0 12px;white-space:nowrap;flex-shrink:0;}
 }
 @media(max-width:480px){
   .kpi-row{grid-template-columns:1fr 1fr;}
@@ -1119,7 +1127,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
         <button class="ai-interpret-btn" style="margin-left:auto;" onclick="aiInterpretMkt()">✨ Interpret</button>
       </div>
       <div class="ai-interpret-panel" id="ai-panel-mkt" style="margin-bottom:10px;"></div>
-      <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:14px;">
+      <div class="mkt-subtabs" style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:14px;">
         <div class="tab active" id="nav-mkt-outreach" onclick="mktSwitchTab('outreach',this)">Outreach</div>
         <div class="tab" id="nav-mkt-campaigns" onclick="mktSwitchTab('campaigns',this)">Campaigns</div>
       </div>
