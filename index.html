@@ -324,13 +324,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   .timebar-day-hint{display:none;}
   /* Marketing — single column, scrollable tables */
   .mkt-grid{grid-template-columns:1fr !important;}
-  .mkt-grid .tw div[style*="max-height"]{max-height:60vh !important;overflow-y:auto !important;overflow-x:auto !important;-webkit-overflow-scrolling:touch;}
+  .mkt-grid .tw div[style*="max-height"]{max-height:300px !important;overflow-y:auto !important;overflow-x:auto !important;-webkit-overflow-scrolling:touch;}
   #tab-marketing{overflow-y:auto !important;}
   #tab-marketing .tw{max-height:none;}
-  /* The "✓ user · date" sent-badge is the widest element in these rows and
-     was forcing the whole row (and its scroll container) far past screen
-     width. Let it wrap instead of forcing width. */
-  .actioned-badge{font-size:9px;padding:2px 5px;white-space:normal;}
   /* Hide EC chart on mobile */
   .ec-chart-card{display:none !important;}
 
