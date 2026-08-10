@@ -776,6 +776,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
       <div class="tab" onclick="rbSwitchTab('rb-outreach',this)" id="nav-rb-outreach">Outreach <span id="rb-alert-badge" style="display:none;background:rgba(239,68,68,.2);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;font-family:\'DM Mono\',monospace;">0</span></div>
       <div class="tab" onclick="rbSwitchTab('rb-templates',this)" id="nav-rb-templates" style="display:none;">Templates</div>
       <div class="tab" onclick="rbSwitchTab('rb-activity',this)" id="nav-rb-activity">Activity</div>
+      <div class="tab" onclick="rbSwitchTab('rb-campaigns',this)" id="nav-rb-campaigns">Campaigns</div>
     </div>
     <!-- Exec tabs removed — unified single screen -->
     <!-- Exec tabs -->
@@ -1374,6 +1375,10 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           </table>
         </div>
       </div>
+    </div>
+
+    <div class="rb-panel" id="tab-rb-campaigns" style="overflow-y:auto;padding:14px 18px;">
+      <div id="rb-campaigns-body"></div>
     </div>
 
     <!-- ═══ RAABTA: CSR STATS (drill-through only — reached by clicking a CSR's name in the Activity Report; no tab button) ═══ -->
@@ -7620,6 +7625,7 @@ function bnUpdateSubTabs(mode){
       {id:'rb-outreach',label:'Outreach',fn:()=>rbSwitchTab('rb-outreach')},
       ...(curUser?.role!=='viewer'?[{id:'rb-templates',label:'Templates',fn:()=>rbSwitchTab('rb-templates')}]:[]),
       {id:'rb-activity',label:'Activity',fn:()=>rbSwitchTab('rb-activity')},
+      {id:'rb-campaigns',label:'Campaigns',fn:()=>rbSwitchTab('rb-campaigns')},
     ],
     exec:[
       {id:'ec-report',label:'Report',fn:()=>ecSwitchTab('report')},
@@ -10063,54 +10069,7 @@ async function rbRenderOutreach(){
      filterHtml:''},
   ];
 
-  // ── Campaigns card ────────────────────────────────────────────────────────
-  const camps=RB.campaigns||[];
-  let campaignsHtml='';
-  if(camps.length){
-    const rows=camps.map(camp=>{
-      const attr=rbGetCampaignAttribution(camp);
-      const sentCount=camp.recipients.filter(rbRecipSent).length;
-      const conv=sentCount?Math.round(attr.orders/sentCount*100):0;
-      const sentDate=new Date(camp.date);
-      return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
-        <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(rbCampaignDisplayName(camp))}</td>
-        <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
-        <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
-        <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--grn);">${attr.orders}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtFull(attr.revenue)}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;color:${conv>=20?'var(--grn)':conv>=10?'var(--pur)':'var(--t3)'};">${conv}%</td>
-        <td style="text-align:right;padding:4px 8px;"><button onclick="event.stopPropagation();rbDeleteCampaign('${camp.id}')" style="background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:4px;color:var(--red);font-size:10px;cursor:pointer;padding:2px 6px;" title="Remove">🗑</button></td>
-      </tr>`;
-    }).join('');
-    campaignsHtml=`<div class="rb-card" style="margin-bottom:12px;">
-      <div class="rb-card-hd">
-        <div>
-          <div class="rb-card-title" style="color:var(--blu)">📊 Campaigns</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:2px;font-family:'DM Mono',monospace;">${camps.length} campaign${camps.length!==1?'s':''} · attribution from uploaded orders · click a row to see recipients</div>
-        </div>
-        <button onclick="const g=document.getElementById('rb-camps-guide');g.style.display=g.style.display==='none'?'block':'none'" style="padding:4px 11px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;white-space:nowrap;">? How it works</button>
-      </div>
-      <div id="rb-camps-guide" style="display:none;padding:14px 16px;background:rgba(59,130,246,.05);border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2);line-height:1.9;">
-        <strong style="color:var(--blu);display:block;margin-bottom:10px;font-size:12px;">How Campaign Attribution Works</strong>
-        <strong>How orders are matched</strong><br>When you save a campaign, we record the recipient names and the moment it was saved. Every time you load this tab, we scan your uploaded Excel orders and find any order from those customers placed within the attribution window. No manual tracking needed — results update automatically as you upload new data.<br><br>
-        <strong>How revenue is calculated</strong><br>Revenue = total of the <em>Total Sales</em> column for all matched orders that were actually delivered (cancelled/pending orders don't count). It uses the same figures shown across your dashboard, taken directly from your Excel uploads. Orders not yet uploaded will not appear here.<br><br>
-        <strong>Conv% — Conversion rate</strong><br>Unique customers who placed at least one matched, delivered order ÷ total recipients × 100.<br>Example: 20 recipients, 4 ordered within 7 days → 20% conversion.<br><span style="color:var(--grn);">■</span> Green ≥20% &nbsp;·&nbsp; <span style="color:var(--pur);">■</span> Purple ≥10% &nbsp;·&nbsp; <span style="color:var(--t3);">■</span> Grey below 10%<br><br>
-        <strong>Attribution window</strong><br>Set per campaign when you save it (1–90 days, default 7 days). Shorter windows give higher confidence that your message drove the order. 7 days works well for grocery and delivery businesses.<br><br>
-        <strong>Does it work for Facebook or Instagram campaigns?</strong><br>Not automatically. Attribution is name-based — only customers in your Raabta recipient list are tracked. If someone saw a social ad and ordered but wasn't in the campaign list, they won't appear here.<br><strong>Workaround:</strong> After running a social campaign, create a manual campaign in Raabta listing the customers you targeted, then check results after your window closes.<br><br>
-        <strong style="color:var(--acc);">Important caveats</strong><br>· Only orders in your <strong>uploaded Excel data</strong> are counted — live or un-uploaded orders are invisible to this feature.<br>· A customer in multiple overlapping campaigns is counted in all of them — no cross-campaign de-duplication.<br>· Matching is name-based using the same normalisation as the rest of the dashboard. Name spelling variations can cause missed matches.
-      </div>
-      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table class="dt" style="width:100%;min-width:560px;">
-          <thead><tr><th>Campaign</th><th>Date</th><th>Template</th><th>By</th><th style="text-align:right">Sent</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th><th style="text-align:right">Conv%</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>`;
-  }
-
-  el.innerHTML=alertsHtml+sections.map(s=>outreachSection(s.id,s.title,s.color,s.rows,s.cols,s.filterHtml,s.subtitle,s.guide)).join('')+campaignsHtml;
+  el.innerHTML=alertsHtml+sections.map(s=>outreachSection(s.id,s.title,s.color,s.rows,s.cols,s.filterHtml,s.subtitle,s.guide)).join('');
 
   // Wire row click for customer modal (not on bell clicks)
   sections.forEach(s=>{
@@ -10610,7 +10569,7 @@ async function rbDeleteCampaign(id){
   RB.campaigns=RB.campaigns.filter(c=>c.id!==id);
   const recipOverlay=document.getElementById('rb-camp-recip-overlay');
   if(recipOverlay&&recipOverlay._campId===id)recipOverlay.remove();
-  if(rbCurTab==='rb-outreach')rbRenderOutreach();
+  if(rbCurTab==='rb-campaigns')rbRenderCampaigns();
   if(document.getElementById('mkt-campaigns-body'))renderMktCampaigns();
 }
 
@@ -10796,6 +10755,7 @@ async function rbSaveCampaign(name,templateId,templateName,recipients,attributio
   RB.campaigns.unshift(camp);
   notif(`✓ Campaign "${name}" saved (${recipients.length} recipients, ${attributionDays}d window)`);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
+  if(rbCurTab==='rb-campaigns')rbRenderCampaigns();
 }
 
 function rbLocalDayKey(d){
@@ -10818,7 +10778,7 @@ async function rbAutoSaveTemplateSend(cname,phone,tid,tname){
     existing.recipients.push({name:cname,phone:phone||'',sent:true});
     try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(existing.id),{recipients:existing.recipients});}
     catch(e){console.error('Failed to append campaign recipient:',e);}
-    if(rbCurTab==='rb-outreach')rbRenderOutreach();
+    if(rbCurTab==='rb-campaigns')rbRenderCampaigns();
     return;
   }
   await rbSaveCampaign(tname+' → '+cname,tid,tname,[{name:cname,phone:phone||'',sent:true}],7);
@@ -10953,6 +10913,7 @@ function rbSwitchTab(name, el){
   if(name==='rb-outreach'){rbRenderOutreach();alertsUpdateBadge();}
   if(name==='rb-templates'){const _ta=getUserAccess(curUser);if(!_ta.templates){notif('⚠ Access restricted');return;}rbRenderTpls();}
   if(name==='rb-activity'){rbRenderAct();}
+  if(name==='rb-campaigns'){rbRenderCampaigns();}
 }
 
 // ── rbInit updated ────────────────────────────────────────────────────────────
@@ -10976,6 +10937,7 @@ const RB_TEMPLATES=[
 ];
 </script>
 <script src="features/raabta-activity-report.js"></script>
+<script src="features/raabta-campaigns.js"></script>
 <script src="features/raabta-csr-stats.js"></script>
 </body>
 </html>
