@@ -9097,16 +9097,44 @@ document.getElementById('rb-cm').addEventListener('click',function(e){if(e.targe
 document.getElementById('rb-am').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 document.getElementById('alert-modal').addEventListener('click',function(e){if(e.target===this)closeAlertModal();});
 
-// Escape key closes all modals
+// Escape closes whatever modal is currently open. Self-discovering: any new
+// modal that uses either the .open class or style.display='block' is covered
+// automatically, so this never needs editing when a modal is added.
+const _MODAL_CLOSERS={
+  'alert-modal':()=>closeAlertModal(),
+  'rb-cm':()=>rbCloseCM()
+};
+function _closeTopModal(){
+  // 1. class-based modals
+  const opened=[...document.querySelectorAll('.open')].filter(el=>{
+    const s=getComputedStyle(el);
+    return s.position==='fixed'||el.classList.contains('rb-modal')||el.id==='alert-modal'||el.id==='rb-cm'||el.id==='rb-am'||el.id==='bulk-msg-modal';
+  });
+  if(opened.length){
+    const el=opened[opened.length-1]; // topmost / most recently opened
+    const fn=_MODAL_CLOSERS[el.id];
+    if(fn){fn();}else{el.classList.remove('open');}
+    return true;
+  }
+  // 2. display-based overlays. edit-perms-overlay is inserted/removed
+  // wholesale (insertAdjacentHTML/.remove()) rather than toggling
+  // display:block<->none like the other three, so its own presence in the
+  // DOM -- not its inline display value -- is what "open" means for it.
+  const overlays=['edit-perms-overlay','clear-modal','super-overlay','admin-overlay'];
+  for(const id of overlays){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    if(id==='edit-perms-overlay'){el.remove();return true;}
+    if(el.style.display==='block'){el.style.display='none';return true;}
+  }
+  return false;
+}
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape')return;
-  if(document.getElementById('alert-modal').classList.contains('open')){closeAlertModal();return;}
-  if(document.getElementById('rb-cm').classList.contains('open')){rbCloseCM();return;}
-  if(document.getElementById('rb-am').classList.contains('open')){document.getElementById('rb-am').classList.remove('open');return;}
-  ['admin-overlay','super-overlay','clear-modal'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&el.style.display==='block'){el.style.display='none';}
-  });
+  // Don't steal Escape from an open <select> or a text input mid-edit
+  const t=e.target;
+  if(t&&(t.tagName==='SELECT'))return;
+  _closeTopModal();
 });
 
 // ═══════════════════════════════════════════════
@@ -10628,6 +10656,7 @@ function rbOpenCampaignRecipients(campId){
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  document.addEventListener('keydown',function esc(e){if(e.key==='Escape'){overlay.remove();document.removeEventListener('keydown',esc);}});
   renderList();
 }
 
