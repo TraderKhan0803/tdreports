@@ -324,9 +324,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
   .timebar-day-hint{display:none;}
   /* Marketing — single column, scrollable tables */
   .mkt-grid{grid-template-columns:1fr !important;}
-  .mkt-grid .tw div[style*="max-height"]{max-height:none !important;overflow-y:visible !important;}
+  .mkt-grid .tw div[style*="max-height"]{max-height:60vh !important;overflow-y:auto !important;overflow-x:auto !important;-webkit-overflow-scrolling:touch;}
   #tab-marketing{overflow-y:auto !important;}
   #tab-marketing .tw{max-height:none;}
+  /* The "✓ user · date" sent-badge is the widest element in these rows and
+     was forcing the whole row (and its scroll container) far past screen
+     width. Let it wrap instead of forcing width. */
+  .actioned-badge{font-size:9px;padding:2px 5px;white-space:normal;}
   /* Hide EC chart on mobile */
   .ec-chart-card{display:none !important;}
 
@@ -1156,7 +1160,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             Sorted by most recent first order. <strong>Value</strong> is what that first order was worth.<br>
             <strong>Tip:</strong> Widen "Last N days" after time away to catch anyone missed; narrow it to focus only on the freshest arrivals.
           </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
+          <div style="flex:1;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">First Order</th><th style="text-align:right">Value</th><th>Phone</th></tr></thead>
             <tbody id="mkt-welcome-body"></tbody></table>
           </div>
@@ -1188,7 +1192,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <span style="color:var(--grn);">● On schedule</span> — within their normal reorder cycle. May not need contact yet.<br>
             <strong>Examples:</strong> 30–60 days = customers lost last month (highest priority) · 60–90 days = drifting away · 90+ days = long-term lapsed
           </div>
-          <div style="flex:1;overflow-y:auto;max-height:320px;">
+          <div style="flex:1;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:320px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Order</th><th style="text-align:right">Days</th><th style="text-align:right">Avg Gap</th><th>Signal</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th></tr></thead>
             <tbody id="mkt-lapsed-body"></tbody></table>
           </div>
@@ -1213,7 +1217,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             <strong>Attempts</strong> counts every order placed regardless of outcome; <strong>Last Attempt</strong> is the most recent one.<br>
             <strong>Tip:</strong> Multiple attempts with zero deliveries often points to an address, payment, or availability issue worth resolving directly rather than a generic follow-up.
           </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
+          <div style="flex:1;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Last Attempt</th><th style="text-align:right">Attempts</th><th style="text-align:right">Phone</th></tr></thead>
             <tbody id="mkt-never-body"></tbody></table>
           </div>
@@ -1239,7 +1243,7 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
             Customers whose average order value meets or exceeds the threshold, with at least 2 orders on record. Raise the threshold to focus on your very highest spenders; lower it to see a broader high-value segment.<br>
             <strong>Tip:</strong> Sort by Last Order to spot high-value customers who've gone quiet — they're worth a personal follow-up before they lapse entirely.
           </div>
-          <div style="flex:1;overflow-y:auto;max-height:280px;">
+          <div style="flex:1;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:280px;">
             <table class="dt"><thead><tr><th>Customer</th><th>Type</th><th style="text-align:right">Avg Order</th><th style="text-align:right">Orders</th><th style="text-align:right">Total Sales</th><th style="text-align:right">Last Order</th></tr></thead>
             <tbody id="mkt-vip-body"></tbody></table>
           </div>
