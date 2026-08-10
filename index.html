@@ -1000,9 +1000,9 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div class="sh mb12"><div class="stitle">Products</div><div class="hint" id="prod-list-count"></div></div>
           <div class="tw st" style="max-height:340px;"><table class="dt" id="tbl-prods">
             <thead><tr>
-              <th onclick="sortTable('prods','name')" style="cursor:pointer;">Product ↕</th>
-              <th onclick="sortTable('prods','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
-              <th onclick="sortTable('prods','rev')" style="text-align:right;cursor:pointer;">Revenue ↕</th>
+              <th>Product</th>
+              <th style="text-align:right">Qty</th>
+              <th style="text-align:right">Revenue</th>
             </tr></thead>
             <tbody id="body-prods"></tbody>
           </table></div>
@@ -1018,9 +1018,9 @@ tr:hover .alert-bell.no-alert{opacity:.45;}
           <div class="tw st" style="max-height:340px;"><table class="dt" id="tbl-prod-orders">
             <thead><tr>
               <th>Order ID</th>
-              <th onclick="sortTable('prod-orders','cust')" style="cursor:pointer;">Customer ↕</th>
-              <th onclick="sortTable('prod-orders','date')" style="text-align:right;cursor:pointer;">Date ↕</th>
-              <th onclick="sortTable('prod-orders','qty')" style="text-align:right;cursor:pointer;">Qty ↕</th>
+              <th>Customer</th>
+              <th style="text-align:right">Date</th>
+              <th style="text-align:right">Qty</th>
             </tr></thead>
             <tbody id="body-prod-orders"></tbody>
           </table></div>
@@ -5791,7 +5791,7 @@ function renderMktCampaigns(){
     const dateStr=d.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
     return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
       <td style="font-size:12px;max-width:160px;word-break:break-word;font-weight:500;">${esc(rbCampaignDisplayName(camp))}</td>
-      <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${dateStr}</td>
+      <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;" data-sort="${d.getTime()}">${dateStr}</td>
       <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
       <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
@@ -5801,6 +5801,7 @@ function renderMktCampaigns(){
       <td style="text-align:right;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;">${camp.attributionDays}d</td>
     </tr>`;
   }).join('');
+  initSortableTable('mkt-campaigns-body',[{key:'camp',type:'text'},{key:'date',type:'date'},{key:'tpl',type:'text'},{key:'by',type:'text'},{key:'sent',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'rev',type:'num',align:'right'},{key:'conv',type:'num',align:'right'},{key:'win',type:'num',align:'right'}]);
 }
 
 function getMktToday(){
@@ -5984,12 +5985,13 @@ function renderMktVIP(){
   custs.forEach(c=>{
     const daysSince=c.LastOrder?Math.floor((today-c.LastOrder)/86400000):999;
     const recColor=daysSince>60?'var(--red)':daysSince>30?'var(--acc)':'var(--grn)';
-    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer,c.Type==='B2B'));
+    frag.appendChild(mktRow(`<td><span style="color:var(--acc);text-decoration:underline">${esc(c.Customer)}</span></td><td><span class="bdg ${c.Type==='B2B'?'b-b2b':'b-b2c'}">${c.Type}</span></td><td style="text-align:right;font-family:\'DM Mono\',monospace;color:var(--acc)">${fmtFull(c.AvgOrder)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${c.Orders}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${fmtFull(c.Sales)}</td><td style="text-align:right;font-size:11px;color:${recColor}" data-sort="${c.LastOrder?.getTime()||0}">${c.LastOrder?fmtDate(c.LastOrder)+'  ('+daysSince+'d)':'—'}</td>`,c.Customer,c.Type==='B2B'));
   });
   const tb=document.getElementById('mkt-vip-body');if(!tb)return;tb.innerHTML='';
   if(!custs.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No customers meeting this threshold</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
   document.getElementById('mkt-vip-count').textContent=custs.length+' customers with avg order ≥ PKR '+threshold.toLocaleString();
+  initSortableTable('mkt-vip-body',[{key:'cust',type:'text'},{key:'type',type:'text'},{key:'avg',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'sales',type:'num',align:'right'},{key:'last',type:'date',align:'right'}]);
 }
 
 function downloadMktList(type){
@@ -9737,22 +9739,7 @@ function _renderProdTable(){
   const tb=document.getElementById('body-prods');tb.innerHTML='';
   if(!prodChartData.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="3" style="text-align:center;padding:30px;color:var(--t3)">No product data</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
-  // Wire sortable headers
-  const thead=document.querySelector('#tbl-prods thead tr');
-  if(thead){
-    const cols=[{key:'name',type:'text'},{key:'qty',type:'num'},{key:'rev',type:'num'}];
-    [...thead.cells].forEach((th,i)=>{
-      const col=cols[i];if(!col)return;
-      th.className='sortable'+(_prodSortState.col===col.key?' '+_prodSortState.dir:'');
-      th.style.cursor='pointer';
-      th.onclick=()=>{
-        const sameCol=_prodSortState.col===col.key;
-        _prodSortState={col:col.key,dir:sameCol&&_prodSortState.dir==='desc'?'asc':'desc',type:col.type};
-        _sortProds();_renderProdTable();
-        if(selProd){const p=prodChartData.find(x=>x.name===selProd);if(p)renderProdOrders(p);}
-      };
-    });
-  }
+  initSortableTable('body-prods',[{key:'name',type:'text'},{key:'qty',type:'num',align:'right'},{key:'rev',type:'num',align:'right'}]);
 }
 
 function selectProduct(name){
@@ -9816,12 +9803,13 @@ function renderProdOrders(p){
   const frag=document.createDocumentFragment();
   lines.forEach(d=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace">${esc(d.date)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.qty}</td>`;
+    tr.innerHTML=`<td><span style="color:var(--acc);text-decoration:underline;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px" onclick="gotoOrderFromPS('${esc(d.cust)}')">${esc(d.oid)}</span>${getBellHtml('order',d.oid)}</td><td>${esc(d.cust)}</td><td style="text-align:right;font-size:11px;font-family:\'DM Mono\',monospace" data-sort="${d.dateVal?.getTime()||0}">${esc(d.date)}</td><td style="text-align:right;font-family:\'DM Mono\',monospace">${d.qty}</td>`;
     frag.appendChild(tr);
   });
   const tb=document.getElementById('body-prod-orders');tb.innerHTML='';
   if(!lines.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="4" style="text-align:center;padding:20px;color:var(--t3)">No orders</td>';tb.appendChild(tr);}
   else tb.appendChild(frag);
+  initSortableTable('body-prod-orders',[{key:'oid',type:'text'},{key:'cust',type:'text'},{key:'date',type:'date',align:'right'},{key:'qty',type:'num',align:'right'}]);
 }
 
 // ── OUTREACH TAB — full rebuild with filters, counts, alerts, sorting ──────────

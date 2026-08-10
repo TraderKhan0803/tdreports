@@ -160,7 +160,7 @@ function rbActRowHTML(l,kind,fuTarget){
   const selCell=isSuper?`<td style="text-align:center;${firstTd}" onclick="event.stopPropagation();">${selectable?`<input type="checkbox" class="rb-act-sel-cb" data-id="${l.id}"${_rbActSelected.has(l.id)?' checked':''} onchange="rbActToggleSelect('${l.id}',this.checked)" style="accent-color:var(--acc);cursor:pointer;">`:''}</td>`:'';
   return`<tr${trStyle?` style="${trStyle}"`:''}>
     ${selCell}
-    <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${isSuper?'':firstTd}">${rbFt(l.ts)}</td>
+    <td style="white-space:nowrap;color:var(--t3);font-family:'DM Mono',monospace;font-size:10px;${isSuper?'':firstTd}" data-sort="${new Date(l.ts).getTime()||0}">${rbFt(l.ts)}</td>
     <td><span style="font-weight:700;color:var(--acc);cursor:pointer;text-decoration:underline;" onclick="rbOpenCsrStats('${esc(l.user)}')">${esc(l.user)}</span></td>
     <td style="font-weight:500;color:var(--txt);cursor:pointer;text-decoration:underline;" onclick="goToDashboardCustomer('${esc(l.customerName)}','Raabta Activity Report')">${esc(l.customerName)}</td>
     <td style="color:var(--txt)">${tag}${ctxTag}${esc(l.action)}</td>
@@ -280,6 +280,10 @@ async function rbRenderAct(){
   if(theadRow)theadRow.innerHTML=(isSuper?'<th style="width:26px;"><input type="checkbox" id="rb-act-selall" title="Select all" onchange="rbActToggleSelectAll(this.checked)" style="accent-color:var(--acc);cursor:pointer;"></th>':'')+'<th>Time</th><th>User</th><th>Customer</th><th>Action</th><th>Outcome / Note</th><th></th>';
   const colspan=isSuper?7:6;
   tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:16px;font-size:11px;">Loading…</td></tr>';
+  // The select-all checkbox <th> only exists for super-admins, so the cols
+  // array passed to initSortableTable must shift in lockstep with it --
+  // otherwise every column's sort would be off by one for that role.
+  const actSortCols=(isSuper?[{key:''}]:[]).concat([{key:'time',type:'date'},{key:'user',type:'text'},{key:'cust',type:'text'},{key:'action',type:'text'},{key:'outcome',type:'text'},{key:''}]);
   const summaryEl=document.getElementById('rb-act-summary');
   try{
     // Only the date range is filtered server-side -- everything else is
@@ -388,9 +392,10 @@ async function rbRenderAct(){
       return true;
     });
 
-    if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';rbActPruneSelected();rbActRenderBulkBar();rbActSyncSelectAllCheckbox();return;}
+    if(!tableFiltered.length){tb.innerHTML='<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--t3);padding:26px;font-family:\'DM Mono\',monospace">No activity matches these filters.</td></tr>';initSortableTable('rb-act-body',actSortCols);rbActPruneSelected();rbActRenderBulkBar();rbActSyncSelectAllCheckbox();return;}
     const topLevel=rbActNestChildren(tableFiltered,contextParents);
     tb.innerHTML=topLevel.map(rbActThreadRowsHTML).join('');
+    initSortableTable('rb-act-body',actSortCols);
     rbActPruneSelected();
     rbActRenderBulkBar();
     rbActSyncSelectAllCheckbox();

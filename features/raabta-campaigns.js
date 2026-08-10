@@ -86,7 +86,7 @@ function rbRenderCampaigns(){
     const sentDate=new Date(camp.date);
     return`<tr onclick="rbOpenCampaignRecipients('${camp.id}')" style="cursor:pointer;">
       <td style="font-size:12px;max-width:140px;word-break:break-word;">${esc(rbCampaignDisplayName(camp))}</td>
-      <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;">${sentDate.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+      <td style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap;" data-sort="${sentDate.getTime()}">${sentDate.toLocaleString('en-PK',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
       <td style="font-size:11px;color:var(--t2);">${camp.templateName?esc(camp.templateName):'—'}</td>
       <td style="font-size:11px;color:var(--t3);">${esc(camp.sentBy||'—')}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;">${sentCount}</td>
@@ -118,8 +118,9 @@ function rbRenderCampaigns(){
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="dt" style="width:100%;min-width:560px;">
         <thead><tr><th>Campaign</th><th>Date</th><th>Template</th><th>By</th><th style="text-align:right">Sent</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th><th style="text-align:right">Conv%</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
+        <tbody id="rb-campaigns-tbody">${rows}</tbody>
       </table>
     </div>
   </div>`;
+  initSortableTable('rb-campaigns-tbody',[{key:'camp',type:'text'},{key:'date',type:'date'},{key:'tpl',type:'text'},{key:'by',type:'text'},{key:'sent',type:'num',align:'right'},{key:'orders',type:'num',align:'right'},{key:'rev',type:'num',align:'right'},{key:'conv',type:'num',align:'right'},{key:''}]);
 }
