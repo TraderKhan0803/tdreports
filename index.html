@@ -451,7 +451,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .rb-lt{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;}
 .rb-la{font-weight:600;color:var(--txt);}
 .rb-lm{color:var(--t3);font-size:10px;font-family:\'DM Mono\',monospace;}
-.rb-ln{color:var(--t2);margin-top:3px;}
+.rb-ln{color:var(--t2);margin-top:3px;white-space:pre-wrap;}
 .rb-lo{color:var(--acc);font-size:10px;margin-top:2px;font-family:\'DM Mono\',monospace;}
 .rb-osel{padding:5px 9px;border-radius:var(--r2);border:1px solid var(--bdr);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt);background:var(--sur2);outline:none;}
 .rb-osel:focus{border-color:var(--acc);}
@@ -7948,7 +7948,7 @@ function rbOpenC(id){
         }
         const normPhone=rbNormalizePhone(custPhone);
         const lnk=normPhone?'https://wa.me/'+normPhone+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
-        return '<button class="rb-tpl-btn" data-cid="'+c.id+'" data-tid="'+t.id+'" data-lnk="'+lnk.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" onclick="rbSTplBtn(this)"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
+        return '<button class="rb-tpl-btn" data-cid="'+c.id+'" data-tid="'+t.id+'" data-lnk="'+lnk.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" data-msg="'+msg.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" onclick="rbSTplBtn(this)"><span class="tn">'+t.id+'. '+esc(t.name)+'</span><span class="tt">'+esc(t.tim)+'</span></button>';
       }).join('');
     }
   }
@@ -8453,7 +8453,7 @@ function rbTplSendFilled(cid,tid,custPhone,placeholders){
   const normPhone2=rbNormalizePhone(custPhone);
   const lnk=normPhone2?'https://wa.me/'+normPhone2+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
   window.open(lnk,'_blank');
-  rbSTpl(cid,tid,lnk);
+  rbSTpl(cid,tid,lnk,msg);
 }
 
 function rbNormalizePhone(raw){
@@ -8472,9 +8472,10 @@ function rbSTplBtn(btn){
   const cid=btn.dataset.cid;
   const tid=btn.dataset.tid;
   const lnk=btn.dataset.lnk;
+  const msg=btn.dataset.msg||'';
   if(!cid||!tid||!lnk)return;
   window.open(lnk,'_blank');
-  rbSTpl(cid,tid,lnk);
+  rbSTpl(cid,tid,lnk,msg);
   // Auto-save 1:1 sends as campaigns (grouped per template+day+sender) so they appear in attribution
   const c=RB.custs.find(x=>x.id===cid);
   const t=RB_TEMPLATES.find(x=>x.id===tid);
@@ -8483,10 +8484,10 @@ function rbSTplBtn(btn){
   }
 }
 
-async function rbSTpl(cid,tid,lnk){
+async function rbSTpl(cid,tid,lnk,msg){
   const c=RB.custs.find(x=>x.id===cid);const t=RB_TEMPLATES.find(x=>x.id===tid);if(!c||!t)return;
   const parentId=await rbEnsureAlertParent(cid,c.name)||'';
-  const logId=await rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'','','message','',false,parentId);
+  const logId=await rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'',msg||'','message','',false,parentId);
   RB.sessionParent=logId||null; // template becomes the session parent for notes; overwrites if multiple sends
   rbMarkSentThisSession(cid);
   rbRenderMH(c);
@@ -10430,16 +10431,16 @@ function rbBulkSendNext(){
   window.open('https://wa.me/'+norm+'?text='+encodeURIComponent(msg),'_blank');
   _bulkSentAt[next.name.toLowerCase()]=new Date().toISOString();
   if(_bulkReopenCampId)rbMarkCampaignRecipientSent(_bulkReopenCampId,next.name,next.phone);
-  rbBulkLogSend(next,tid,tpl?tpl.name:'');
+  rbBulkLogSend(next,tid,tpl?tpl.name:'',msg);
   rbBulkRenderResults(_bulkMsgList,_bulkLastLabel,false);
 }
 
-async function rbBulkLogSend(recipient,tid,tname){
+async function rbBulkLogSend(recipient,tid,tname,msg){
   const effTid=tid||'custom';
   const effTname=tname||'Custom Message';
   const custRecord=RB.custs.find(c=>c.name.toLowerCase()===recipient.name.toLowerCase());
   const cid=custRecord?.id||'';
-  await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'','','message');
+  await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'',msg||'','message');
   await rbAutoSaveTemplateSend(recipient.name,recipient.phone||'',effTid,effTname);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
