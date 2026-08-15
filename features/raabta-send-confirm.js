@@ -1,110 +1,65 @@
-// ── RAABTA: POST-SEND CONFIRMATION ─────────────────────────────────────────────
-// After a template/message send, WhatsApp opens in another tab. If the number is
-// dead ("not on WhatsApp"), the dashboard never hears about it — it already logged
-// the send optimistically. This floating bar lets the CSR flag a bounce in ONE tap
-// (each reason chip marks it directly), and (for blank sends with no captured text)
-// paste what they actually sent. Corrections are appended as edits (edited_from =
-// the send's id), matching the codebase's append-only log-edit model; reporting
-// reads the latest edit.
+// ── RAABTA: MARK SEND AS NOT DELIVERED (row action) ────────────────────────────
+// A template / quick-WA send is logged optimistically at click time. If it bounced
+// (dead number, wrong number), the CSR flags it from the Activity Report row via
+// the "✗ Didn't deliver" button — no popup, no timer. Flagging appends an edit
+// (edited_from = the send's id) with a "Not delivered" outcome, so it drops out of
+// the Messages Sent KPI, and it unwinds the recipient from campaign attribution.
+// The action lives on the durable log row, so past sends can be corrected too.
 
-let _rbSendConfirmCtx=null;
-let _rbSendConfirmTimer=null;
-
-function rbSendConfirmClose(){
-  if(_rbSendConfirmTimer){clearTimeout(_rbSendConfirmTimer);_rbSendConfirmTimer=null;}
-  document.getElementById('rb-send-confirm')?.remove();
-  _rbSendConfirmCtx=null;
-}
-
-function rbShowSendConfirm(opts){
-  const {logId,cid,cname,tid,tname,msg,campId}=opts||{};
-  if(!logId)return;
-  rbSendConfirmClose();
-  _rbSendConfirmCtx={logId,cid,cname,tid,tname:tname||'',msg:msg||'',campId:campId||''};
-  const blank=!(msg&&msg.trim());
-
-  const chip='padding:5px 10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:20px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;';
-
-  const bar=document.createElement('div');
-  bar.id='rb-send-confirm';
-  bar.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:900;'
-    +'background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);'
-    +'box-shadow:0 8px 30px rgba(0,0,0,.45);padding:12px 14px;max-width:94vw;width:440px;'
-    +"font-family:'DM Sans',sans-serif;";
-
-  bar.innerHTML=
-     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">'
-    +  '<span style="font-size:13px;color:var(--txt);flex:1;">&#10003; Sent to <b>'+esc(cname)+'</b></span>'
-    +  '<button id="rb-sc-x" title="Dismiss" style="background:transparent;border:none;color:var(--t3);font-size:16px;cursor:pointer;line-height:1;">&times;</button>'
+function rbActMarkNotDelivered(btn){
+  const logId=btn.dataset.lid,cid=btn.dataset.cid,cname=btn.dataset.cname,
+        action=btn.dataset.action,ts=btn.dataset.ts,user=btn.dataset.user;
+  const chip='padding:7px 14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:20px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;';
+  const overlay=document.createElement('div');
+  overlay.id='rb-nd-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML='<div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;width:340px;max-width:95vw;">'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:4px;">Mark as not delivered</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:14px;">'+esc(cname)+' &mdash; why didn\'t it reach them?</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    +  '<button class="rb-nd-reason" data-reason="Not on WhatsApp" style="'+chip+'">Not on WhatsApp</button>'
+    +  '<button class="rb-nd-reason" data-reason="Wrong number" style="'+chip+'">Wrong number</button>'
+    +  '<button class="rb-nd-reason" data-reason="Other" style="'+chip+'">Other</button>'
     +'</div>'
-    +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">'
-    +  '<span style="font-size:11px;color:var(--t3);">Didn\'t reach them? Tap a reason:</span>'
-    +  '<button class="rb-sc-reason" data-reason="Not on WhatsApp" style="'+chip+'">Not on WhatsApp</button>'
-    +  '<button class="rb-sc-reason" data-reason="Wrong number" style="'+chip+'">Wrong number</button>'
-    +  '<button class="rb-sc-reason" data-reason="Other" style="'+chip+'">Other</button>'
-    +'</div>'
-    +(blank
-      ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'
-        +'<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;margin-bottom:6px;">Blank message &mdash; paste what you sent (optional)</div>'
-        +'<textarea id="rb-sc-note-inp" placeholder="What did you send in WhatsApp&hellip;" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:7px 9px;border-radius:var(--r2);font-family:\'DM Sans\',sans-serif;font-size:12px;min-height:48px;resize:vertical;outline:none;box-sizing:border-box;"></textarea>'
-        +'<button id="rb-sc-note-save" style="margin-top:6px;padding:5px 12px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);border-radius:var(--r2);color:var(--grn);font-size:11px;font-weight:600;cursor:pointer;">Save message</button>'
-        +'</div>'
-      : '');
-
-  document.body.appendChild(bar);
-
-  document.getElementById('rb-sc-x').onclick=rbSendConfirmClose;
-  bar.querySelectorAll('.rb-sc-reason').forEach(b=>{
-    b.onclick=function(){rbSendConfirmFail(b.dataset.reason);};
+    +'<div style="margin-top:14px;text-align:right;"><button id="rb-nd-cancel" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;">Cancel</button></div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('rb-nd-cancel').onclick=function(){overlay.remove();};
+  document.addEventListener('keydown',function esc(e){if(e.key==='Escape'){overlay.remove();document.removeEventListener('keydown',esc);}});
+  overlay.querySelectorAll('.rb-nd-reason').forEach(b=>{
+    b.onclick=function(){overlay.remove();rbDoMarkNotDelivered(logId,cid,cname,action,ts,user,b.dataset.reason);};
   });
-  const noteSave=document.getElementById('rb-sc-note-save');
-  if(noteSave){
-    noteSave.onclick=rbSendConfirmAddNote;
-    document.getElementById('rb-sc-note-inp').addEventListener('focus',function(){
-      if(_rbSendConfirmTimer){clearTimeout(_rbSendConfirmTimer);_rbSendConfirmTimer=null;}
-    });
-  }
-
-  _rbSendConfirmTimer=setTimeout(rbSendConfirmClose,12000); // happy path: auto-dismiss if untouched
 }
 
-async function rbSendConfirmRefresh(cid,cname){
-  if(RB.acid===cid){const cust=RB.custs.find(x=>x.id===cid);if(cust)rbRenderMH(cust);}
-  if(document.getElementById('rb-act-body')&&typeof rbRenderAct==='function')await rbRenderAct();
+async function rbDoMarkNotDelivered(logId,cid,cname,action,ts,user,reason){
+  // Append an edit that supersedes the send: "Not delivered" outcome keeps it in
+  // the log as an attempt but excludes it from the Messages Sent count. The
+  // original send row (nested under it) still shows the message text, so nothing
+  // is lost. The note is left empty on the edit itself.
+  await rbLogA(cid,cname,'Send not delivered','Not delivered: '+reason,'','message',logId,true);
+  notif('Marked as not delivered — '+reason);
+  // template name lives after the "— " in "Sent Template <id> — <name>"
+  const dash=(action||'').indexOf('— ');
+  const tname=dash>=0?action.slice(dash+2).trim():'';
+  await rbUnwindCampaignSend(cname,tname,rbLocalDayKey(new Date(ts)),user);
+  if(typeof rbRenderAct==='function')await rbRenderAct();
+  if(RB.acid===cid){const cust=RB.custs.find(x=>x.id===cid);if(cust&&typeof rbRenderMH==='function')rbRenderMH(cust);}
   if(document.getElementById('rb-comm-overlay')&&typeof rbRefreshCommHistory==='function')await rbRefreshCommHistory(cid,cname);
 }
 
-async function rbSendConfirmFail(reason){
-  const c=_rbSendConfirmCtx;if(!c)return;
-  // Append an edit that supersedes the send: keeps it in the log as an attempt,
-  // sets a "Not delivered" outcome (excluded from the Messages Sent count),
-  // and preserves the attempted message text in the note.
-  await rbLogA(c.cid,c.cname,'Send not delivered','Not delivered: '+reason,c.msg||'','message',c.logId,true);
-  const cid=c.cid,cname=c.cname,tname=c.tname,campId=c.campId;
-  rbSendConfirmClose();
-  notif('Marked as not delivered — '+reason);
-  await rbUnwindCampaignSend(cname,tname,campId);
-  await rbSendConfirmRefresh(cid,cname);
-}
-
-// A bounced send shouldn't count toward campaign attribution. Sends are folded
-// into a campaign two ways: the auto-grouped one (template + sender + day, via
-// rbAutoSaveTemplateSend) and, for a reopened bulk campaign, that campaign
-// directly. Flip this recipient's sent flag to false in whichever applies —
-// rbRecipSent then drops them from both the sent count and the order matching.
-async function rbUnwindCampaignSend(cname,tname,campId){
-  const user=(typeof curUser!=='undefined'&&curUser)?curUser.u:'system';
-  const today=rbLocalDayKey();
+// Flip this recipient to sent:false in the campaign(s) that recorded the send,
+// matched by template name + the send's own day + the CSR who sent it. rbRecipSent
+// then drops them from the sent count AND the order-matching that drives
+// conversion/revenue. Matching on the send's day (not "today") means past sends
+// unwind correctly.
+async function rbUnwindCampaignSend(cname,tname,dayKey,user){
+  if(!tname)return;
   const lc=(cname||'').toLowerCase();
-  const targets=[];
-  if(tname){
-    const grouped=(RB.campaigns||[]).find(c=>c.templateName===tname&&(c.sentBy||'')===user&&rbLocalDayKey(new Date(c.date))===today);
-    if(grouped)targets.push(grouped);
-  }
-  if(campId){
-    const reopened=(RB.campaigns||[]).find(c=>c.id===campId);
-    if(reopened&&!targets.includes(reopened))targets.push(reopened);
-  }
+  const targets=(RB.campaigns||[]).filter(c=>
+    c.templateName===tname&&
+    rbLocalDayKey(new Date(c.date))===dayKey&&
+    (!user||(c.sentBy||'')===user));
   for(const camp of targets){
     const r=camp.recipients.find(x=>(x.name||'').toLowerCase()===lc);
     if(r&&r.sent!==false){
@@ -116,15 +71,4 @@ async function rbUnwindCampaignSend(cname,tname,campId){
   if(typeof rbCurTab!=='undefined'&&rbCurTab==='rb-outreach'&&typeof rbRenderOutreach==='function')rbRenderOutreach();
   if(typeof rbCurTab!=='undefined'&&rbCurTab==='rb-campaigns'&&typeof rbRenderCampaigns==='function')rbRenderCampaigns();
   if(document.getElementById('mkt-campaigns-view')&&typeof renderMktCampaigns==='function')renderMktCampaigns();
-}
-
-async function rbSendConfirmAddNote(){
-  const c=_rbSendConfirmCtx;if(!c)return;
-  const val=(document.getElementById('rb-sc-note-inp')?.value||'').trim();
-  if(!val){notif('⚠ Type what you sent first');return;}
-  await rbLogA(c.cid,c.cname,'Interaction logged','',val,'message',c.logId,true);
-  const cid=c.cid,cname=c.cname;
-  rbSendConfirmClose();
-  notif('Message saved');
-  await rbSendConfirmRefresh(cid,cname);
 }

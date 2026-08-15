@@ -142,7 +142,7 @@ function rbActClearCardFilterAndRender(){
 // l itself -- an EDITED row has no parent_id of its own, so its Follow-up
 // must resolve through its edited_from row (the row it's nested under here)
 // rather than targeting the edit row directly.
-function rbActRowHTML(l,kind,fuTarget){
+function rbActRowHTML(l,kind,fuTarget,alreadyFailed){
   const nested=kind==='edit'||kind==='child';
   const tag=kind==='edit'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">EDITED</span>'
     :kind==='child'?'<span style="font-size:9px;color:var(--acc);background:rgba(249,115,22,.12);border-radius:8px;padding:1px 6px;margin-right:5px;">↳ FOLLOW-UP</span>'
@@ -168,6 +168,7 @@ function rbActRowHTML(l,kind,fuTarget){
     <td style="white-space:nowrap;">
       <button onclick="rbOpenEditLog('${l.id}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;">Edit</button>
       <button onclick="rbOpenFollowUp('${fuTarget}','${l.customerId}','${esc(l.customerName)}')" style="background:transparent;border:1px solid var(--bdr);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--t3);cursor:pointer;margin-left:4px;">↳ Follow-up</button>
+      ${((String(l.action||'').startsWith('Sent Template')||l.action==='Quick WA link opened')&&kind===''&&!alreadyFailed&&!l.isContext)?`<button onclick="rbActMarkNotDelivered(this)" data-lid="${l.id}" data-cid="${l.customerId}" data-cname="${esc(l.customerName)}" data-action="${esc(l.action)}" data-ts="${l.ts}" data-user="${esc(l.user)}" style="background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;margin-left:4px;">✗ Didn't deliver</button>`:''}
     </td>
   </tr>`;
 }
@@ -214,7 +215,8 @@ function rbActThreadRowsHTML(t){
   // real in-range rows and still need theirs.
   if(!t.isContext)_rbActDeleteMap[t.id]=[t.id,...(t.edits||[]).map(e=>e.id),...(t.children||[]).flatMap(c=>[c.id,...(c.edits||[]).map(e=>e.id)])];
   (t.edits||[]).forEach(e=>{_rbActDeleteMap[e.id]=[e.id];});
-  let html=rbActRowHTML(t,'',tTarget)+(t.edits||[]).map(e=>rbActRowHTML(e,'edit',tTarget)).join('');
+  const _effND=String(rbActEffective(t).outcome||'').startsWith('Not delivered');
+  let html=rbActRowHTML(t,'',tTarget,_effND)+(t.edits||[]).map(e=>rbActRowHTML(e,'edit',tTarget)).join('');
   (t.children||[]).forEach(c=>{
     const cTarget=c.parentId||c.id;
     _rbActDeleteMap[c.id]=[c.id,...(c.edits||[]).map(e=>e.id)];

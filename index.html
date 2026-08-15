@@ -7885,7 +7885,7 @@ function rbQWA(id){
   const target=num?`https://wa.me/${num}?text=${msg}`:`https://wa.me/?text=${msg}`;
   window.open(target,'_blank');
   const _qmsg=RB_TEMPLATES[14].en.replace('[Name]',c.name);
-  rbLogA(c.id,c.name,'Quick WA link opened','',_qmsg,'message').then(id=>{RB.sessionParent=id||null;rbShowSendConfirm({logId:id,cid:c.id,cname:c.name,tid:'14',msg:_qmsg});});
+  rbLogA(c.id,c.name,'Quick WA link opened','',_qmsg,'message').then(id=>{RB.sessionParent=id||null;});
   rbMarkSentThisSession(c.id);
 }
 
@@ -8490,7 +8490,6 @@ async function rbSTpl(cid,tid,lnk,msg){
   const parentId=await rbEnsureAlertParent(cid,c.name)||'';
   const logId=await rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'',msg||'','message','',false,parentId);
   RB.sessionParent=logId||null; // template becomes the session parent for notes; overwrites if multiple sends
-  rbShowSendConfirm({logId,cid,cname:c.name,tid,tname:t.name,msg});
   rbMarkSentThisSession(cid);
   rbRenderMH(c);
 }
@@ -10442,8 +10441,7 @@ async function rbBulkLogSend(recipient,tid,tname,msg){
   const effTname=tname||'Custom Message';
   const custRecord=RB.custs.find(c=>c.name.toLowerCase()===recipient.name.toLowerCase());
   const cid=custRecord?.id||'';
-  const _lid=await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'',msg||'','message');
-  rbShowSendConfirm({logId:_lid,cid,cname:recipient.name,tid:effTid,tname:effTname,msg,campId:_bulkReopenCampId});
+  await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'',msg||'','message');
   await rbAutoSaveTemplateSend(recipient.name,recipient.phone||'',effTid,effTname);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
