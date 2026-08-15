@@ -261,7 +261,7 @@ function rbActSummaryCardsHTML(threads,resolvedThreads,outstandingThreads){
   threads.forEach(t=>{
     const eff=rbActEffective(t);
     if(rbActEffectiveType(eff)==='call')calls++;
-    if(rbActEffectiveType(eff)==='message')messages++;
+    if(rbActEffectiveType(eff)==='message'&&!String(eff.outcome||'').startsWith('Not delivered'))messages++;
     if((eff.outcome||'').includes('Complaint'))complaintsTotal++;
     if(eff.outcome==='Responded Positively')positive++;
   });

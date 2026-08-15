@@ -7884,7 +7884,8 @@ function rbQWA(id){
   const msg=encodeURIComponent(RB_TEMPLATES[14].en.replace('[Name]',c.name));
   const target=num?`https://wa.me/${num}?text=${msg}`:`https://wa.me/?text=${msg}`;
   window.open(target,'_blank');
-  rbLogA(c.id,c.name,'Quick WA link opened','','','message').then(id=>{RB.sessionParent=id||null;});
+  const _qmsg=RB_TEMPLATES[14].en.replace('[Name]',c.name);
+  rbLogA(c.id,c.name,'Quick WA link opened','',_qmsg,'message').then(id=>{RB.sessionParent=id||null;rbShowSendConfirm({logId:id,cid:c.id,cname:c.name,tid:'14',msg:_qmsg});});
   rbMarkSentThisSession(c.id);
 }
 
@@ -8489,6 +8490,7 @@ async function rbSTpl(cid,tid,lnk,msg){
   const parentId=await rbEnsureAlertParent(cid,c.name)||'';
   const logId=await rbLogA(cid,c.name,`Sent Template ${tid} — ${t.name}`,'',msg||'','message','',false,parentId);
   RB.sessionParent=logId||null; // template becomes the session parent for notes; overwrites if multiple sends
+  rbShowSendConfirm({logId,cid,cname:c.name,tid,tname:t.name,msg});
   rbMarkSentThisSession(cid);
   rbRenderMH(c);
 }
@@ -10440,7 +10442,8 @@ async function rbBulkLogSend(recipient,tid,tname,msg){
   const effTname=tname||'Custom Message';
   const custRecord=RB.custs.find(c=>c.name.toLowerCase()===recipient.name.toLowerCase());
   const cid=custRecord?.id||'';
-  await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'',msg||'','message');
+  const _lid=await rbLogA(cid,recipient.name,`Sent Template ${effTid} — ${effTname}`,'',msg||'','message');
+  rbShowSendConfirm({logId:_lid,cid,cname:recipient.name,tid:effTid,tname:effTname,msg,campId:_bulkReopenCampId});
   await rbAutoSaveTemplateSend(recipient.name,recipient.phone||'',effTid,effTname);
   if(rbCurTab==='rb-outreach')rbRenderOutreach();
 }
@@ -10912,5 +10915,6 @@ const RB_TEMPLATES=[
 <script src="features/raabta-activity-report.js"></script>
 <script src="features/raabta-campaigns.js"></script>
 <script src="features/raabta-csr-stats.js"></script>
+<script src="features/raabta-send-confirm.js"></script>
 </body>
 </html>
