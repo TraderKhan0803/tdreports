@@ -1,10 +1,11 @@
 // ── RAABTA: POST-SEND CONFIRMATION ─────────────────────────────────────────────
 // After a template/message send, WhatsApp opens in another tab. If the number is
 // dead ("not on WhatsApp"), the dashboard never hears about it — it already logged
-// the send optimistically. This floating bar lets the CSR flag a bounce in one tap,
-// and (for blank sends with no captured text) paste what they actually sent.
-// Corrections are appended as edits (edited_from = the send's id), matching the
-// codebase's append-only log-edit model; reporting reads the latest edit.
+// the send optimistically. This floating bar lets the CSR flag a bounce in ONE tap
+// (each reason chip marks it directly), and (for blank sends with no captured text)
+// paste what they actually sent. Corrections are appended as edits (edited_from =
+// the send's id), matching the codebase's append-only log-edit model; reporting
+// reads the latest edit.
 
 let _rbSendConfirmCtx=null;
 let _rbSendConfirmTimer=null;
@@ -22,26 +23,25 @@ function rbShowSendConfirm(opts){
   _rbSendConfirmCtx={logId,cid,cname,tid,tname:tname||'',msg:msg||'',campId:campId||''};
   const blank=!(msg&&msg.trim());
 
+  const chip='padding:5px 10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:20px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;';
+
   const bar=document.createElement('div');
   bar.id='rb-send-confirm';
   bar.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:900;'
     +'background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);'
-    +'box-shadow:0 8px 30px rgba(0,0,0,.45);padding:12px 14px;max-width:94vw;width:420px;'
+    +'box-shadow:0 8px 30px rgba(0,0,0,.45);padding:12px 14px;max-width:94vw;width:440px;'
     +"font-family:'DM Sans',sans-serif;";
 
   bar.innerHTML=
-     '<div style="display:flex;align-items:center;gap:10px;">'
+     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">'
     +  '<span style="font-size:13px;color:var(--txt);flex:1;">&#10003; Sent to <b>'+esc(cname)+'</b></span>'
-    +  '<button id="rb-sc-fail" style="padding:5px 11px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:var(--r2);color:var(--red);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">&#10007; Didn\'t go through</button>'
     +  '<button id="rb-sc-x" title="Dismiss" style="background:transparent;border:none;color:var(--t3);font-size:16px;cursor:pointer;line-height:1;">&times;</button>'
     +'</div>'
-    +'<div id="rb-sc-reasons" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'
-    +  '<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:\'DM Mono\',monospace;margin-bottom:6px;">Why didn\'t it send?</div>'
-    +  '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-    +    '<button class="rb-sc-reason" data-reason="Not on WhatsApp" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;color:var(--t2);font-size:11px;cursor:pointer;">Not on WhatsApp</button>'
-    +    '<button class="rb-sc-reason" data-reason="Wrong number" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;color:var(--t2);font-size:11px;cursor:pointer;">Wrong number</button>'
-    +    '<button class="rb-sc-reason" data-reason="Other" style="padding:5px 10px;background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;color:var(--t2);font-size:11px;cursor:pointer;">Other</button>'
-    +  '</div>'
+    +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">'
+    +  '<span style="font-size:11px;color:var(--t3);">Didn\'t reach them? Tap a reason:</span>'
+    +  '<button class="rb-sc-reason" data-reason="Not on WhatsApp" style="'+chip+'">Not on WhatsApp</button>'
+    +  '<button class="rb-sc-reason" data-reason="Wrong number" style="'+chip+'">Wrong number</button>'
+    +  '<button class="rb-sc-reason" data-reason="Other" style="'+chip+'">Other</button>'
     +'</div>'
     +(blank
       ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'
@@ -54,10 +54,6 @@ function rbShowSendConfirm(opts){
   document.body.appendChild(bar);
 
   document.getElementById('rb-sc-x').onclick=rbSendConfirmClose;
-  document.getElementById('rb-sc-fail').onclick=function(){
-    if(_rbSendConfirmTimer){clearTimeout(_rbSendConfirmTimer);_rbSendConfirmTimer=null;}
-    document.getElementById('rb-sc-reasons').style.display='block';
-  };
   bar.querySelectorAll('.rb-sc-reason').forEach(b=>{
     b.onclick=function(){rbSendConfirmFail(b.dataset.reason);};
   });
@@ -69,7 +65,7 @@ function rbShowSendConfirm(opts){
     });
   }
 
-  _rbSendConfirmTimer=setTimeout(rbSendConfirmClose,12000);
+  _rbSendConfirmTimer=setTimeout(rbSendConfirmClose,12000); // happy path: auto-dismiss if untouched
 }
 
 async function rbSendConfirmRefresh(cid,cname){
@@ -80,6 +76,9 @@ async function rbSendConfirmRefresh(cid,cname){
 
 async function rbSendConfirmFail(reason){
   const c=_rbSendConfirmCtx;if(!c)return;
+  // Append an edit that supersedes the send: keeps it in the log as an attempt,
+  // sets a "Not delivered" outcome (excluded from the Messages Sent count),
+  // and preserves the attempted message text in the note.
   await rbLogA(c.cid,c.cname,'Send not delivered','Not delivered: '+reason,c.msg||'','message',c.logId,true);
   const cid=c.cid,cname=c.cname,tname=c.tname,campId=c.campId;
   rbSendConfirmClose();
@@ -91,7 +90,7 @@ async function rbSendConfirmFail(reason){
 // A bounced send shouldn't count toward campaign attribution. Sends are folded
 // into a campaign two ways: the auto-grouped one (template + sender + day, via
 // rbAutoSaveTemplateSend) and, for a reopened bulk campaign, that campaign
-// directly. Flip this recipient's sent flag to false in whichever applies --
+// directly. Flip this recipient's sent flag to false in whichever applies —
 // rbRecipSent then drops them from both the sent count and the order matching.
 async function rbUnwindCampaignSend(cname,tname,campId){
   const user=(typeof curUser!=='undefined'&&curUser)?curUser.u:'system';
