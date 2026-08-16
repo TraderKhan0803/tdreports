@@ -27,6 +27,7 @@ let _rbActPendingCsr=null,_rbActPendingOutcome=null; // set by rbActRestoreFilte
 let _rbActSelected=new Set(); // ids the user has checked
 let _rbActSelectableIds=[]; // ids of currently-rendered, checkable rows (excludes dimmed context-parent rows)
 let _rbActDeleteMap={}; // id -> full list of row ids a delete of that row should cascade to
+let _rbActRowMeta={}; // id -> {action,cname,user,ts} for deleted-row campaign matching
 
 // Nearly every filter input calls rbRenderAct() directly (oninput/onchange),
 // and each call awaits 1-2 fetches -- so rapid filter changes (or the tab's
@@ -214,6 +215,7 @@ function rbActThreadRowsHTML(t){
   // no checkbox of its own, so it gets no map entry -- but its children are
   // real in-range rows and still need theirs.
   if(!t.isContext)_rbActDeleteMap[t.id]=[t.id,...(t.edits||[]).map(e=>e.id),...(t.children||[]).flatMap(c=>[c.id,...(c.edits||[]).map(e=>e.id)])];
+  if(!t.isContext)_rbActRowMeta[t.id]={action:t.action,cname:t.customerName,user:t.user,ts:t.ts};
   (t.edits||[]).forEach(e=>{_rbActDeleteMap[e.id]=[e.id];});
   const _effND=String(rbActEffective(t).outcome||'').startsWith('Not delivered');
   let html=rbActRowHTML(t,'',tTarget,_effND)+(t.edits||[]).map(e=>rbActRowHTML(e,'edit',tTarget)).join('');
@@ -360,7 +362,7 @@ async function rbRenderAct(){
     // state below; applying a stale response here is exactly what let
     // "Select all" pick up rows outside the currently-applied filters.
     if(gen!==_rbActRenderGen)return;
-    _rbActSelectableIds=[];_rbActDeleteMap={};
+    _rbActSelectableIds=[];_rbActDeleteMap={};_rbActRowMeta={};
 
     // General filters -- what the summary cards reflect.
     const csr=document.getElementById('rb-af')?.value||'';
@@ -473,7 +475,43 @@ async function rbActDeleteSelected(){
   const idSet=new Set(ids);
   RB.alog=RB.alog.filter(l=>!idSet.has(l.id));
   rbSave();
+  const _delMetas=ids.map(id=>_rbActRowMeta[id]).filter(m=>m&&String(m.action||'').startsWith('Sent Template'));
+  if(_delMetas.length)await rbSyncCampaignsAfterLogDelete(_delMetas);
   _rbActSelected.clear();
   await rbRenderAct();
   notif('Deleted '+ids.length+' record'+(ids.length===1?'':'s'));
+}
+
+// When Activity records are deleted (test-data cleanup), pull the matching
+// recipient out of the campaign that recorded the send — so the campaign's
+// sent count drops and the name disappears from the recipients modal. Matched
+// by customer name + template + the send's day + the CSR, since there's no
+// stored link between a log row and a campaign recipient.
+async function rbSyncCampaignsAfterLogDelete(metas){
+  const changed=new Map();
+  for(const m of metas){
+    const action=String(m.action||'');
+    if(!action.startsWith('Sent Template'))continue;
+    const dash=action.indexOf('— ');
+    const tname=dash>=0?action.slice(dash+2).trim():'';
+    if(!tname)continue;
+    const day=rbLocalDayKey(new Date(m.ts));
+    const lc=(m.cname||'').toLowerCase();
+    (RB.campaigns||[]).forEach(c=>{
+      if(c.templateName===tname&&rbLocalDayKey(new Date(c.date))===day&&(c.sentBy||'')===(m.user||'')){
+        const before=c.recipients.length;
+        c.recipients=c.recipients.filter(r=>(r.name||'').toLowerCase()!==lc);
+        if(c.recipients.length!==before)changed.set(c.id,c);
+      }
+    });
+  }
+  for(const c of changed.values()){
+    try{await sb('PATCH','campaigns?id=eq.'+encodeURIComponent(c.id),{recipients:c.recipients});}
+    catch(e){console.error('Campaign sync failed:',e);}
+  }
+  if(changed.size){
+    if(typeof rbCurTab!=='undefined'&&rbCurTab==='rb-campaigns'&&typeof rbRenderCampaigns==='function')rbRenderCampaigns();
+    if(typeof rbCurTab!=='undefined'&&rbCurTab==='rb-outreach'&&typeof rbRenderOutreach==='function')rbRenderOutreach();
+    if(document.getElementById('mkt-campaigns-view')&&typeof renderMktCampaigns==='function')renderMktCampaigns();
+  }
 }
