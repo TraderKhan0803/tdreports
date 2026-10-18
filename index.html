@@ -2187,6 +2187,12 @@ async function sb(method,path,body=null){
   const t=await res.text();return t?JSON.parse(t):[];
 }
 const dbGet=(t,p='')=>sb('GET',t+'?'+p);
+// Account routes (auth/*, users/list, admin/users/*) return {error:"..."}
+// on failure; surface that text instead of the raw JSON.
+async function gw(method,route,body){
+  try{return await sb(method,route,body);}
+  catch(e){let m=e.message;try{m=JSON.parse(m).error||m;}catch(_){}throw new Error(m);}
+}
 const dbInsert=(t,d)=>sb('POST',t,d);
 const dbDelete=(t,p)=>sb('DELETE',t+'?'+p);
 async function fetchAllRows(table,extra=''){
@@ -2270,12 +2276,7 @@ async function doChangePassword(){
   if(!np){errEl.textContent='Please enter a new password';return;}
   if(np!==cp){errEl.textContent='Passwords do not match';return;}
   try{
-    // Update password in DB
-    await fetch(GATEWAY_URL+'/users?username=eq.'+encodeURIComponent(curUser.u),{
-      method:'PATCH',
-      headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json'},
-      body:JSON.stringify({password:np,must_change_password:false})
-    });
+    await gw('POST','auth/change-password',{new_password:np});
     logActivity('admin','Changed password on first login');
     document.getElementById('change-pw-screen').style.display='none';
     onLoginSuccess();
@@ -2296,10 +2297,10 @@ async function doForgot(){
 
 function doLogout(){
   stopAlertPolling();
-  if(authToken)sb('DELETE','sessions?token=eq.'+encodeURIComponent(authToken)).catch(()=>{});
   logActivity('session','Logged out');
+  if(authToken)gw('POST','auth/logout').catch(()=>{});
   authToken=null;curUser=null;
-  localStorage.removeItem('tezz_token');localStorage.removeItem('tezz_user');
+  localStorage.removeItem('tezz_token');localStorage.removeItem('tezz_user');localStorage.removeItem('tezz_config_cache');
   document.getElementById('app').style.display='none';
   showLogin();
   document.getElementById('li-user').value='';document.getElementById('li-pass').value='';
@@ -2408,7 +2409,7 @@ async function loadAllData(){
     const cachedConfig=_getCachedConfig();
     const [config,users]=await Promise.all([
       cachedConfig?Promise.resolve(cachedConfig):dbGet('admin_config','select=*'),
-      dbGet('users','select=username,role,email')
+      gw('GET','users/list')
     ]);
     if(!cachedConfig)_setCachedConfig(config);
 
@@ -2497,13 +2498,14 @@ function _getCachedConfig(){
   try{
     const c=localStorage.getItem('tezz_config_cache');
     if(!c)return null;
-    const{ts,data}=JSON.parse(c);
+    const{ts,u,data}=JSON.parse(c);
+    if(u!==curUser?.u)return null; // cache belongs to whoever saved it -- never another user's (viewers get a filtered config)
     if(Date.now()-ts>3600000)return null; // 1 hour TTL
     return data;
   }catch(e){return null;}
 }
 function _setCachedConfig(data){
-  try{localStorage.setItem('tezz_config_cache',JSON.stringify({ts:Date.now(),data}));}catch(e){}
+  try{localStorage.setItem('tezz_config_cache',JSON.stringify({ts:Date.now(),u:curUser?.u,data}));}catch(e){}
 }
 
 async function loadAllData_UNUSED(){
@@ -2516,7 +2518,7 @@ async function loadAllData_UNUSED(){
     showLoader('Loading config & users…');
     const [config,users]=await Promise.all([
       dbGet('admin_config','select=*'),
-      dbGet('users','select=username,role,email')
+      gw('GET','users/list')
     ]);
     S.orders=orders.map(o=>({
       Order_ID:o.order_id,Customer:o.customer||'',Address:o.address||'',
@@ -2584,7 +2586,7 @@ async function reloadAllData(){
     let [curOrders,config,users]=await Promise.all([
       fetchAllRows('orders','year=eq.'+curYear+'&month=eq.'+mm),
       dbGet('admin_config','select=*'),
-      dbGet('users','select=username,role,email')
+      gw('GET','users/list')
     ]);
 
     // Fallback: if no data for current month, use most recent month with data
@@ -4333,7 +4335,7 @@ async function saveEditedPerms(username){
     scenario:!!document.getElementById('ep-scenario')?.checked,
     raabtaAdmin:!!document.getElementById('ep-raabtaAdmin')?.checked,
   };
-  await saveUserPerms(username,perms);
+  try{await saveUserPerms(username,perms);}catch(e){notif('❌ '+e.message);return;}
   // Reload config so renderUserList shows updated perms
   const config=await dbGet('admin_config','select=*');
   S._rawConfig=config;
@@ -4425,11 +4427,7 @@ async function doResetPassword(username){
   const pw=document.getElementById('reset-pw-inp')?.value;
   if(!pw||pw.length<4){notif('⚠ Password must be at least 4 characters');return;}
   try{
-    await fetch(GATEWAY_URL+'/users?username=eq.'+encodeURIComponent(username),{
-      method:'PATCH',
-      headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json'},
-      body:JSON.stringify({password:pw,must_change_password:true})
-    });
+    await gw('POST','admin/users/reset-password',{username,password:pw});
     document.getElementById('reset-pw-overlay')?.remove();
     notif('✓ Password reset for "'+username+'" — they must change it on next login');
     logActivity('admin','Reset password for user: '+username);
@@ -4443,7 +4441,7 @@ async function addUser(){
   const r=document.getElementById('inp-urole').value;
   if(!u||!p)return;
   try{
-    await dbInsert('users',[{username:u,password:p,role:r,email:email,must_change_password:true}]);
+    await gw('POST','admin/users',{username:u,password:p,role:r,email});
     S.users.push({u,role:r,email});
     // Save permissions for viewers
     if(r==='viewer'){
@@ -4464,7 +4462,7 @@ async function addUser(){
 }
 async function rmUser(username){
   try{
-    await dbDelete('users','username=eq.'+encodeURIComponent(username));
+    await gw('POST','admin/users/delete',{username});
     S.users=S.users.filter(u=>u.u!==username);renderUserList();
     notif(`✓ User "${username}" deleted`);logActivity('admin',`Deleted user: ${username}`);
   }catch(e){notif('❌ '+e.message);}
@@ -6281,14 +6279,22 @@ function stopAlertPolling(){if(_pollInterval){clearInterval(_pollInterval);_poll
 // ═══════════════════════════════════════════════
 (async function init(){
   const t=localStorage.getItem('tezz_token');
-  const u=localStorage.getItem('tezz_user');
-  if(t&&u){
+  if(t){
     try{
       authToken=t;
-      const sessions=await dbGet('sessions','token=eq.'+encodeURIComponent(t)+'&expires_at=gt.'+new Date().toISOString()+'&select=username,role');
-      if(sessions.length){curUser=JSON.parse(u);onLoginSuccess();return;}
-      authToken=null;
-    }catch(e){authToken=null;}
+      // Role comes from the server (auth/me), never from localStorage.
+      const me=await gw('GET','auth/me');
+      curUser={u:me.username,role:me.role,email:me.email||''};
+      localStorage.setItem('tezz_user',JSON.stringify(curUser));
+      if(me.must_change_password){
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('change-pw-screen').style.display='flex';
+        return;
+      }
+      onLoginSuccess();return;
+    }catch(e){
+      authToken=null;curUser=null;
+    }
     sessionStorage.removeItem('tezz_token');sessionStorage.removeItem('tezz_user');
   }
   showLogin();
@@ -7705,9 +7711,7 @@ function getUserAccess(user){
 }
 
 async function saveUserPerms(username, perms){
-  const now=new Date().toISOString();
-  await sb('DELETE','admin_config?type=eq.user_perms_'+encodeURIComponent(username)).catch(()=>{});
-  await dbInsert('admin_config',[{type:'user_perms_'+username,value1:JSON.stringify(perms),value2:'',updated_by:curUser?.u||'',updated_at:now}]).catch(()=>{});
+  await gw('POST','admin/users/permissions',{username,perms});
 }
 
 function toggleLogoMenu(){

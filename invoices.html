@@ -485,16 +485,17 @@ const dbInsert=(t,rows)=>sb('POST',t,rows);
 // ── AUTH ──
 async function init(){
   const tok=localStorage.getItem('tezz_token');
-  const usr=localStorage.getItem('tezz_user');
-  if(tok&&usr){
+  if(tok){
     try{
-      const u=JSON.parse(usr);
-      if(ADMIN_ROLES.includes(u.role)){
-        authToken=tok;
-        const s=await dbGet('sessions','token=eq.'+encodeURIComponent(tok)+'&select=username,role,expires_at');
-        if(s.length&&new Date(s[0].expires_at)>new Date()){curUser=u;showApp();return;}
-        authToken=null;
+      // Role comes from the server (auth/me), never from localStorage.
+      authToken=tok;
+      const me=await sb('GET','auth/me');
+      if(ADMIN_ROLES.includes(me.role)&&!me.must_change_password){
+        curUser={u:me.username,role:me.role,email:me.email||''};
+        localStorage.setItem('tezz_user',JSON.stringify(curUser));
+        showApp();return;
       }
+      authToken=null;
     }catch(e){authToken=null;}
   }
   showLogin();
@@ -520,6 +521,7 @@ async function doLogin(){
       return;
     }
     if(!ADMIN_ROLES.includes(data.role)){err.textContent='';showDenied();return;}
+    if(data.must_change_password){err.textContent='Please sign in to the dashboard first to set a new password.';return;}
     authToken=data.token;curUser={u:data.username,role:data.role,email:data.email||''};
     localStorage.setItem('tezz_token',authToken);
     localStorage.setItem('tezz_user',JSON.stringify(curUser));
@@ -529,7 +531,7 @@ async function doLogin(){
 }
 
 function doLogout(){
-  if(authToken)sb('DELETE','sessions?token=eq.'+encodeURIComponent(authToken)).catch(()=>{});
+  if(authToken)sb('POST','auth/logout').catch(()=>{});
   localStorage.removeItem('tezz_token');localStorage.removeItem('tezz_user');
   authToken=null;curUser=null;showLogin();
 }
