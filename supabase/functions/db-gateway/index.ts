@@ -389,6 +389,23 @@ async function handleAccountRoute(req: Request, route: string, who: Identity): P
     }
   }
 
+  // Manual fallback for the new-customer flag. Triggers normally keep it
+  // correct (supabase/migrations/20261020_new_customers_part2.sql); this
+  // recomputes every order in the database, not just what a browser loaded.
+  if (route === 'admin/recalc-new-customers' && m === 'POST') {
+    if (who.role !== 'super' && who.role !== 'admin') {
+      audit(who, m, route, '', 'block', 'super/admin only');
+      return json(req, 403, { error: 'Forbidden' });
+    }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/refresh_new_customer_flags`, {
+      method: 'POST',
+      headers: { ...svcHeaders(), 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    if (!res.ok) return json(req, 502, { error: 'Recalculation failed' });
+    return json(req, 200, { changed: Number(await res.json()) || 0 });
+  }
+
   if (!route.startsWith('admin/users') || m !== 'POST') return json(req, 404, { error: 'Not found' });
   if (who.role !== 'super') {
     audit(who, m, route, '', 'block', 'super only');

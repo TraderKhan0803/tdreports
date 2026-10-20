@@ -4137,7 +4137,6 @@ async function runAdminUpload(){
   document.getElementById('adm-lbl-products').classList.remove('loaded');
   document.getElementById('adm-upload-btn').disabled=true;
   await reloadAllData();renderUploadHistory();
-  if(ordersRowsAdded>0){ await recalcNewCustomers(); }
   if(zeroRowFiles.length){
     alert('⚠️ No new rows were added from '+(zeroRowFiles.length===1?'this file':zeroRowFiles.length+' of the files')+':\n\n'+zeroRowFiles.map(n=>'• '+n).join('\n')+'\n\nEvery row already exists in the database, likely from a previous upload. If you intended to replace this data, delete the existing batch first, then re-upload.');
   }
@@ -4254,6 +4253,7 @@ function processOrdersWB(wb,log){
 
     const city=detectCity(addr);
     const custType=b2bSet.has(custL)?'B2B':'B2C';
+    // Placeholder only -- a database trigger sets the real flag on insert.
     const isFirst=!allCustSeen.has(custL)?'New Customer':'Recurring Customer';
     allCustSeen.add(custL);
     result.push({Order_ID:oid,Customer:cust,Address:addr,Phone:String(r['customerPhone']||'').trim(),Placed_On:rawDateStr,Payment:normPayment(String(r['Payment']||'')),Source:String(r['Source']||'').trim(),Status:status,Total_Sales:parseFloat(r['Total']||0)||0,Other_Details:String(r['Other Details']||'').trim(),Scheduled:String(r['Scheduled']||'').trim(),City:city,Customer_Type:custType,IsFirstOrder:isFirst,Year:od?od.getFullYear():null,Month:od?od.getMonth()+1:null,Order_Date_Str:od?fmtDate(od):'—',Order_Date_ISO:od?toISODate(od):null});
@@ -4830,37 +4830,15 @@ async function rmTest(i){
 // RECALCULATE NEW CUSTOMERS
 // ═══════════════════════════════════════════════
 async function recalcNewCustomers(){
+  // The database keeps orders.is_first_order correct on its own (triggers
+  // on orders and customer_links). This is the manual fallback: it
+  // recomputes every order server-side, not just what this browser loaded.
   showLoader('Recalculating new customers…');
   try{
-    // Sort all orders by date ascending
-    const sorted=[...S.orders].filter(o=>o.Order_Date).sort((a,b)=>a.Order_Date-b.Order_Date);
-    const seen=new Set();
-    const updates=[]; // {order_id, is_first_order}
-    sorted.forEach(o=>{
-      const key=resolveCustomerName(o.Customer).toLowerCase();
-      const isFirst=!seen.has(key);
-      seen.add(key);
-      const newVal=isFirst?'New Customer':'Recurring Customer';
-      if(o.IsFirstOrder!==newVal)updates.push({order_id:o.Order_ID,is_first_order:newVal});
-    });
-    // Also handle orders without dates
-    S.orders.filter(o=>!o.Order_Date).forEach(o=>{
-      const key=resolveCustomerName(o.Customer).toLowerCase();
-      if(seen.has(key)){if(o.IsFirstOrder!=='Recurring Customer')updates.push({order_id:o.Order_ID,is_first_order:'Recurring Customer'});}
-    });
-    // Send updates in batches
-    const BATCH=50;
-    for(let i=0;i<updates.length;i+=BATCH){
-      const batch=updates.slice(i,i+BATCH);
-      await Promise.all(batch.map(u=>fetch(GATEWAY_URL+'/orders?order_id=eq.'+encodeURIComponent(u.order_id),{
-        method:'PATCH',
-        headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({is_first_order:u.is_first_order})
-      })));
-    }
+    const r=await gw('POST','admin/recalc-new-customers');
     hideLoader();
-    notif(`✓ Recalculated — ${updates.length} records updated`);
-    logActivity('admin',`Recalculated new customers: ${updates.length} updates`);
+    notif(`✓ Recalculated — ${r.changed} records updated`);
+    logActivity('admin',`Recalculated new customers: ${r.changed} updates`);
     await reloadAllData();
   }catch(e){hideLoader();notif('❌ '+e.message);}
 }
