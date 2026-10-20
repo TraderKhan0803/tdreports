@@ -19,6 +19,7 @@
 // auth/change-password, users/list, admin/users/*), so the browser never
 // touches users or sessions directly. Table access follows a per-role
 // allow-list; see "Table access rules" below and GATEWAY_ENFORCE.
+// Monthly Updates readers reach only mu/* routes; see "Monthly Updates".
 //
 // Deploy with: supabase functions deploy db-gateway --no-verify-jwt
 
@@ -325,12 +326,20 @@ async function handleAccountRoute(req: Request, route: string, who: Identity): P
   const m = req.method;
 
   if (route === 'auth/me' && m === 'GET') {
+    let reader: { profile: string; display_name: string } | null = null;
+    if (who.role === 'reader') {
+      try {
+        const rows = await svcGet(`mu_readers?username=eq.${enc(who.username)}&deleted_at=is.null&select=profile,display_name`);
+        reader = rows[0] || null;
+      } catch { /* profile is informational; the mu_ functions check it again */ }
+    }
     return json(req, 200, {
       username: who.username,
       role: who.role,
       email: who.email,
       perms: who.perms,
       must_change_password: who.mustChange,
+      ...(reader ? { profile: reader.profile, display_name: reader.display_name } : {}),
     });
   }
 
@@ -382,8 +391,10 @@ async function handleAccountRoute(req: Request, route: string, who: Identity): P
 
   if (route === 'users/list' && m === 'GET') {
     if (who.role === 'reader') return json(req, 403, { error: 'Forbidden' });
+    // Reader accounts (partners, investors…) are listed for super only.
+    const notReaders = who.role === 'super' ? '' : '&role=neq.reader';
     try {
-      return json(req, 200, await svcGet('users?select=username,role,email&order=username.asc'));
+      return json(req, 200, await svcGet(`users?select=username,role,email&order=username.asc${notReaders}`));
     } catch {
       return json(req, 502, { error: 'Lookup failed' });
     }
@@ -422,6 +433,18 @@ async function handleAccountRoute(req: Request, route: string, who: Identity): P
     const email = typeof body.email === 'string' ? body.email.trim() : '';
     if (!USERNAME_RE.test(username)) return json(req, 400, { error: 'Username may only use letters, numbers and . _ @ -' });
     if (password.length < MIN_PASSWORD) return json(req, 400, { error: `Password must be at least ${MIN_PASSWORD} characters` });
+    if (role === 'reader') {
+      // Monthly Updates reader: users row + mu_readers row, created together.
+      const profile = typeof body.profile === 'string' ? body.profile : '';
+      const displayName = typeof body.display_name === 'string' ? body.display_name.trim() : '';
+      if (!MU_PROFILES.includes(profile)) return json(req, 400, { error: 'Invalid profile' });
+      if (!displayName) return json(req, 400, { error: 'Missing display name' });
+      const r = await muRpc('mu_create_reader', {
+        p_by: who.username, p_username: username, p_password: password, p_email: email,
+        p_profile: profile, p_display_name: displayName,
+      });
+      return json(req, r.status, r.body);
+    }
     if (!NEW_USER_ROLES.includes(role)) return json(req, 400, { error: 'Invalid role' });
     const res = await svcWrite('POST', 'users', [{ username, password, role, email, must_change_password: true }]);
     if (res.status === 409) return json(req, 409, { error: 'User already exists' });
@@ -734,6 +757,155 @@ function viewerRule(
   return deny('not deletable by viewers');
 }
 
+// ── Monthly Updates ──────────────────────────────────────────────────────
+//
+// Readers never touch tables: every reader request is a mu/* route that
+// calls a mu_* database function with p_username = the session's user, so
+// the database filters everything to their profile. Super uses the editor
+// tables directly, plus mu/admin/* routes. These rules apply in both
+// GATEWAY_ENFORCE modes. See supabase/migrations/20261021_monthly_updates_phase1.sql.
+
+const MU_PROFILES = ['partner', 'investor', 'employee', 'prospect_investor', 'prospect_partner'];
+// Super may read and write these as tables (the Phase 2 editor).
+const MU_EDITOR_TABLES = new Set([
+  'mu_updates', 'mu_stories', 'mu_items', 'mu_item_tags', 'mu_story_tags',
+  'mu_section_defaults', 'mu_section_audience', 'mu_readers',
+]);
+// Super may only read these; mu_publish / mu_ensure_aliases write them.
+const MU_READONLY_TABLES = new Set(['mu_sections', 'mu_customer_aliases']);
+// mu_notes and mu_reads (and any other mu_ table) are never tables to the
+// browser — not even for super, who sees only sent notes via a function.
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])-01$/;
+
+function muTableRule(who: Identity, method: string, table: string, params: URLSearchParams): string | null {
+  if (who.role !== 'super') return 'Monthly Updates tables are super only';
+  if (who.mustChange) return 'must change password first';
+  if ((params.get('select') || '').includes('(')) return 'embedded select';
+  if ((method === 'DELETE' || method === 'PATCH') && !hasFilter(params)) return 'unfiltered ' + method;
+  if (MU_EDITOR_TABLES.has(table)) return ['GET', 'POST', 'PATCH', 'DELETE'].includes(method) ? null : 'method not allowed';
+  if (MU_READONLY_TABLES.has(table)) return method === 'GET' ? null : 'read-only table';
+  return 'table is not reachable from the browser';
+}
+
+// Call a mu_* function. 'mu: …' exceptions become 404 / 403 / 400 with the
+// message; anything else is a 502 without database details.
+async function muRpc(fn: string, args: Record<string, unknown>): Promise<{ status: number; body: unknown }> {
+  let res: Response;
+  try {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { ...svcHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(args),
+    });
+  } catch {
+    return { status: 502, body: { error: 'Request failed' } };
+  }
+  const text = await res.text();
+  let data: any = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch { /* leave null */ }
+  if (res.ok) return { status: 200, body: data };
+  const msg = typeof data?.message === 'string' ? data.message : '';
+  if (msg.startsWith('mu: not found')) return { status: 404, body: { error: 'Not found' } };
+  if (msg.startsWith('mu: forbidden')) return { status: 403, body: { error: 'Forbidden' } };
+  if (msg.startsWith('mu: ')) return { status: 400, body: { error: msg.slice(4) } };
+  if (typeof data?.code === 'string' && data.code.startsWith('22')) return { status: 400, body: { error: 'Invalid request' } };
+  return { status: 502, body: { error: 'Request failed' } };
+}
+
+async function handleMuRoute(req: Request, route: string, url: URL, who: Identity): Promise<Response> {
+  const m = req.method;
+  const qp = (k: string) => url.searchParams.get(k) || '';
+  const reply = (r: { status: number; body: unknown }) => json(req, r.status, r.body);
+  const bad = (msg: string) => json(req, 400, { error: msg });
+  const refuse = (reason: string) => {
+    audit(who, m, route, url.search.slice(1), 'block', reason);
+    return json(req, 403, { error: 'Forbidden' });
+  };
+  if (who.mustChange) return json(req, 403, { error: 'Password change required' });
+
+  if (route.startsWith('mu/admin/')) {
+    if (who.role !== 'super') return refuse('Monthly Updates admin is super only');
+    const body = m === 'POST' ? await readJson(req) : null;
+    if (m === 'POST' && !body) return bad('Invalid request body');
+    switch (`${m} ${route}`) {
+      case 'GET mu/admin/questions': {
+        const id = qp('update_id');
+        if (id && !UUID_RE.test(id)) return bad('Invalid update_id');
+        return reply(await muRpc('mu_admin_questions', { p_update_id: id || null }));
+      }
+      case 'POST mu/admin/reply':
+        if (!UUID_RE.test(String(body!.note_id))) return bad('Invalid note_id');
+        return reply(await muRpc('mu_admin_reply', { p_by: who.username, p_note_id: body!.note_id, p_reply: String(body!.reply ?? '') }));
+      case 'GET mu/admin/reads':
+        if (!UUID_RE.test(qp('update_id'))) return bad('Invalid update_id');
+        return reply(await muRpc('mu_admin_read_summary', { p_update_id: qp('update_id') }));
+      case 'GET mu/admin/new-customers':
+        if (!MONTH_RE.test(qp('from')) || !MONTH_RE.test(qp('to'))) return bad('from / to must be YYYY-MM-01');
+        return reply(await muRpc('mu_new_customer_counts', { p_from: qp('from'), p_to: qp('to') }));
+      case 'POST mu/admin/aliases': {
+        const keys = body!.keys;
+        if (!Array.isArray(keys) || keys.length > 20000 || !keys.every((k) => typeof k === 'string')) return bad('keys must be a list of strings');
+        return reply(await muRpc('mu_ensure_aliases', { p_keys: keys }));
+      }
+      case 'POST mu/admin/publish':
+        if (!UUID_RE.test(String(body!.update_id))) return bad('Invalid update_id');
+        if (!Array.isArray(body!.sections)) return bad('sections must be a list');
+        return reply(await muRpc('mu_publish', { p_by: who.username, p_update_id: body!.update_id, p_sections: body!.sections }));
+      case 'POST mu/admin/unpublish':
+        if (!UUID_RE.test(String(body!.update_id))) return bad('Invalid update_id');
+        return reply(await muRpc('mu_unpublish', { p_by: who.username, p_update_id: body!.update_id }));
+    }
+    return json(req, 404, { error: 'Not found' });
+  }
+
+  // Reader routes. The username always comes from the session; anything
+  // the browser sends as a username is ignored.
+  if (who.role !== 'reader') return refuse('Monthly Updates reader routes are for readers');
+  const me = who.username;
+  const body = m === 'POST' ? await readJson(req) : null;
+  if (m === 'POST' && !body) return bad('Invalid request body');
+  switch (`${m} ${route}`) {
+    case 'GET mu/updates':
+      return reply(await muRpc('mu_list_updates', { p_username: me }));
+    case 'GET mu/update':
+      if (!MONTH_RE.test(qp('month'))) return bad('month must be YYYY-MM-01');
+      return reply(await muRpc('mu_get_update', { p_username: me, p_month: qp('month') }));
+    case 'GET mu/story':
+      if (!UUID_RE.test(qp('id'))) return bad('Invalid id');
+      return reply(await muRpc('mu_story_timeline', { p_username: me, p_story_id: qp('id') }));
+    case 'GET mu/notes':
+      return reply(await muRpc('mu_my_notes', { p_username: me }));
+    case 'POST mu/notes': {
+      const send = body!.send;
+      if (!UUID_RE.test(String(body!.update_id))) return bad('Invalid update_id');
+      if (send !== undefined && send !== null && typeof send !== 'boolean') return bad('send must be true or false');
+      return reply(await muRpc('mu_save_note', {
+        p_username: me,
+        p_update_id: body!.update_id,
+        p_target_type: String(body!.target_type ?? ''),
+        p_target_id: String(body!.target_id ?? ''),
+        p_body: String(body!.body ?? ''),
+        p_send: send ?? null,
+      }));
+    }
+    case 'POST mu/notes/delete':
+      if (!UUID_RE.test(String(body!.id))) return bad('Invalid id');
+      return reply(await muRpc('mu_delete_note', { p_username: me, p_note_id: body!.id }));
+    case 'POST mu/reads': {
+      if (!UUID_RE.test(String(body!.update_id))) return bad('Invalid update_id');
+      const seconds = Number(body!.seconds ?? 0);
+      if (!Number.isFinite(seconds)) return bad('Invalid seconds');
+      const tab = body!.tab === undefined || body!.tab === null ? null : String(body!.tab);
+      return reply(await muRpc('mu_record_read', { p_username: me, p_update_id: body!.update_id, p_seconds: Math.round(seconds), p_tab: tab }));
+    }
+  }
+  return json(req, 404, { error: 'Not found' });
+}
+
 // ── Request handler ──────────────────────────────────────────────────────
 
 async function forward(req: Request, table: string, search: string, bodyText: string | undefined): Promise<Response> {
@@ -786,6 +958,7 @@ Deno.serve(async (req: Request) => {
   if (route.startsWith('auth/') || route.startsWith('admin/') || route === 'users/list') {
     return handleAccountRoute(req, route, who);
   }
+  if (route.startsWith('mu/')) return handleMuRoute(req, route, url, who);
 
   // Hard blocks — both modes.
   const query = url.search.slice(1);
@@ -793,12 +966,18 @@ Deno.serve(async (req: Request) => {
   if (!TABLE_RE.test(route)) hardReason = 'not a table path';
   else if (HARD_BLOCKED.has(route)) hardReason = 'table is never reachable from the browser';
   else if (who.role === 'reader') hardReason = 'readers have no table access';
+  else if (route.startsWith('mu_')) hardReason = muTableRule(who, req.method, route, url.searchParams) || '';
   if (hardReason) {
     audit(who, req.method, route, query, 'block', hardReason);
     return json(req, 403, { error: 'Forbidden' });
   }
 
   const bodyText = ['GET', 'HEAD'].includes(req.method) ? undefined : await req.text();
+  // Allowed mu_ table request (super, editor tables): no further rules.
+  if (route.startsWith('mu_')) {
+    const pgRes = await forward(req, route, url.search, bodyText);
+    return relay(req, pgRes, pgRes.body);
+  }
   const d = evaluate(who, req.method, route, url.searchParams, bodyText, req.headers.get('prefer') || '');
 
   if (!d.ok) {
